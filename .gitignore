@@ -1,0 +1,11 @@
+# Raw scrape / personal source data — kept local only
+parser/
+task_pages/
+raw_all_sentences.json
+unique_all_sentences.json
+sentences.json
+sentences_compact.json
+sentences_final.json
+anki_import.txt
+morasha_*.txt
+hebrew_trainer.html
