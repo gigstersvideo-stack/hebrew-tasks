@@ -22,6 +22,10 @@
     --amber-soft: #F5E9D2;
     --border: #D6DCD4;
     --shadow: 0 1px 2px rgba(28,35,33,0.04), 0 8px 24px rgba(28,35,33,0.06);
+    --del-bg: rgba(178,58,46,0.12);
+    --ins-bg: rgba(46,125,70,0.14);
+    --fuzzy-bg: rgba(31,87,80,0.10);
+    --miss-bg: rgba(154,107,18,0.14);
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
@@ -31,6 +35,8 @@
       --good: #6FCB8B; --good-soft: #1E3323; --bad: #E08579; --bad-soft: #3A211E;
       --amber: #E0B75C; --amber-soft: #3A3016;
       --border: #2A3236; --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+      --del-bg: rgba(224,133,121,0.16); --ins-bg: rgba(111,203,139,0.18);
+      --fuzzy-bg: rgba(143,209,194,0.14); --miss-bg: rgba(224,183,92,0.16);
     }
   }
   :root[data-theme="dark"] {
@@ -40,6 +46,8 @@
     --good: #6FCB8B; --good-soft: #1E3323; --bad: #E08579; --bad-soft: #3A211E;
     --amber: #E0B75C; --amber-soft: #3A3016;
     --border: #2A3236; --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+    --del-bg: rgba(224,133,121,0.16); --ins-bg: rgba(111,203,139,0.18);
+    --fuzzy-bg: rgba(143,209,194,0.14); --miss-bg: rgba(224,183,92,0.16);
   }
 
   * { box-sizing: border-box; }
@@ -99,18 +107,34 @@
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); padding: 28px 28px 24px; display: flex; flex-direction: column; gap: 16px; }
   .eyebrow-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .eyebrow { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-faint); font-weight: 600; }
-  .badge {
-    font-family: 'Noto Sans Hebrew', sans-serif; font-size: 0.72rem; font-weight: 700;
-    background: var(--accent-soft); color: var(--accent-strong); border-radius: 6px; padding: 3px 8px;
+  .badge-group { display: flex; gap: 6px; }
+  .badge, .badge-mode {
+    font-size: 0.72rem; font-weight: 700; border-radius: 6px; padding: 3px 8px;
+    background: var(--accent-soft); color: var(--accent-strong);
   }
+  .badge { font-family: 'Noto Sans Hebrew', sans-serif; }
+  .badge-mode { font-family: 'IBM Plex Sans', sans-serif; }
 
   .prompt { font-family: 'Source Serif 4', Georgia, serif; font-size: 1.5rem; line-height: 1.4; text-wrap: balance; color: var(--text); }
+  .prompt.hebrew-prompt { font-family: 'Noto Sans Hebrew', sans-serif; direction: rtl; text-align: right; font-size: 1.4rem; }
+
+  .listen-box { display: none; flex-direction: column; align-items: center; gap: 10px; padding: 14px 0; }
+  .listen-box.show { display: flex; }
+  .btn-play-big {
+    width: 68px; height: 68px; border-radius: 50%; border: none; background: var(--accent); color: var(--surface);
+    font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: filter 0.12s ease, transform 0.05s ease;
+  }
+  .btn-play-big:hover { filter: brightness(1.06); }
+  .btn-play-big:active { transform: scale(0.96); }
+  .listen-hint { font-size: 0.78rem; color: var(--text-faint); }
 
   .hint-line {
     display: none; direction: rtl; text-align: right; font-family: 'Noto Sans Hebrew', sans-serif;
     font-size: 1.05rem; color: var(--text-muted); background: var(--surface-2); border-radius: 6px; padding: 8px 10px;
   }
   .hint-line.show { display: block; }
+  .hint-line.ltr { direction: ltr; text-align: left; font-family: 'IBM Plex Sans', 'Segoe UI', sans-serif; font-size: 0.95rem; }
   .hint-line .blank { color: var(--text-faint); }
 
   .answer-row { display: flex; flex-direction: column; gap: 6px; }
@@ -150,9 +174,13 @@
   .diff-line .diff-label-row { display: flex; align-items: center; justify-content: space-between; }
   .diff-line .diff-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-faint); font-weight: 600; }
   .diff-text { font-family: 'Noto Sans Hebrew', 'Arial Hebrew', 'David', sans-serif; direction: rtl; text-align: right; font-size: 1.15rem; line-height: 1.6; }
+  .diff-text.ltr { direction: ltr; text-align: left; font-family: 'IBM Plex Sans', 'Segoe UI', sans-serif; font-size: 1.05rem; }
   .tok { padding: 0 1px; border-radius: 3px; }
-  .tok.del { color: var(--bad); text-decoration: line-through; text-decoration-thickness: 1.5px; background: rgba(178,58,46,0.12); }
-  .tok.ins { color: var(--good); font-weight: 600; background: rgba(46,125,70,0.14); }
+  .tok.del { color: var(--bad); text-decoration: line-through; text-decoration-thickness: 1.5px; background: var(--del-bg); }
+  .tok.ins { color: var(--good); font-weight: 600; background: var(--ins-bg); }
+  .tok.fuzzy { color: var(--text); border-bottom: 1px dotted var(--accent-strong); background: var(--fuzzy-bg); }
+  .tok.miss { color: var(--amber); background: var(--miss-bg); font-weight: 600; }
+  .listen-meaning { font-family: 'IBM Plex Sans', 'Segoe UI', sans-serif; direction: ltr; text-align: left; font-size: 0.85rem; color: var(--text-muted); margin-top: 6px; }
 
   button.icon-btn {
     background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--text-muted);
@@ -189,6 +217,7 @@
   <div class="toolbar">
     <div class="filters">
       <select id="filter-level" aria-label="Уровень"></select>
+      <select id="filter-mode" aria-label="Тип упражнения"></select>
     </div>
     <button class="link-btn" id="btn-toggle-stats">Статистика и метод ▾</button>
   </div>
@@ -205,26 +234,36 @@
     </div>
     <h2>Как это работает</h2>
     <ul class="method-list">
-      <li>Активное вспоминание — вы печатаете перевод сами, а не выбираете из вариантов.</li>
-      <li>Интервальные повторения (алгоритм SM‑2, как в Anki) — лёгкие фразы повторяются реже, сложные — чаще.</li>
-      <li>Очередь ошибок — фразы, где вы ошиблись, возвращаются в течение той же сессии, а не через день.</li>
+      <li>Активное вспоминание — вы печатаете ответ сами, а не выбираете из вариантов.</li>
+      <li>Три типа заданий вперемешку: перевод RU→HE, перевод HE→RU и аудирование на слух — у каждого своё расписание повторений для каждой фразы.</li>
+      <li>Интервальные повторения (алгоритм SM‑2, как в Anki) — лёгкие карточки повторяются реже, сложные — чаще.</li>
+      <li>Очередь ошибок — то, где вы ошиблись, возвращается в течение той же сессии, а не через день.</li>
       <li>Лимит новых карточек в день — чтобы не перегружать память сразу всей базой.</li>
+      <li>Гибкая проверка иврита: разные написания слова (יי/י, וו/ו), финальные буквы (ך/כ и т.п.), опечатка в одну букву и небольшой список синонимов не считаются ошибкой — такие места подчёркнуты пунктиром.</li>
+      <li>Перевод HE→RU проверяется по смыслу (по ключевым словам), а не дословно — другой порядок слов и перефразирование не считаются ошибкой.</li>
       <li>Постепенные подсказки вместо мгновенного ответа — сначала попытка, потом помощь.</li>
-      <li>Озвучивание правильного ответа — на слух, для произношения.</li>
+      <li>Озвучивание фразы на иврите — на слух, для произношения и для заданий на аудирование.</li>
     </ul>
   </div>
 
   <div class="card">
     <div class="eyebrow-row">
       <div class="eyebrow" id="card-eyebrow">—</div>
-      <div class="badge" id="card-badge">—</div>
+      <div class="badge-group">
+        <div class="badge-mode" id="mode-badge">—</div>
+        <div class="badge" id="card-badge">—</div>
+      </div>
     </div>
     <div class="prompt" id="card-prompt">Загрузка…</div>
+    <div class="listen-box" id="listen-box">
+      <button class="btn-play-big" id="btn-play" type="button" aria-label="Прослушать">▶</button>
+      <div class="listen-hint">Нажмите, чтобы прослушать фразу на иврите. Можно переслушивать сколько угодно.</div>
+    </div>
 
     <div class="hint-line" id="hint-line"></div>
 
     <div class="answer-row">
-      <label for="answer">Ваш перевод на иврит</label>
+      <label for="answer" id="answer-label">Ваш перевод на иврит</label>
       <input id="answer" type="text" dir="rtl" lang="he" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="הקלידו כאן..." />
     </div>
 
@@ -238,12 +277,12 @@
     <div class="feedback" id="feedback">
       <div class="verdict" id="verdict"></div>
       <div class="diff-line" id="diff-user-wrap">
-        <div class="diff-label">Вы написали</div>
+        <div class="diff-label" id="diff-user-label">Вы написали</div>
         <div class="diff-text" id="diff-user"></div>
       </div>
       <div class="diff-line">
         <div class="diff-label-row">
-          <div class="diff-label">Правильный ответ</div>
+          <div class="diff-label" id="diff-ref-label">Правильный ответ</div>
           <button class="icon-btn" id="btn-audio" type="button">🔊 Прослушать</button>
         </div>
         <div class="diff-text" id="diff-ref"></div>
@@ -269,7 +308,15 @@ const LEVELS = [
   { sym: "ג", label: "продвинутый" },
 ];
 
-const STORE_KEY = "ivrit_trainer_progress_v2";
+const ttsSupported = "speechSynthesis" in window;
+const MODES = {
+  ru2he: { label: "RU → HE" },
+  he2ru: { label: "HE → RU" },
+  listen: { label: "Аудирование" },
+};
+const ALL_MODES = ttsSupported ? ["ru2he", "he2ru", "listen"] : ["ru2he", "he2ru"];
+
+const STORE_KEY = "ivrit_trainer_progress_v3";
 let progress = null;
 function todayStr() { return new Date().toISOString().slice(0, 10); }
 function defaultProgress() {
@@ -308,11 +355,10 @@ function schedule(state, q) {
 }
 function isMastered(st) { return !!st && st.reps >= 2 && st.interval >= 21; }
 
-// ---- level filter ----
+// ---- filters ----
 const levelSelect = document.getElementById("filter-level");
 const optAllLvl = document.createElement("option");
-optAllLvl.value = "all";
-optAllLvl.textContent = "Все уровни";
+optAllLvl.value = "all"; optAllLvl.textContent = "Все уровни";
 levelSelect.appendChild(optAllLvl);
 LEVELS.forEach((lv, code) => {
   const opt = document.createElement("option");
@@ -320,6 +366,11 @@ LEVELS.forEach((lv, code) => {
   opt.textContent = `${lv.sym} — ${lv.label}`;
   levelSelect.appendChild(opt);
 });
+
+const modeSelect = document.getElementById("filter-mode");
+const modeOptions = [["mixed", "Все типы вперемешку"], ["ru2he", "Перевод RU → HE"], ["he2ru", "Перевод HE → RU"]];
+if (ttsSupported) modeOptions.push(["listen", "Аудирование (на слух)"]);
+modeOptions.forEach(([v, l]) => { const o = document.createElement("option"); o.value = v; o.textContent = l; modeSelect.appendChild(o); });
 
 function poolForLevel() {
   const v = levelSelect.value;
@@ -329,89 +380,143 @@ function poolForLevel() {
   for (let i = 0; i < DATA.length; i++) if (DATA[i].l === code) out.push(i);
   return out;
 }
-
-// ---- selection ----
-let lastIndex = -1;
-let currentIndex = -1;
-let checked = false;
-let hintsUsed = 0;
-
-function sample(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
-
-function pickNext() {
-  ensureTodayMeta();
-  const lvlPool = poolForLevel();
-  const pool = lvlPool.length ? lvlPool : DATA.map((_, i) => i);
-  const now = Date.now();
-  const due = [], fresh = [];
-  for (const i of pool) {
-    const st = progress.items[i];
-    if (st && st.due <= now) due.push(i);
-    else if (!st) fresh.push(i);
-  }
-  let dueF = due.filter(i => i !== lastIndex); if (!dueF.length) dueF = due;
-  let freshF = fresh.filter(i => i !== lastIndex); if (!freshF.length) freshF = fresh;
-
-  const capLeft = progress.meta.dailyNewCap - progress.meta.newToday.count;
-  const canNew = capLeft > 0 && freshF.length > 0;
-
-  document.getElementById("queue-note").textContent =
-    (!canNew && freshF.length > 0) ? "Дневная норма новых карточек пройдена — повторяем изученное." : "";
-
-  if (dueF.length) {
-    dueF.sort((a, b) => {
-      const sa = progress.items[a], sb = progress.items[b];
-      const la = sa ? sa.lapses : 0, lb = sb ? sb.lapses : 0;
-      if (lb !== la) return lb - la;
-      return (sa ? sa.due : 0) - (sb ? sb.due : 0);
-    });
-    const top = dueF.slice(0, Math.max(3, Math.ceil(dueF.length * 0.3)));
-    if (canNew && Math.random() < 0.25) return sample(freshF);
-    return sample(top);
-  }
-  if (canNew) return sample(freshF);
-  const learned = pool.filter(i => progress.items[i]);
-  if (learned.length) { const f = learned.filter(i => i !== lastIndex); return sample(f.length ? f : learned); }
-  if (freshF.length) return sample(freshF);
-  const f2 = pool.filter(i => i !== lastIndex);
-  return sample(f2.length ? f2 : pool);
+function enabledModes() {
+  const sel = modeSelect.value;
+  return ALL_MODES.includes(sel) ? [sel] : ALL_MODES;
 }
 
-// ---- normalization & diff ----
-const NIQQUD = /[֑-ׇֽֿׁׂׅׄ]/g;
-function normToken(tok) { return tok.replace(NIQQUD, "").replace(/[^א-ת0-9\-]/g, "").trim(); }
+// ---- normalization ----
+const NIQQUD = /[֑-ׇֽֿׁׂׅׄ]/g;
 function tokenize(s) { return s.trim().split(/\s+/).filter(Boolean); }
+function escapeHtml(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+function levenshteinLE(a, b, maxD) {
+  const la = a.length, lb = b.length;
+  if (Math.abs(la - lb) > maxD) return false;
+  const dp = [];
+  for (let i = 0; i <= la; i++) { dp.push(new Array(lb + 1).fill(0)); dp[i][0] = i; }
+  for (let j = 0; j <= lb; j++) dp[0][j] = j;
+  for (let i = 1; i <= la; i++)
+    for (let j = 1; j <= lb; j++)
+      dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1] : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+  return dp[la][lb] <= maxD;
+}
 
-function diffTokens(userToks, refToks) {
-  const a = userToks.map(normToken), b = refToks.map(normToken);
-  const n = a.length, m = b.length;
+// ---- Hebrew fuzzy matching ----
+const SOFIT_MAP = { "ך": "כ", "ם": "מ", "ן": "נ", "ף": "פ", "ץ": "צ" };
+function heBaseNorm(tok) {
+  let s = tok.replace(NIQQUD, "").replace(/[^א-ת0-9\-]/g, "");
+  s = s.replace(/[ךםןףץ]/g, c => SOFIT_MAP[c]);
+  return s;
+}
+function heLooseNorm(tok) { return heBaseNorm(tok).replace(/יי/g, "י").replace(/וו/g, "ו"); }
+// Небольшой, намеренно консервативный список синонимов — расширяйте по своему усмотрению.
+const HE_SYNONYMS = [
+  ["כאן", "פה"],
+  ["אבל", "אך"],
+  ["מיד", "תיכף"],
+  ["קצת", "מעט"],
+];
+const HE_SYN_MAP = {};
+HE_SYNONYMS.forEach(group => {
+  const normGroup = group.map(heBaseNorm);
+  normGroup.forEach(w => { HE_SYN_MAP[w] = normGroup; });
+});
+function heSynonymMatch(a, b) { const g = HE_SYN_MAP[a]; return !!g && g.includes(b); }
+// 0 = не совпадает, 1 = совпадает приблизительно, 2 = совпадает точно
+function heMatchDegree(a, b) {
+  const na = heBaseNorm(a), nb = heBaseNorm(b);
+  if (!na || !nb) return 0;
+  if (na === nb) return 2;
+  const la = heLooseNorm(a), lb = heLooseNorm(b);
+  if (la === lb) return 1;
+  if (heSynonymMatch(na, nb) || heSynonymMatch(nb, na)) return 1;
+  if (Math.min(na.length, nb.length) >= 3 && levenshteinLE(na, nb, 1)) return 1;
+  return 0;
+}
+
+function diffTokensGeneric(userToks, refToks, matchFn) {
+  const n = userToks.length, m = refToks.length;
+  const deg = Array.from({ length: n }, () => new Array(m));
+  for (let i = 0; i < n; i++) for (let j = 0; j < m; j++) deg[i][j] = matchFn(userToks[i], refToks[j]) > 0;
   const dp = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
   for (let i = n - 1; i >= 0; i--)
     for (let j = m - 1; j >= 0; j--)
-      dp[i][j] = a[i] === b[j] ? dp[i+1][j+1] + 1 : Math.max(dp[i+1][j], dp[i][j+1]);
+      dp[i][j] = deg[i][j] ? dp[i+1][j+1] + 1 : Math.max(dp[i+1][j], dp[i][j+1]);
   const userOps = [], refOps = [];
   let i = 0, j = 0;
   while (i < n && j < m) {
-    if (a[i] === b[j]) { userOps.push({ t: "eq", w: userToks[i] }); refOps.push({ t: "eq", w: refToks[j] }); i++; j++; }
-    else if (dp[i+1][j] >= dp[i][j+1]) { userOps.push({ t: "del", w: userToks[i] }); i++; }
+    if (deg[i][j]) {
+      const d = matchFn(userToks[i], refToks[j]);
+      const t = d === 2 ? "eq" : "eqf";
+      userOps.push({ t, w: userToks[i] }); refOps.push({ t, w: refToks[j] });
+      i++; j++;
+    } else if (dp[i+1][j] >= dp[i][j+1]) { userOps.push({ t: "del", w: userToks[i] }); i++; }
     else { refOps.push({ t: "ins", w: refToks[j] }); j++; }
   }
   while (i < n) { userOps.push({ t: "del", w: userToks[i] }); i++; }
   while (j < m) { refOps.push({ t: "ins", w: refToks[j] }); j++; }
   return { userOps, refOps };
 }
-function escapeHtml(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 function renderOps(ops) {
   return ops.map(o => {
     const w = escapeHtml(o.w);
     if (o.t === "eq") return `<span class="tok">${w}</span>`;
+    if (o.t === "eqf") return `<span class="tok fuzzy" title="Принято: похожая форма">${w}</span>`;
     if (o.t === "del") return `<span class="tok del">${w}</span>`;
     return `<span class="tok ins">${w}</span>`;
   }).join(" ");
 }
 
+// ---- Russian meaning-coverage matching (for HE→RU) ----
+const RU_STOP = new Set(["и","в","на","я","ты","он","она","оно","мы","вы","они","это","что","как","у","с","не","а","но","же","ли","бы","за","к","от","до","для","по","из","о","об","при","то","так","уже","только","если","когда","чтобы","мне","тебе","ему","ей","нам","вам","им","его","её","их","был","была","было","были","есть","быть","этот","эта","эти","тот","та","те"]);
+function ruNormWord(w) { return w.toLowerCase().replace(/[^а-яё\-]/g, ""); }
+function ruContentWords(text) { return tokenize(text).map(ruNormWord).filter(w => w.length > 1 && !RU_STOP.has(w)); }
+function ruWordsMatch(a, b) {
+  if (a === b) return true;
+  const minLen = Math.min(a.length, b.length);
+  if (minLen >= 4 && a.slice(0, 4) === b.slice(0, 4)) return true;
+  if (minLen >= 3 && levenshteinLE(a, b, 1)) return true;
+  return false;
+}
+function russianCheck(userText, refText) {
+  const userWords = ruContentWords(userText);
+  const refWords = ruContentWords(refText);
+  const matchedRefIdx = new Set(), matchedUserIdx = new Set();
+  refWords.forEach((rw, ri) => {
+    for (let ui = 0; ui < userWords.length; ui++) {
+      if (matchedUserIdx.has(ui)) continue;
+      if (ruWordsMatch(rw, userWords[ui])) { matchedRefIdx.add(ri); matchedUserIdx.add(ui); break; }
+    }
+  });
+  const missing = refWords.filter((_, ri) => !matchedRefIdx.has(ri));
+  const coverage = refWords.length ? matchedRefIdx.size / refWords.length : 1;
+  const isCorrect = userWords.length > 0 && (missing.length === 0 || (refWords.length >= 4 && coverage >= 0.75));
+  return { isCorrect, missing, matchedCount: matchedRefIdx.size, total: refWords.length, matchedUserIdx };
+}
+function renderUserRuHighlighted(userText, result) {
+  const rawTokens = tokenize(userText);
+  let ci = 0;
+  return rawTokens.map(tok => {
+    const norm = ruNormWord(tok);
+    const isContent = norm.length > 1 && !RU_STOP.has(norm);
+    let cls = "tok";
+    if (isContent) { if (result.matchedUserIdx.has(ci)) cls = "tok ins"; ci++; }
+    return `<span class="${cls}">${escapeHtml(tok)}</span>`;
+  }).join(" ");
+}
+function renderRefRuHighlighted(refText, missingList) {
+  const missingLeft = missingList.slice();
+  const rawTokens = tokenize(refText);
+  return rawTokens.map(tok => {
+    const norm = ruNormWord(tok);
+    let cls = "tok";
+    const idx = missingLeft.indexOf(norm);
+    if (idx !== -1) { cls = "tok miss"; missingLeft.splice(idx, 1); }
+    return `<span class="${cls}">${escapeHtml(tok)}</span>`;
+  }).join(" ");
+}
+
 // ---- audio ----
-const ttsSupported = "speechSynthesis" in window;
 function speak(text) {
   if (!ttsSupported) return;
   try {
@@ -422,14 +527,66 @@ function speak(text) {
   } catch (e) {}
 }
 
+// ---- selection ----
+let lastKey = null, currentIndex = -1, currentMode = "ru2he", checked = false, hintsUsed = 0;
+function sample(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function currentKey() { return currentIndex + ":" + currentMode; }
+
+function pickNext() {
+  ensureTodayMeta();
+  const lvlPool = poolForLevel();
+  const pool = lvlPool.length ? lvlPool : DATA.map((_, i) => i);
+  const modes = enabledModes();
+  const now = Date.now();
+  const due = [], fresh = [];
+  for (const i of pool) {
+    for (const m of modes) {
+      const key = i + ":" + m;
+      const st = progress.items[key];
+      if (st && st.due <= now) due.push(key);
+      else if (!st) fresh.push(key);
+    }
+  }
+  let dueF = due.filter(k => k !== lastKey); if (!dueF.length) dueF = due;
+  let freshF = fresh.filter(k => k !== lastKey); if (!freshF.length) freshF = fresh;
+
+  const capLeft = progress.meta.dailyNewCap - progress.meta.newToday.count;
+  const canNew = capLeft > 0 && freshF.length > 0;
+  document.getElementById("queue-note").textContent =
+    (!canNew && freshF.length > 0) ? "Дневная норма новых карточек пройдена — повторяем изученное." : "";
+
+  let pickedKey;
+  if (dueF.length) {
+    dueF.sort((a, b) => {
+      const sa = progress.items[a], sb = progress.items[b];
+      const la = sa ? sa.lapses : 0, lb = sb ? sb.lapses : 0;
+      if (lb !== la) return lb - la;
+      return (sa ? sa.due : 0) - (sb ? sb.due : 0);
+    });
+    const top = dueF.slice(0, Math.max(3, Math.ceil(dueF.length * 0.3)));
+    pickedKey = (canNew && Math.random() < 0.25) ? sample(freshF) : sample(top);
+  } else if (canNew) {
+    pickedKey = sample(freshF);
+  } else {
+    const allKeys = [];
+    for (const i of pool) for (const m of modes) allKeys.push(i + ":" + m);
+    const learned = allKeys.filter(k => progress.items[k]);
+    if (learned.length) { const f = learned.filter(k => k !== lastKey); pickedKey = sample(f.length ? f : learned); }
+    else if (freshF.length) pickedKey = sample(freshF);
+    else { const f2 = allKeys.filter(k => k !== lastKey); pickedKey = sample(f2.length ? f2 : allKeys); }
+  }
+  const sep = pickedKey.lastIndexOf(":");
+  return { index: Number(pickedKey.slice(0, sep)), mode: pickedKey.slice(sep + 1) };
+}
+
 // ---- session stats ----
 let sessionCorrect = 0, sessionTotal = 0, streak = 0;
 
 function updateStatsBar() {
   document.getElementById("stat-total").textContent = DATA.length;
-  const seenCount = Object.keys(progress.items).length;
-  document.getElementById("stat-seen").textContent = seenCount;
-  document.getElementById("progress-fill").style.width = (100 * seenCount / DATA.length).toFixed(1) + "%";
+  const touched = new Set(Object.keys(progress.items).map(k => k.slice(0, k.lastIndexOf(":"))));
+  document.getElementById("stat-seen").textContent = touched.size;
+  document.getElementById("progress-fill").style.width = (100 * touched.size / DATA.length).toFixed(1) + "%";
   document.getElementById("stat-accuracy").textContent = sessionTotal ? Math.round(100 * sessionCorrect / sessionTotal) + "%" : "—";
   document.getElementById("stat-streak").textContent = streak;
   renderLevelsTable();
@@ -437,17 +594,20 @@ function updateStatsBar() {
 
 function renderLevelsTable() {
   const now = Date.now();
+  const activeModes = ALL_MODES;
   const rows = [];
   const totals = { total: 0, learning: 0, mastered: 0, due: 0 };
   LEVELS.forEach((lv, code) => {
     let total = 0, learning = 0, mastered = 0, due = 0;
     for (let i = 0; i < DATA.length; i++) {
       if (DATA[i].l !== code) continue;
-      total++;
-      const st = progress.items[i];
-      if (!st) continue;
-      if (isMastered(st)) mastered++; else learning++;
-      if (st.due <= now) due++;
+      for (const m of activeModes) {
+        total++;
+        const st = progress.items[i + ":" + m];
+        if (!st) continue;
+        if (isMastered(st)) mastered++; else learning++;
+        if (st.due <= now) due++;
+      }
     }
     totals.total += total; totals.learning += learning; totals.mastered += mastered; totals.due += due;
     rows.push(`<tr><td>${lv.sym} <span style="color:var(--text-faint)">${lv.label}</span></td><td class="num">${total}</td><td class="num">${learning}</td><td class="num">${mastered}</td><td class="num">${due}</td></tr>`);
@@ -460,9 +620,13 @@ function renderLevelsTable() {
 const els = {
   eyebrow: document.getElementById("card-eyebrow"),
   badge: document.getElementById("card-badge"),
+  modeBadge: document.getElementById("mode-badge"),
   prompt: document.getElementById("card-prompt"),
+  listenBox: document.getElementById("listen-box"),
+  btnPlay: document.getElementById("btn-play"),
   hintLine: document.getElementById("hint-line"),
   answer: document.getElementById("answer"),
+  answerLabel: document.getElementById("answer-label"),
   btnCheck: document.getElementById("btn-check"),
   btnHint: document.getElementById("btn-hint"),
   btnReveal: document.getElementById("btn-reveal"),
@@ -470,54 +634,96 @@ const els = {
   feedback: document.getElementById("feedback"),
   verdict: document.getElementById("verdict"),
   diffUserWrap: document.getElementById("diff-user-wrap"),
+  diffUserLabel: document.getElementById("diff-user-label"),
   diffUser: document.getElementById("diff-user"),
+  diffRefLabel: document.getElementById("diff-ref-label"),
   diffRef: document.getElementById("diff-ref"),
   btnAudio: document.getElementById("btn-audio"),
 };
 if (!ttsSupported) els.btnAudio.style.display = "none";
 
+function renderPrompt(mode, d) {
+  els.prompt.classList.remove("hebrew-prompt");
+  if (mode === "listen") {
+    els.prompt.style.display = "none";
+    els.listenBox.classList.add("show");
+  } else {
+    els.listenBox.classList.remove("show");
+    els.prompt.style.display = "block";
+    if (mode === "he2ru") { els.prompt.textContent = d.h; els.prompt.classList.add("hebrew-prompt"); }
+    else { els.prompt.textContent = d.r; }
+  }
+}
+function configureAnswerInput(mode) {
+  if (mode === "he2ru") {
+    els.answer.setAttribute("dir", "ltr"); els.answer.setAttribute("lang", "ru");
+    els.answer.placeholder = "Напишите по-русски...";
+    Object.assign(els.answer.style, { direction: "ltr", textAlign: "left", fontFamily: "'IBM Plex Sans', sans-serif", fontSize: "1.05rem" });
+    els.answerLabel.textContent = "Ваш перевод на русский";
+  } else {
+    els.answer.setAttribute("dir", "rtl"); els.answer.setAttribute("lang", "he");
+    els.answer.placeholder = "הקלידו כאן...";
+    Object.assign(els.answer.style, { direction: "rtl", textAlign: "right", fontFamily: "'Noto Sans Hebrew', 'Arial Hebrew', 'David', sans-serif", fontSize: "1.3rem" });
+    els.answerLabel.textContent = mode === "listen" ? "Что вы услышали? (на иврите)" : "Ваш перевод на иврит";
+  }
+}
+
 function loadCard() {
-  currentIndex = pickNext();
-  const wasNew = !progress.items[currentIndex];
+  const picked = pickNext();
+  currentIndex = picked.index; currentMode = picked.mode;
+  const key = currentKey();
+  const wasNew = !progress.items[key];
   if (wasNew) { ensureTodayMeta(); progress.meta.newToday.count++; saveProgress(); }
-  lastIndex = currentIndex;
-  checked = false;
-  hintsUsed = 0;
+  lastKey = key; checked = false; hintsUsed = 0;
   const d = DATA[currentIndex];
   const lv = LEVELS[d.l];
   els.eyebrow.textContent = wasNew ? "Новая фраза" : "Повторение";
+  els.modeBadge.textContent = MODES[currentMode].label;
   els.badge.textContent = `${lv.sym} · ${lv.label}`;
-  els.prompt.textContent = d.r;
-  els.hintLine.classList.remove("show");
+  renderPrompt(currentMode, d);
+  configureAnswerInput(currentMode);
+  els.hintLine.classList.remove("show", "ltr");
   els.hintLine.innerHTML = "";
   els.answer.value = "";
   els.answer.disabled = false;
   els.feedback.classList.remove("show", "good", "bad");
   els.btnCheck.disabled = false;
-  els.btnHint.disabled = tokenize(d.h).length <= 1;
+  const hintRefLen = currentMode === "he2ru" ? tokenize(d.r).length : tokenize(d.h).length;
+  els.btnHint.disabled = hintRefLen <= 1;
   els.btnReveal.disabled = false;
   els.btnNext.disabled = true;
-  els.answer.focus();
+  if (currentMode !== "listen") els.answer.focus();
   updateStatsBar();
 }
 
-function showFeedback(isCorrect, userText, errorCount) {
-  const d = DATA[currentIndex];
+function showFeedback(isCorrect, fb) {
   els.feedback.classList.add("show", isCorrect ? "good" : "bad");
   els.feedback.classList.remove(isCorrect ? "bad" : "good");
   els.verdict.className = "verdict " + (isCorrect ? "good" : "bad");
-  els.verdict.textContent = isCorrect ? "✓ Верно" : "✕ Есть ошибки";
+  els.verdict.textContent = isCorrect ? "✓ Верно" : (fb.kind === "ru" ? "✕ Не хватает смысла" : "✕ Есть ошибки");
 
-  if (isCorrect) {
-    els.diffUserWrap.style.display = "none";
-    els.diffRef.innerHTML = `<span class="tok">${d.h}</span>`;
-  } else {
+  if (fb.kind === "ru") {
+    els.diffUser.classList.add("ltr"); els.diffRef.classList.add("ltr");
+    els.diffUserLabel.textContent = "Вы написали";
+    els.diffRefLabel.textContent = "Эталонный перевод";
     els.diffUserWrap.style.display = "flex";
-    const userToks = tokenize(userText);
-    const refToks = tokenize(d.h);
-    const { userOps, refOps } = diffTokens(userToks, refToks);
-    els.diffUser.innerHTML = userToks.length ? renderOps(userOps) : "<span class=\"tok\">(пусто)</span>";
-    els.diffRef.innerHTML = renderOps(refOps);
+    els.diffUser.innerHTML = fb.userText.trim() ? renderUserRuHighlighted(fb.userText, fb.result) : '<span class="tok">(пусто)</span>';
+    els.diffRef.innerHTML = renderRefRuHighlighted(fb.refText, fb.result.missing);
+  } else {
+    els.diffUser.classList.remove("ltr"); els.diffRef.classList.remove("ltr");
+    els.diffUserLabel.textContent = "Вы написали";
+    els.diffRefLabel.textContent = "Правильный ответ";
+    if (isCorrect) {
+      els.diffUserWrap.style.display = "none";
+      els.diffRef.innerHTML = `<span class="tok">${escapeHtml(DATA[currentIndex].h)}</span>`;
+    } else {
+      els.diffUserWrap.style.display = "flex";
+      els.diffUser.innerHTML = fb.userOps.length ? renderOps(fb.userOps) : '<span class="tok">(пусто)</span>';
+      els.diffRef.innerHTML = renderOps(fb.refOps);
+    }
+    if (currentMode === "listen") {
+      els.diffRef.innerHTML += `<div class="listen-meaning">${escapeHtml(DATA[currentIndex].r)}</div>`;
+    }
   }
 
   els.answer.disabled = true;
@@ -528,55 +734,71 @@ function showFeedback(isCorrect, userText, errorCount) {
   els.btnNext.focus();
 }
 
-function gradeAndSchedule(isCorrect, errorCount, refLen, gaveUp) {
-  let q;
-  if (gaveUp) q = 0;
-  else if (errorCount === 0) q = 5;
-  else if (refLen > 0 && errorCount / refLen <= 0.34) q = 3;
-  else q = 1;
-  if (hintsUsed > 0) q = Math.min(q, 4);
-  progress.items[currentIndex] = schedule(progress.items[currentIndex], q);
-  saveProgress();
-}
-
 function doCheck() {
   if (checked) return;
   checked = true;
   const userText = els.answer.value;
-  const userToks = tokenize(userText);
-  const refToks = tokenize(DATA[currentIndex].h);
-  const userNorm = userToks.map(normToken).join(" ");
-  const refNorm = refToks.map(normToken).join(" ");
-  const isCorrect = userNorm.length > 0 && userNorm === refNorm;
-  const { userOps, refOps } = diffTokens(userToks, refToks);
-  const errorCount = userOps.filter(o => o.t === "del").length + refOps.filter(o => o.t === "ins").length;
+  const d = DATA[currentIndex];
+  let isCorrect, quality, fb;
+
+  if (currentMode === "he2ru") {
+    const result = russianCheck(userText, d.r);
+    isCorrect = result.isCorrect;
+    quality = result.missing.length === 0 ? 5 : (result.total && result.matchedCount / result.total >= 0.5 ? 3 : 1);
+    fb = { kind: "ru", userText, refText: d.r, result };
+  } else {
+    const userToks = tokenize(userText);
+    const refToks = tokenize(d.h);
+    const { userOps, refOps } = diffTokensGeneric(userToks, refToks, heMatchDegree);
+    const errorCount = userOps.filter(o => o.t === "del").length + refOps.filter(o => o.t === "ins").length;
+    const hadFuzzy = userOps.some(o => o.t === "eqf");
+    isCorrect = userToks.length > 0 && errorCount === 0;
+    if (errorCount === 0) quality = hadFuzzy ? 4 : 5;
+    else if (refToks.length > 0 && errorCount / refToks.length <= 0.34) quality = 3;
+    else quality = 1;
+    fb = { kind: "he", userOps, refOps };
+  }
+  if (hintsUsed > 0) quality = Math.min(quality, 4);
 
   sessionTotal++;
   if (isCorrect) { sessionCorrect++; streak++; } else { streak = 0; }
-  gradeAndSchedule(isCorrect, errorCount, refToks.length, false);
+  const key = currentKey();
+  progress.items[key] = schedule(progress.items[key], quality);
+  saveProgress();
   updateStatsBar();
-  showFeedback(isCorrect, userText, errorCount);
+  showFeedback(isCorrect, fb);
 }
 
 function doReveal() {
   if (checked) return;
   checked = true;
-  sessionTotal++;
-  streak = 0;
-  gradeAndSchedule(false, 1, 1, true);
+  sessionTotal++; streak = 0;
+  const key = currentKey();
+  progress.items[key] = schedule(progress.items[key], 0);
+  saveProgress();
   updateStatsBar();
-  showFeedback(false, els.answer.value, 1);
+  const d = DATA[currentIndex];
+  if (currentMode === "he2ru") {
+    const refWords = ruContentWords(d.r);
+    showFeedback(false, { kind: "ru", userText: els.answer.value, refText: d.r, result: { missing: refWords, matchedUserIdx: new Set() } });
+  } else {
+    const userOps = tokenize(els.answer.value).map(w => ({ t: "del", w }));
+    const refOps = tokenize(d.h).map(w => ({ t: "ins", w }));
+    showFeedback(false, { kind: "he", userOps, refOps });
+  }
 }
 
 function doHint() {
   if (checked) return;
-  const refToks = tokenize(DATA[currentIndex].h);
+  const d = DATA[currentIndex];
+  const refToks = currentMode === "he2ru" ? tokenize(d.r) : tokenize(d.h);
   const maxHints = Math.max(0, refToks.length - 1);
   if (hintsUsed >= maxHints) return;
   hintsUsed++;
-  const revealed = refToks.slice(0, hintsUsed);
+  const revealed = refToks.slice(0, hintsUsed).map(escapeHtml);
   const hidden = refToks.slice(hintsUsed).map(() => '<span class="blank">•••</span>');
   els.hintLine.innerHTML = revealed.join(" ") + (hidden.length ? " " + hidden.join(" ") : "");
+  els.hintLine.classList.toggle("ltr", currentMode === "he2ru");
   els.hintLine.classList.add("show");
   if (hintsUsed >= maxHints) els.btnHint.disabled = true;
   els.answer.focus();
@@ -587,10 +809,12 @@ els.btnHint.addEventListener("click", doHint);
 els.btnReveal.addEventListener("click", doReveal);
 els.btnNext.addEventListener("click", loadCard);
 els.btnAudio.addEventListener("click", () => speak(DATA[currentIndex].h));
+els.btnPlay.addEventListener("click", () => speak(DATA[currentIndex].h));
 els.answer.addEventListener("keydown", (e) => {
   if (e.key === "Enter") { e.preventDefault(); if (!checked) doCheck(); else loadCard(); }
 });
 levelSelect.addEventListener("change", loadCard);
+modeSelect.addEventListener("change", loadCard);
 
 const statsPanel = document.getElementById("stats-panel");
 const toggleStatsBtn = document.getElementById("btn-toggle-stats");
@@ -637,7 +861,7 @@ resetBtn.addEventListener("click", () => {
   }
 });
 
-document.getElementById("subtitle").textContent = `${DATA.length} предложений из ваших занятий · уровни א – ג`;
+document.getElementById("subtitle").textContent = `${DATA.length} предложений · уровни א – ג · перевод в обе стороны и аудирование`;
 updateStatsBar();
 loadCard();
 </script>
