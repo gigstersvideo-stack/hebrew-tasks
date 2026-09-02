@@ -203,6 +203,25 @@
   .progress-bar > div { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.25s ease; }
 
   .queue-note { font-size: 0.72rem; color: var(--text-faint); text-align: center; }
+
+  .rating-row { display: none; gap: 8px; flex-wrap: wrap; padding-top: 2px; }
+  .rating-row.show { display: flex; }
+  button.rating-btn {
+    font-family: 'IBM Plex Sans', sans-serif; font-size: 0.78rem; font-weight: 600; border-radius: 7px;
+    padding: 7px 12px; cursor: pointer; border: 1px solid var(--border); background: var(--surface);
+    color: var(--text-muted); flex: 1 1 auto;
+  }
+  button.rating-btn:hover { background: var(--surface-2); }
+  button.rating-btn.suggested { border-color: var(--accent); color: var(--accent-strong); font-weight: 700; }
+
+  .mistakes-block { display: flex; flex-direction: column; gap: 4px; }
+  .mistake-chip {
+    font-family: 'IBM Plex Sans', sans-serif; font-size: 0.78rem; color: var(--text-muted);
+    display: flex; justify-content: space-between; gap: 8px; padding: 3px 0; border-bottom: 1px dashed var(--border);
+  }
+  .mistake-chip .word { font-family: 'Noto Sans Hebrew', sans-serif; color: var(--text); font-weight: 600; }
+  .mistake-chip .word.ru { font-family: 'IBM Plex Sans', sans-serif; }
+  .cap-advice { font-size: 0.76rem; color: var(--amber); margin-top: -4px; }
 </style>
 
 <div class="page">
@@ -214,7 +233,8 @@
     <div class="stats">
       <span>Изучено <b id="stat-seen">0</b>/<span id="stat-total">0</span></span>
       <span>Точность за сессию <b id="stat-accuracy">—</b></span>
-      <span>Серия <b id="stat-streak">0</b></span>
+      <span>Подряд <b id="stat-streak">0</b></span>
+      <span>Дней подряд <b id="stat-daystreak">0</b></span>
     </div>
   </header>
 
@@ -238,6 +258,11 @@
       <label for="cap-input">Новых карточек в день:</label>
       <input type="number" id="cap-input" min="1" max="200" step="1">
     </div>
+    <div class="cap-advice" id="cap-advice"></div>
+
+    <h2>Слова, в которых чаще всего ошибаетесь</h2>
+    <div class="mistakes-block" id="mistakes-block"></div>
+
     <h2>Как это работает</h2>
     <ul class="method-list">
       <li>Активное вспоминание — вы печатаете ответ сами, а не выбираете из вариантов.</li>
@@ -251,6 +276,9 @@
       <li>Озвучивание фразы на иврите — на слух, для произношения и для заданий на аудирование.</li>
       <li>Четвёртый тип задания — пропуск слова (cloze): в знакомом предложении скрыто одно слово, остальное дано как подсказка контекста. Это легче полного перевода и хорошо тренирует конкретные словоформы.</li>
       <li>После проверки показываются слова с похожим «скелетом корня» из других фраз — это автоматическая эвристика по общим буквам, а не точный морфологический разбор, поэтому иногда ошибается.</li>
+      <li>Перед тем как новая или недавно забытая карточка уходит в долгосрочное расписание, она обязательно повторяется ещё раз в течение ~10 минут — короткая «блокированная» практика перед разнесением по интервалам.</li>
+      <li>Освоенные карточки не покидают ротацию навсегда — интервал повторения растёт, но не больше ~180 дней.</li>
+      <li>После проверки можно уточнить оценку вручную (Снова / Трудно / Хорошо / Легко) вместо автоматической — это калибрует расписание точнее, как в Anki.</li>
     </ul>
   </div>
 
@@ -297,6 +325,12 @@
         <div class="diff-text" id="diff-ref"></div>
       </div>
       <div class="related-words" id="related-words"></div>
+      <div class="rating-row" id="rating-row">
+        <button class="rating-btn" id="rate-again" data-q="1">Снова</button>
+        <button class="rating-btn" id="rate-hard" data-q="3">Трудно</button>
+        <button class="rating-btn" id="rate-good" data-q="4">Хорошо</button>
+        <button class="rating-btn" id="rate-easy" data-q="5">Легко</button>
+      </div>
     </div>
   </div>
 
@@ -331,12 +365,20 @@ const STORE_KEY = "ivrit_trainer_progress_v3";
 let progress = null;
 function todayStr() { return new Date().toISOString().slice(0, 10); }
 function defaultProgress() {
-  return { items: {}, meta: { dailyNewCap: 20, newToday: { date: todayStr(), count: 0 } } };
+  return {
+    items: {},
+    meta: { dailyNewCap: 20, newToday: { date: todayStr(), count: 0 } },
+    mistakesHe: {}, mistakesRu: {},
+    streak: { lastDate: null, count: 0 },
+  };
 }
 try {
   progress = JSON.parse(localStorage.getItem(STORE_KEY));
   if (!progress || !progress.items || !progress.meta) progress = defaultProgress();
 } catch (e) { progress = defaultProgress(); }
+if (!progress.mistakesHe) progress.mistakesHe = {};
+if (!progress.mistakesRu) progress.mistakesRu = {};
+if (!progress.streak) progress.streak = { lastDate: null, count: 0 };
 function ensureTodayMeta() {
   if (!progress.meta.newToday || progress.meta.newToday.date !== todayStr()) {
     progress.meta.newToday = { date: todayStr(), count: 0 };
@@ -344,27 +386,64 @@ function ensureTodayMeta() {
 }
 function saveProgress() { try { localStorage.setItem(STORE_KEY, JSON.stringify(progress)); } catch (e) {} }
 
-// ---- SM-2 scheduling ----
+// ---- SM-2 scheduling (with one short "blocked practice" step before a
+// brand-new or just-failed card graduates into the long-interval schedule) ----
+const MAX_INTERVAL_DAYS = 180;
+const RELEARN_INTERVAL_DAYS = 10 / (24 * 60); // ~10 minutes, same session
 function schedule(state, q) {
-  if (!state) state = { ease: 2.5, interval: 0, reps: 0, lapses: 0, seen: 0, correct: 0, due: 0 };
+  if (!state) state = { ease: 2.5, interval: 0, reps: 0, lapses: 0, seen: 0, correct: 0, due: 0, learnStep: 0 };
+  if (state.learnStep === undefined) state.learnStep = state.reps > 0 ? 2 : 0;
   state.seen++;
   if (q >= 3) {
     state.correct++;
+    if (state.learnStep < 2) {
+      // still in the short blocked-practice phase: one more quick repeat before graduating
+      state.learnStep++;
+      if (state.learnStep < 2) {
+        state.interval = RELEARN_INTERVAL_DAYS;
+        state.due = Date.now() + 10 * 60 * 1000;
+        state.ease = Math.max(1.3, state.ease + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02)));
+        return state;
+      }
+    }
     if (state.reps === 0) state.interval = 1;
     else if (state.reps === 1) state.interval = 6;
-    else state.interval = Math.max(1, Math.round(state.interval * state.ease));
+    else state.interval = Math.min(MAX_INTERVAL_DAYS, Math.max(1, Math.round(state.interval * state.ease)));
     state.reps++;
     state.due = Date.now() + state.interval * 24 * 60 * 60 * 1000;
   } else {
     state.lapses++;
     state.reps = 0;
-    state.interval = 1;
+    state.learnStep = 0;
+    state.interval = RELEARN_INTERVAL_DAYS;
     state.due = Date.now() + 10 * 60 * 1000; // relearn in ~10 minutes, same session
   }
   state.ease = Math.max(1.3, state.ease + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02)));
   return state;
 }
 function isMastered(st) { return !!st && st.reps >= 2 && st.interval >= 21; }
+
+function updateDailyStreak() {
+  const today = todayStr();
+  if (progress.streak.lastDate === today) return;
+  const last = progress.streak.lastDate;
+  if (last) {
+    const diffDays = Math.round((new Date(today) - new Date(last)) / 86400000);
+    progress.streak.count = diffDays === 1 ? progress.streak.count + 1 : 1;
+  } else {
+    progress.streak.count = 1;
+  }
+  progress.streak.lastDate = today;
+}
+
+// ---- mistake journal: which words trip you up most, tracked across sessions ----
+function tallyMistake(map, word) {
+  if (!word) return;
+  map[word] = (map[word] || 0) + 1;
+}
+function topMistakes(map, limit) {
+  return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, limit);
+}
 
 // ---- filters ----
 const levelSelect = document.getElementById("filter-level");
@@ -566,7 +645,7 @@ function speak(text) {
 }
 
 // ---- selection ----
-let lastKey = null, currentIndex = -1, currentMode = "ru2he", checked = false, hintsUsed = 0;
+let lastKey = null, currentIndex = -1, currentMode = "ru2he", checked = false, hintsUsed = 0, pendingQuality = 0;
 function sample(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 function currentKey() { return currentIndex + ":" + currentMode; }
 
@@ -627,7 +706,46 @@ function updateStatsBar() {
   document.getElementById("progress-fill").style.width = (100 * touched.size / DATA.length).toFixed(1) + "%";
   document.getElementById("stat-accuracy").textContent = sessionTotal ? Math.round(100 * sessionCorrect / sessionTotal) + "%" : "—";
   document.getElementById("stat-streak").textContent = streak;
+  document.getElementById("stat-daystreak").textContent = progress.streak.count;
   renderLevelsTable();
+  renderMistakes();
+  renderCapAdvice();
+}
+
+function renderMistakes() {
+  const he = topMistakes(progress.mistakesHe, 6);
+  const ru = topMistakes(progress.mistakesRu, 6);
+  const block = document.getElementById("mistakes-block");
+  if (!he.length && !ru.length) {
+    block.innerHTML = '<div class="mistake-chip"><span>Пока данных нет — они появятся после нескольких ошибок.</span></div>';
+    return;
+  }
+  const rows = [];
+  he.forEach(([w, c]) => rows.push(`<div class="mistake-chip"><span class="word">${escapeHtml(w)}</span><span>${c}×</span></div>`));
+  ru.forEach(([w, c]) => rows.push(`<div class="mistake-chip"><span class="word ru">${escapeHtml(w)}</span><span>${c}×</span></div>`));
+  block.innerHTML = rows.join("");
+}
+
+function renderCapAdvice() {
+  const el = document.getElementById("cap-advice");
+  const pool = DATA.length * ALL_MODES.length;
+  const now = Date.now();
+  let due = 0, learning = 0;
+  for (let i = 0; i < DATA.length; i++) {
+    for (const m of ALL_MODES) {
+      const st = progress.items[i + ":" + m];
+      if (!st) continue;
+      learning++;
+      if (st.due <= now) due++;
+    }
+  }
+  if (due > 250) {
+    el.textContent = "Много карточек «к повторению» — возможно, стоит временно снизить дневной лимит новых карточек.";
+  } else if (due < 15 && learning < pool * 0.05) {
+    el.textContent = "Очередь почти пуста — можно повысить дневной лимит новых карточек.";
+  } else {
+    el.textContent = "";
+  }
 }
 
 function renderLevelsTable() {
@@ -679,6 +797,7 @@ const els = {
   btnAudio: document.getElementById("btn-audio"),
   clozeCaption: document.getElementById("cloze-caption"),
   relatedWords: document.getElementById("related-words"),
+  ratingRow: document.getElementById("rating-row"),
 };
 if (!ttsSupported) els.btnAudio.style.display = "none";
 
@@ -739,6 +858,8 @@ function loadCard() {
   els.hintLine.innerHTML = "";
   els.relatedWords.classList.remove("show");
   els.relatedWords.innerHTML = "";
+  els.ratingRow.classList.remove("show");
+  document.querySelectorAll(".rating-btn").forEach(b => b.classList.remove("suggested"));
   els.answer.value = "";
   els.answer.disabled = false;
   els.feedback.classList.remove("show", "good", "bad");
@@ -805,6 +926,12 @@ function showFeedback(isCorrect, fb) {
     }
   }
 
+  els.ratingRow.classList.add("show");
+  const suggestedQ = pendingQuality === 0 ? 1 : pendingQuality;
+  document.querySelectorAll(".rating-btn").forEach(b => {
+    b.classList.toggle("suggested", Number(b.dataset.q) === suggestedQ);
+  });
+
   els.answer.disabled = true;
   els.btnCheck.disabled = true;
   els.btnHint.disabled = true;
@@ -825,12 +952,14 @@ function doCheck() {
     isCorrect = result.isCorrect;
     quality = result.missing.length === 0 ? 5 : (result.total && result.matchedCount / result.total >= 0.5 ? 3 : 1);
     fb = { kind: "ru", userText, refText: d.r, result };
+    if (!isCorrect) result.missing.forEach(w => tallyMistake(progress.mistakesRu, w));
   } else if (currentMode === "cloze") {
     const userWord = tokenize(userText)[0] || "";
     const degree = userWord ? heMatchDegree(userWord, d.c) : 0;
     isCorrect = degree > 0;
     quality = degree === 2 ? 5 : degree === 1 ? 4 : 1;
     fb = { kind: "cloze", userWord, degree };
+    if (!isCorrect) tallyMistake(progress.mistakesHe, heBaseNorm(d.c));
   } else {
     const userToks = tokenize(userText);
     const refToks = tokenize(d.h);
@@ -842,13 +971,13 @@ function doCheck() {
     else if (refToks.length > 0 && errorCount / refToks.length <= 0.34) quality = 3;
     else quality = 1;
     fb = { kind: "he", userOps, refOps };
+    if (!isCorrect) refOps.filter(o => o.t === "ins").forEach(o => tallyMistake(progress.mistakesHe, heBaseNorm(o.w)));
   }
   if (hintsUsed > 0) quality = Math.min(quality, 4);
+  pendingQuality = quality;
 
   sessionTotal++;
   if (isCorrect) { sessionCorrect++; streak++; } else { streak = 0; }
-  const key = currentKey();
-  progress.items[key] = schedule(progress.items[key], quality);
   saveProgress();
   updateStatsBar();
   showFeedback(isCorrect, fb);
@@ -858,22 +987,23 @@ function doReveal() {
   if (checked) return;
   checked = true;
   sessionTotal++; streak = 0;
-  const key = currentKey();
-  progress.items[key] = schedule(progress.items[key], 0);
-  saveProgress();
-  updateStatsBar();
+  pendingQuality = 0;
   const d = DATA[currentIndex];
   if (currentMode === "he2ru") {
     const refWords = ruContentWords(d.r);
     showFeedback(false, { kind: "ru", userText: els.answer.value, refText: d.r, result: { missing: refWords, matchedUserIdx: new Set() } });
   } else if (currentMode === "cloze") {
+    tallyMistake(progress.mistakesHe, heBaseNorm(d.c));
     const userWord = tokenize(els.answer.value)[0] || "";
     showFeedback(false, { kind: "cloze", userWord, degree: 0 });
   } else {
+    tallyMistake(progress.mistakesHe, heBaseNorm(d.c));
     const userOps = tokenize(els.answer.value).map(w => ({ t: "del", w }));
     const refOps = tokenize(d.h).map(w => ({ t: "ins", w }));
     showFeedback(false, { kind: "he", userOps, refOps });
   }
+  saveProgress();
+  updateStatsBar();
 }
 
 function doHint() {
@@ -906,14 +1036,26 @@ function doHint() {
   els.answer.focus();
 }
 
+function commitAndAdvance(quality) {
+  const key = currentKey();
+  progress.items[key] = schedule(progress.items[key], quality);
+  updateDailyStreak();
+  saveProgress();
+  updateStatsBar();
+  loadCard();
+}
+
 els.btnCheck.addEventListener("click", doCheck);
 els.btnHint.addEventListener("click", doHint);
 els.btnReveal.addEventListener("click", doReveal);
-els.btnNext.addEventListener("click", loadCard);
+els.btnNext.addEventListener("click", () => commitAndAdvance(pendingQuality));
 els.btnAudio.addEventListener("click", () => speak(DATA[currentIndex].h));
 els.btnPlay.addEventListener("click", () => speak(DATA[currentIndex].h));
+document.querySelectorAll(".rating-btn").forEach(btn => {
+  btn.addEventListener("click", () => commitAndAdvance(Number(btn.dataset.q)));
+});
 els.answer.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") { e.preventDefault(); if (!checked) doCheck(); else loadCard(); }
+  if (e.key === "Enter") { e.preventDefault(); if (!checked) doCheck(); else commitAndAdvance(pendingQuality); }
 });
 levelSelect.addEventListener("change", loadCard);
 modeSelect.addEventListener("change", loadCard);
