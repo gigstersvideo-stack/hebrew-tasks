@@ -6,6 +6,7 @@ unique_all_sentences.json
 sentences.json
 sentences_compact.json
 sentences_final.json
+chunks.json
 anki_import.txt
 morasha_*.txt
 hebrew_trainer.html
