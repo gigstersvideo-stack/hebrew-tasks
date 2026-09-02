@@ -76,6 +76,9 @@
   header.top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
   header.top h1 { font-size: 1.25rem; font-weight: 700; margin: 0; letter-spacing: -0.01em; }
   header.top .subtitle { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
+  .cross-link { font-size: 0.78rem; margin-top: 4px; }
+  .cross-link a { color: var(--text-muted); text-decoration: none; border-bottom: 1px dotted var(--text-faint); }
+  .cross-link a:hover { color: var(--accent-strong); border-bottom-color: var(--accent-strong); }
 
   .stats { display: flex; gap: 8px 14px; flex-wrap: wrap; font-size: 0.78rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
   .stats b { color: var(--text); font-weight: 600; }
@@ -238,6 +241,7 @@
     <div>
       <h1>Ивритский тренажёр</h1>
       <div class="subtitle" id="subtitle">Загрузка…</div>
+      <div class="cross-link"><a href="https://gigstersvideo-stack.github.io/hebrew-reader/reader-prototype.html">קורא — читаем целые истории с разбором слов →</a></div>
     </div>
     <div class="stats">
       <span>Изучено <b id="stat-seen">0</b>/<span id="stat-total">0</span></span>
