@@ -1412,7 +1412,7 @@ loadCard();
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
 import {
-  getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult,
+  getAuth, GoogleAuthProvider, signInWithPopup,
   onAuthStateChanged, signOut,
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 import {
@@ -1520,10 +1520,13 @@ async function pullAndMerge(uid) {
 
 const authStatusEl = document.getElementById("auth-status");
 document.getElementById("btn-signin").addEventListener("click", () => {
-  signInWithRedirect(fbAuth, new GoogleAuthProvider()).catch((e) => {
-    console.error("[ivrit] signInWithRedirect error:", e);
-    authStatusEl.textContent = "Ошибка входа: " + (e && e.code ? e.code : e);
-  });
+  authStatusEl.textContent = "";
+  signInWithPopup(fbAuth, new GoogleAuthProvider())
+    .then((result) => { console.log("[ivrit] signInWithPopup ok, uid:", result.user.uid); })
+    .catch((e) => {
+      console.error("[ivrit] signInWithPopup error:", e);
+      authStatusEl.textContent = "Ошибка входа: " + (e && e.code ? e.code : e);
+    });
 });
 document.getElementById("btn-signout").addEventListener("click", () => { signOut(fbAuth); });
 
@@ -1553,12 +1556,6 @@ onAuthStateChanged(fbAuth, async (user) => {
     authStatusEl.textContent = "";
   }
 });
-getRedirectResult(fbAuth)
-  .then((result) => { console.log("[ivrit] getRedirectResult:", result && result.user && result.user.uid); })
-  .catch((e) => {
-    console.error("[ivrit] getRedirectResult error:", e);
-    authStatusEl.textContent = "Ошибка входа: " + (e && e.code ? e.code : e);
-  });
 </script>
 
 </body>
