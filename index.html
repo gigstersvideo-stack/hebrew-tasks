@@ -231,6 +231,15 @@
   .mistake-chip .word { font-family: 'Noto Sans Hebrew', sans-serif; color: var(--text); font-weight: 600; }
   .mistake-chip .word.ru { font-family: 'IBM Plex Sans', sans-serif; }
   .cap-advice { font-size: 0.76rem; color: var(--amber); margin-top: -4px; }
+
+  .auth-box { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  .auth-user { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--text-muted); }
+  .auth-avatar { width: 22px; height: 22px; border-radius: 50%; }
+  .auth-status { font-size: 0.7rem; color: var(--text-faint); }
+
+  .pool-levels { display: flex; flex-wrap: wrap; gap: 10px 16px; font-size: 0.82rem; }
+  .pool-levels label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+  .pool-note { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
 </style>
 </head>
 <body>
@@ -249,6 +258,15 @@
       <span>Подряд <b id="stat-streak">0</b></span>
       <span>Дней подряд <b id="stat-daystreak">0</b></span>
     </div>
+    <div class="auth-box" id="auth-box">
+      <button class="link-btn" id="btn-signin">Войти через Google — синхронизировать прогресс</button>
+      <div class="auth-user" id="auth-user" style="display:none;">
+        <img class="auth-avatar" id="auth-avatar" alt="">
+        <span id="auth-name"></span>
+        <button class="link-btn" id="btn-signout">Выйти</button>
+      </div>
+      <div class="auth-status" id="auth-status"></div>
+    </div>
   </header>
 
   <div class="progress-bar"><div id="progress-fill" style="width:0%"></div></div>
@@ -262,6 +280,12 @@
   </div>
 
   <div class="panel" id="stats-panel">
+    <h2>Мой пул предложений</h2>
+    <div class="pool-levels" id="pool-levels"></div>
+    <div class="pool-note">В пуле сейчас: <b id="pool-count">0</b> из <span id="pool-total">0</span> фраз.
+      <button class="link-btn" id="btn-pool-reset">Сбросить (включить все уровни)</button>
+    </div>
+
     <h2>Прогресс по уровням</h2>
     <div class="table-scroll">
       <table class="levels">
@@ -297,6 +321,8 @@
       <li>Новые фразы подбираются по принципу «i+1»: среди ещё не изученных предпочтение отдаётся тем, где незнакомо меньше всего слов — а не полностью случайным.</li>
       <li>Аудирование новой фразы сначала проигрывается чуть медленнее, обычная скорость — после того как вы её уже освоили на слух.</li>
       <li>После проверки может показаться часто встречающееся словосочетание с этим словом — тоже эвристика по частоте, не словарь идиом.</li>
+      <li>Вход через Google синхронизирует прогресс, ошибки, серию и пул между устройствами и с читалкой קורא — без входа всё работает так же, только локально в этом браузере.</li>
+      <li>Личный пул: какие уровни вообще участвуют в вашей практике — можно постепенно подключать новые или убирать отдельные фразы, не теряя расписание по остальным.</li>
     </ul>
   </div>
 
@@ -328,6 +354,7 @@
       <button class="action ghost" id="btn-reveal">Показать ответ</button>
       <button class="action ghost" id="btn-next" disabled>Дальше →</button>
     </div>
+    <button class="reset-link" id="btn-exclude-card" style="align-self:flex-start;">Убрать эту фразу из пула</button>
 
     <div class="feedback" id="feedback">
       <div class="verdict" id="verdict"></div>
@@ -381,7 +408,7 @@ const MODES = {
 const ALL_MODES = ttsSupported ? ["ru2he", "he2ru", "listen", "cloze"] : ["ru2he", "he2ru", "cloze"];
 
 const STORE_KEY = "ivrit_trainer_progress_v3";
-let progress = null;
+var progress = null; // `var`, not `let`: needs to be reachable as `window.progress` from the separate Firebase module script below
 function todayStr() { return new Date().toISOString().slice(0, 10); }
 function defaultProgress() {
   return {
@@ -389,6 +416,7 @@ function defaultProgress() {
     meta: { dailyNewCap: 20, newToday: { date: todayStr(), count: 0 } },
     mistakesHe: {}, mistakesRu: {},
     streak: { lastDate: null, count: 0 },
+    pool: { levels: [0, 1, 2, 3, 4], include: [], exclude: [] },
   };
 }
 try {
@@ -398,6 +426,7 @@ try {
 if (!progress.mistakesHe) progress.mistakesHe = {};
 if (!progress.mistakesRu) progress.mistakesRu = {};
 if (!progress.streak) progress.streak = { lastDate: null, count: 0 };
+if (!progress.pool) progress.pool = { levels: [0, 1, 2, 3, 4], include: [], exclude: [] };
 // Migrating from SM-2 (had an `ease` field) to FSRS (difficulty/stability):
 // the two models aren't convertible, so the review schedule resets — but the
 // mistake journal, streak and settings carry over.
@@ -411,6 +440,14 @@ function ensureTodayMeta() {
   }
 }
 function saveProgress() { try { localStorage.setItem(STORE_KEY, JSON.stringify(progress)); } catch (e) {} }
+
+// No-op until the separate Firebase module script (loaded independently, see
+// bottom of file) overrides these on `window` once signed in. Keeps the app
+// fully functional offline/without an account regardless of Firebase's
+// load state.
+function cloudSyncCard(key, state) {}
+function cloudSyncMeta() {}
+async function cloudResetAll() {}
 
 // ---- FSRS-6 scheduling ----
 // Faithful port of the open-spaced-repetition reference formulas
@@ -581,12 +618,24 @@ if (ttsSupported) modeOptions.push(["listen", "Аудирование (на сл
 modeOptions.push(["cloze", "Пропуск слова (cloze)"]);
 modeOptions.forEach(([v, l]) => { const o = document.createElement("option"); o.value = v; o.textContent = l; modeSelect.appendChild(o); });
 
+// Личный пул: какие фразы вообще участвуют в вашей практике. По умолчанию —
+// все уровни. include/exclude — точечные исключения поверх уровня (например,
+// "убрать эту одну фразу", даже если весь её уровень включён).
+function inPool(index) {
+  const p = progress.pool;
+  if (p.exclude.includes(index)) return false;
+  if (p.include.includes(index)) return true;
+  return p.levels.includes(DATA[index].l);
+}
 function poolForLevel() {
   const v = levelSelect.value;
-  if (v === "all") return DATA.map((_, i) => i);
-  const code = Number(v);
+  const code = v === "all" ? null : Number(v);
   const out = [];
-  for (let i = 0; i < DATA.length; i++) if (DATA[i].l === code) out.push(i);
+  for (let i = 0; i < DATA.length; i++) {
+    if (!inPool(i)) continue;
+    if (code !== null && DATA[i].l !== code) continue;
+    out.push(i);
+  }
   return out;
 }
 function enabledModes() {
@@ -828,7 +877,8 @@ function pickI1(candidates) {
 function pickNext() {
   ensureTodayMeta();
   const lvlPool = poolForLevel();
-  const pool = lvlPool.length ? lvlPool : DATA.map((_, i) => i);
+  const poolOnly = DATA.map((_, i) => i).filter(inPool);
+  const pool = lvlPool.length ? lvlPool : (poolOnly.length ? poolOnly : DATA.map((_, i) => i));
   const modes = enabledModes();
   const now = Date.now();
   const due = [], fresh = [];
@@ -886,6 +936,37 @@ function updateStatsBar() {
   renderLevelsTable();
   renderMistakes();
   renderCapAdvice();
+  renderPoolPanel();
+}
+
+function renderPoolPanel() {
+  const wrap = document.getElementById("pool-levels");
+  if (!wrap.childElementCount) {
+    LEVELS.forEach((lv, code) => {
+      const label = document.createElement("label");
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.dataset.level = String(code);
+      cb.addEventListener("change", () => {
+        const set = new Set(progress.pool.levels);
+        if (cb.checked) set.add(code); else set.delete(code);
+        progress.pool.levels = Array.from(set);
+        saveProgress();
+        cloudSyncMeta();
+        updateStatsBar();
+      });
+      label.appendChild(cb);
+      label.appendChild(document.createTextNode(`${lv.sym} ${lv.label}`));
+      wrap.appendChild(label);
+    });
+  }
+  wrap.querySelectorAll("input[type=checkbox]").forEach(cb => {
+    cb.checked = progress.pool.levels.includes(Number(cb.dataset.level));
+  });
+  let count = 0;
+  for (let i = 0; i < DATA.length; i++) if (inPool(i)) count++;
+  document.getElementById("pool-count").textContent = count;
+  document.getElementById("pool-total").textContent = DATA.length;
 }
 
 function renderMistakes() {
@@ -932,7 +1013,7 @@ function renderLevelsTable() {
   LEVELS.forEach((lv, code) => {
     let total = 0, learning = 0, mastered = 0, due = 0;
     for (let i = 0; i < DATA.length; i++) {
-      if (DATA[i].l !== code) continue;
+      if (DATA[i].l !== code || !inPool(i)) continue;
       for (const m of activeModes) {
         total++;
         const st = progress.items[i + ":" + m];
@@ -1223,6 +1304,8 @@ function commitAndAdvance(quality) {
   progress.items[key] = schedule(progress.items[key], quality);
   updateDailyStreak();
   saveProgress();
+  cloudSyncCard(key, progress.items[key]);
+  cloudSyncMeta();
   updateStatsBar();
   loadCard();
 }
@@ -1257,6 +1340,27 @@ capInput.addEventListener("change", () => {
   progress.meta.dailyNewCap = v;
   capInput.value = v;
   saveProgress();
+  cloudSyncMeta();
+});
+
+const btnPoolReset = document.getElementById("btn-pool-reset");
+btnPoolReset.addEventListener("click", () => {
+  progress.pool = { levels: [0, 1, 2, 3, 4], include: [], exclude: [] };
+  saveProgress();
+  cloudSyncMeta();
+  updateStatsBar();
+});
+
+const btnExcludeCard = document.getElementById("btn-exclude-card");
+btnExcludeCard.addEventListener("click", () => {
+  if (checked) return;
+  const p = progress.pool;
+  p.include = p.include.filter(i => i !== currentIndex);
+  if (!p.exclude.includes(currentIndex)) p.exclude.push(currentIndex);
+  saveProgress();
+  cloudSyncMeta();
+  updateStatsBar();
+  loadCard();
 });
 
 const resetBtn = document.getElementById("btn-reset");
@@ -1274,9 +1378,12 @@ resetBtn.addEventListener("click", () => {
   } else {
     clearTimeout(resetTimer);
     const cap = progress.meta.dailyNewCap;
+    const pool = progress.pool;
     progress = defaultProgress();
     progress.meta.dailyNewCap = cap;
+    progress.pool = pool;
     saveProgress();
+    cloudResetAll();
     sessionCorrect = 0; sessionTotal = 0; streak = 0;
     resetArmed = false;
     resetBtn.textContent = "Сбросить прогресс";
@@ -1290,6 +1397,159 @@ resetBtn.addEventListener("click", () => {
 document.getElementById("subtitle").textContent = `${DATA.length} предложений · уровни א – ג · перевод в обе стороны, аудирование и пропуск слова`;
 updateStatsBar();
 loadCard();
+</script>
+
+<!--
+  Firebase auth + cloud sync, in its own module script (separate from the
+  script above) so the trainer itself renders and works instantly and fully
+  offline — this part only loads Google's SDK over the network and, once
+  ready, overrides the sync stubs above on `window`. Entirely optional:
+  without signing in, everything above already works the same as before,
+  purely through localStorage. Signing in with Google adds cross-device sync
+  of FSRS progress, the mistake journal, streak and pool via Firestore,
+  shared with the hebrew-reader site (same Firebase project).
+-->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import {
+  getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult,
+  onAuthStateChanged, signOut,
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+import {
+  getFirestore, doc, getDoc, setDoc, collection, getDocs, writeBatch,
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBt1bUThfMV-9l864CrzdQnJoCmydlV4_E",
+  authDomain: "ivrit-progress.firebaseapp.com",
+  projectId: "ivrit-progress",
+  storageBucket: "ivrit-progress.firebasestorage.app",
+  messagingSenderId: "694820518201",
+  appId: "1:694820518201:web:1da61200a3b8d948c410e8",
+};
+const fbApp = initializeApp(firebaseConfig);
+const fbAuth = getAuth(fbApp);
+const fbDb = getFirestore(fbApp);
+let cloudUid = null;
+
+function cardsCol(uid) { return collection(fbDb, "users", uid, "cards"); }
+function metaDocRef(uid) { return doc(fbDb, "users", uid, "meta", "state"); }
+function metaPayload() {
+  return { meta: progress.meta, mistakesHe: progress.mistakesHe, mistakesRu: progress.mistakesRu, streak: progress.streak, pool: progress.pool };
+}
+
+// These three override the no-op stubs defined in the main script (assigning
+// a `function` here would only create a module-local binding — the classic
+// script would never see it, so it has to go through `window` explicitly).
+window.cloudSyncCard = function (key, state) {
+  if (!cloudUid) return;
+  setDoc(doc(cardsCol(cloudUid), key), state).catch(() => {});
+};
+window.cloudSyncMeta = function () {
+  if (!cloudUid) return;
+  setDoc(metaDocRef(cloudUid), metaPayload()).catch(() => {});
+};
+async function commitInBatches(uid, keys, valueFor) {
+  let batch = writeBatch(fbDb), n = 0;
+  const pending = [];
+  for (const k of keys) {
+    batch.set(doc(cardsCol(uid), k), valueFor(k));
+    n++;
+    if (n >= 400) { pending.push(batch.commit()); batch = writeBatch(fbDb); n = 0; }
+  }
+  if (n > 0) pending.push(batch.commit());
+  await Promise.all(pending);
+}
+window.cloudResetAll = async function () {
+  if (!cloudUid) return;
+  try {
+    const snap = await getDocs(cardsCol(cloudUid));
+    let batch = writeBatch(fbDb), n = 0;
+    const pending = [];
+    snap.forEach(d => {
+      batch.delete(d.ref);
+      n++;
+      if (n >= 400) { pending.push(batch.commit()); batch = writeBatch(fbDb); n = 0; }
+    });
+    if (n > 0) pending.push(batch.commit());
+    await Promise.all(pending);
+    await setDoc(metaDocRef(cloudUid), metaPayload());
+  } catch (e) {}
+};
+
+// On sign-in: merge cloud + whatever was practiced locally as a guest.
+// Per card, the more recently reviewed side wins; mistake counters add up;
+// streak keeps whichever side logged a more recent day. The merged result
+// is written back so both sides converge.
+function mergeCardStates(a, b) {
+  if (!a) return b; if (!b) return a;
+  return (a.lastReview || 0) >= (b.lastReview || 0) ? a : b;
+}
+function mergeCounterMaps(a, b) {
+  const out = Object.assign({}, a);
+  for (const k in b) out[k] = (out[k] || 0) + b[k];
+  return out;
+}
+async function pullAndMerge(uid) {
+  const localItems = progress.items;
+  const remoteItems = {};
+  const snap = await getDocs(cardsCol(uid));
+  snap.forEach(d => { remoteItems[d.id] = d.data(); });
+  const allKeys = new Set([...Object.keys(localItems), ...Object.keys(remoteItems)]);
+  const mergedItems = {};
+  allKeys.forEach(k => { mergedItems[k] = mergeCardStates(localItems[k], remoteItems[k]); });
+
+  const metaSnap = await getDoc(metaDocRef(uid));
+  const remoteMeta = metaSnap.exists() ? metaSnap.data() : null;
+
+  progress.items = mergedItems;
+  if (remoteMeta) {
+    progress.mistakesHe = mergeCounterMaps(progress.mistakesHe, remoteMeta.mistakesHe || {});
+    progress.mistakesRu = mergeCounterMaps(progress.mistakesRu, remoteMeta.mistakesRu || {});
+    if (remoteMeta.streak && (remoteMeta.streak.lastDate || "") > (progress.streak.lastDate || "")) {
+      progress.streak = remoteMeta.streak;
+    }
+    if (remoteMeta.pool) progress.pool = remoteMeta.pool;
+    if (remoteMeta.meta && remoteMeta.meta.dailyNewCap) progress.meta.dailyNewCap = remoteMeta.meta.dailyNewCap;
+  }
+  saveProgress();
+
+  await commitInBatches(uid, allKeys, k => mergedItems[k]);
+  await setDoc(metaDocRef(uid), metaPayload());
+}
+
+const authStatusEl = document.getElementById("auth-status");
+document.getElementById("btn-signin").addEventListener("click", () => {
+  signInWithRedirect(fbAuth, new GoogleAuthProvider());
+});
+document.getElementById("btn-signout").addEventListener("click", () => { signOut(fbAuth); });
+
+onAuthStateChanged(fbAuth, async (user) => {
+  const signinBtn = document.getElementById("btn-signin");
+  const userBox = document.getElementById("auth-user");
+  if (user) {
+    cloudUid = user.uid;
+    signinBtn.style.display = "none";
+    userBox.style.display = "flex";
+    document.getElementById("auth-avatar").src = user.photoURL || "";
+    document.getElementById("auth-name").textContent = user.displayName || user.email || "Вы";
+    authStatusEl.textContent = "Синхронизация…";
+    try {
+      await pullAndMerge(user.uid);
+      authStatusEl.textContent = "Прогресс синхронизирован";
+    } catch (e) {
+      authStatusEl.textContent = "Не удалось синхронизировать — работаем локально";
+    }
+    updateStatsBar();
+    loadCard();
+  } else {
+    cloudUid = null;
+    signinBtn.style.display = "inline";
+    userBox.style.display = "none";
+    authStatusEl.textContent = "";
+  }
+});
+getRedirectResult(fbAuth).catch(() => {});
 </script>
 
 </body>
