@@ -4,10 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.6.2
+  Ивритский тренажёр — v1.7.0
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр</title>
+<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1F5750">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@400;500;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -388,7 +392,7 @@
   <footer class="bottom">
     <button class="reset-link" id="btn-reset">Сбросить прогресс</button>
   </footer>
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.6.2</div>
+  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.7.0</div>
 </div>
 
 <script>
@@ -1402,6 +1406,16 @@ resetBtn.addEventListener("click", () => {
 document.getElementById("subtitle").textContent = `${DATA.length} предложений · уровни א – ג · перевод в обе стороны, аудирование и пропуск слова`;
 updateStatsBar();
 loadCard();
+
+// PWA install support — safe no-op if manifest.json/sw.js aren't served
+// alongside this page (e.g. inside the Claude Artifact viewer).
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch((e) => {
+      console.warn("[ivrit] service worker registration failed:", e);
+    });
+  });
+}
 </script>
 
 <!--
@@ -1421,7 +1435,8 @@ import {
   onAuthStateChanged, signOut,
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 import {
-  getFirestore, doc, getDoc, setDoc, collection, getDocs, writeBatch,
+  getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
+  doc, getDoc, setDoc, collection, getDocs, writeBatch,
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -1434,7 +1449,19 @@ const firebaseConfig = {
 };
 const fbApp = initializeApp(firebaseConfig);
 const fbAuth = getAuth(fbApp);
-const fbDb = getFirestore(fbApp);
+// Persistent local cache: writes/reads work immediately against an IndexedDB
+// cache even offline, and sync to the server automatically once back online
+// (instead of the old plain getFirestore(), where an offline write's .catch
+// would just silently drop it). Falls back to the plain, non-persistent
+// client if the browser can't support it (e.g. very old Safari, private
+// browsing in some browsers).
+let fbDb;
+try {
+  fbDb = initializeFirestore(fbApp, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
+} catch (e) {
+  console.warn("[ivrit] persistent Firestore cache unavailable, using in-memory client:", e);
+  fbDb = getFirestore(fbApp);
+}
 let cloudUid = null;
 
 function cardsCol(uid) { return collection(fbDb, "users", uid, "cards"); }
@@ -1535,6 +1562,18 @@ document.getElementById("btn-signin").addEventListener("click", () => {
 });
 document.getElementById("btn-signout").addEventListener("click", () => { signOut(fbAuth); });
 
+// Persistent sync status (not just a one-off message) — reflects real
+// connectivity, since the persistent Firestore cache above means writes
+// keep working offline and just queue up rather than failing outright.
+function updateCloudStatusIndicator() {
+  if (!cloudUid) { authStatusEl.textContent = ""; return; }
+  authStatusEl.textContent = navigator.onLine
+    ? "☁ Синхронизировано"
+    : "📴 Офлайн — изменения досинхронизируются при подключении";
+}
+window.addEventListener("online", updateCloudStatusIndicator);
+window.addEventListener("offline", updateCloudStatusIndicator);
+
 onAuthStateChanged(fbAuth, async (user) => {
   console.log("[ivrit] onAuthStateChanged fired, user:", user && user.uid);
   const signinBtn = document.getElementById("btn-signin");
@@ -1548,12 +1587,12 @@ onAuthStateChanged(fbAuth, async (user) => {
     authStatusEl.textContent = "Синхронизация…";
     try {
       await pullAndMerge(user.uid);
-      authStatusEl.textContent = "Прогресс синхронизирован";
     } catch (e) {
-      authStatusEl.textContent = "Не удалось синхронизировать — работаем локально";
+      console.error("[ivrit] initial sync failed:", e);
     }
     updateStatsBar();
     loadCard();
+    updateCloudStatusIndicator();
   } else {
     cloudUid = null;
     signinBtn.style.display = "inline";
