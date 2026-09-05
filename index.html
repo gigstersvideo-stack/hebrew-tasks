@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.9.1
+  Ивритский тренажёр — v1.10.0
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр</title>
@@ -14,7 +14,7 @@
 <meta name="theme-color" content="#1F5750">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@400;500;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@400;500;700&family=David+Libre:wght@400;500;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #EDEFEA;
@@ -121,19 +121,30 @@
   .cap-row input { width: 64px; }
   .method-list { margin: 0; padding-left: 18px; font-size: 0.78rem; color: var(--text-muted); line-height: 1.6; }
 
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); padding: 28px 28px 24px; display: flex; flex-direction: column; gap: 16px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-top: 3px solid var(--accent-strong);
+    border-radius: 4px 4px 14px 14px; box-shadow: var(--shadow); padding: 26px 28px 24px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
   .eyebrow-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
   .eyebrow { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-faint); font-weight: 600; }
-  .badge-group { display: flex; gap: 6px; flex-wrap: wrap; }
-  .badge, .badge-mode {
+  .badge-group { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
+  .badge-mode {
     font-size: 0.72rem; font-weight: 700; border-radius: 6px; padding: 3px 8px;
-    background: var(--accent-soft); color: var(--accent-strong);
+    background: var(--accent-soft); color: var(--accent-strong); font-family: 'IBM Plex Sans', sans-serif;
   }
-  .badge { font-family: 'Noto Sans Hebrew', sans-serif; }
-  .badge-mode { font-family: 'IBM Plex Sans', sans-serif; }
+  /* Level indicator gets its own "seal" form (round, outlined, on the page
+     ground rather than filled) so a graduated scale (א → א+ → ב → ...) reads
+     as a stamped mark, distinct from the plain rectangular exercise-type label. */
+  .badge {
+    font-family: 'David Libre', 'Noto Sans Hebrew', serif; font-weight: 700; font-size: 0.9rem;
+    min-width: 26px; height: 26px; border-radius: 999px; border: 1.5px solid var(--accent-strong);
+    color: var(--accent-strong); background: var(--surface); display: flex; align-items: center; justify-content: center;
+    padding: 0 6px;
+  }
 
   .prompt { font-family: 'Source Serif 4', Georgia, serif; font-size: 1.5rem; line-height: 1.4; text-wrap: balance; color: var(--text); }
-  .prompt.hebrew-prompt { font-family: 'Noto Sans Hebrew', sans-serif; direction: rtl; text-align: right; font-size: 1.4rem; }
+  .prompt.hebrew-prompt { font-family: 'David Libre', 'Noto Sans Hebrew', serif; font-weight: 500; direction: rtl; text-align: right; font-size: 1.65rem; line-height: 1.5; }
 
   .listen-box { display: none; flex-direction: column; align-items: center; gap: 10px; padding: 14px 0; }
   .listen-box.show { display: flex; }
@@ -147,8 +158,8 @@
   .listen-hint { font-size: 0.78rem; color: var(--text-faint); }
 
   .hint-line {
-    display: none; direction: rtl; text-align: right; font-family: 'Noto Sans Hebrew', sans-serif;
-    font-size: 1.05rem; color: var(--text-muted); background: var(--surface-2); border-radius: 6px; padding: 8px 10px;
+    display: none; direction: rtl; text-align: right; font-family: 'David Libre', 'Noto Sans Hebrew', serif;
+    font-size: 1.15rem; color: var(--text-muted); background: var(--surface-2); border-radius: 6px; padding: 8px 10px;
   }
   .hint-line.show { display: block; }
   .hint-line.ltr { direction: ltr; text-align: left; font-family: 'IBM Plex Sans', 'Segoe UI', sans-serif; font-size: 0.95rem; }
@@ -157,7 +168,7 @@
   .answer-row { display: flex; flex-direction: column; gap: 6px; }
   .answer-row label { font-size: 0.72rem; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
   input#answer {
-    font-family: 'Noto Sans Hebrew', 'Arial Hebrew', 'David', sans-serif; font-size: 1.3rem; direction: rtl; text-align: right;
+    font-family: 'David Libre', 'Noto Sans Hebrew', 'Arial Hebrew', serif; font-size: 1.4rem; direction: rtl; text-align: right;
     width: 100%; background: var(--surface-2); border: none; border-bottom: 2px solid var(--border);
     border-radius: 4px 4px 0 0; padding: 10px 12px; color: var(--text); transition: border-color 0.15s ease;
   }
@@ -190,7 +201,7 @@
   .diff-line { display: flex; flex-direction: column; gap: 3px; }
   .diff-line .diff-label-row { display: flex; align-items: center; justify-content: space-between; }
   .diff-line .diff-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-faint); font-weight: 600; }
-  .diff-text { font-family: 'Noto Sans Hebrew', 'Arial Hebrew', 'David', sans-serif; direction: rtl; text-align: right; font-size: 1.15rem; line-height: 1.6; }
+  .diff-text { font-family: 'David Libre', 'Noto Sans Hebrew', 'Arial Hebrew', serif; direction: rtl; text-align: right; font-size: 1.25rem; line-height: 1.7; }
   .diff-text.ltr { direction: ltr; text-align: left; font-family: 'IBM Plex Sans', 'Segoe UI', sans-serif; font-size: 1.05rem; }
   .tok { padding: 0 1px; border-radius: 3px; }
   .tok.del { color: var(--bad); text-decoration: line-through; text-decoration-thickness: 1.5px; background: var(--del-bg); }
@@ -225,11 +236,19 @@
   .rating-row.show { display: flex; }
   button.rating-btn {
     font-family: 'IBM Plex Sans', sans-serif; font-size: 0.78rem; font-weight: 600; border-radius: 7px;
-    padding: 7px 12px; cursor: pointer; border: 1px solid var(--border); background: var(--surface);
-    color: var(--text-muted); flex: 1 1 auto;
+    padding: 7px 4px; cursor: pointer; border: 1px solid var(--border); background: var(--surface);
+    color: var(--text-muted); flex: 1 1 auto; transition: filter 0.12s ease;
   }
-  button.rating-btn:hover { background: var(--surface-2); }
-  button.rating-btn.suggested { border-color: var(--accent); color: var(--accent-strong); font-weight: 700; }
+  button.rating-btn:hover { filter: brightness(0.96); }
+  /* Same red→amber→green→teal ladder spaced-repetition tools conventionally
+     use for Again/Hard/Good/Easy — reuses the existing semantic tokens
+     rather than inventing new hues, and gives the four choices a scannable
+     identity instead of four identical grey buttons. */
+  #rate-again { border-color: var(--bad); color: var(--bad); background: var(--bad-soft); }
+  #rate-hard { border-color: var(--amber); color: var(--amber); background: var(--amber-soft); }
+  #rate-good { border-color: var(--good); color: var(--good); background: var(--good-soft); }
+  #rate-easy { border-color: var(--accent-strong); color: var(--accent-strong); background: var(--accent-soft); }
+  button.rating-btn.suggested { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px currentColor; font-weight: 700; }
 
   .mistakes-block { display: flex; flex-direction: column; gap: 4px; }
   .mistake-chip {
@@ -407,7 +426,7 @@
   <footer class="bottom">
     <button class="reset-link" id="btn-reset">Сбросить прогресс</button>
   </footer>
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.9.1</div>
+  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.10.0</div>
 </div>
 
 <script>
