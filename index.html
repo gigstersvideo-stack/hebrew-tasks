@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.9.0
+  Ивритский тренажёр — v1.9.1
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр</title>
@@ -407,7 +407,7 @@
   <footer class="bottom">
     <button class="reset-link" id="btn-reset">Сбросить прогресс</button>
   </footer>
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.9.0</div>
+  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.9.1</div>
 </div>
 
 <script>
@@ -896,7 +896,7 @@ function ruWordsMatch(a, b) {
 }
 function russianCheck(userText, refText) {
   const userWords = ruContentWords(userText);
-  const refWords = ruContentWords(refText);
+  const refWords = ruContentWords(refText.replace(/\([^)]*\)/g, " "));
   const matchedRefIdx = new Set(), matchedUserIdx = new Set();
   refWords.forEach((rw, ri) => {
     for (let ui = 0; ui < userWords.length; ui++) {
