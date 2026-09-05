@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.8.0
+  Ивритский тренажёр — v1.9.0
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр</title>
@@ -248,6 +248,18 @@
   .pool-levels { display: flex; flex-wrap: wrap; gap: 10px 16px; font-size: 0.82rem; }
   .pool-levels label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
   .pool-note { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
+  .custom-card-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 6px 0; border-bottom: 1px dashed var(--border); font-size: 0.8rem;
+  }
+  .custom-card-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  .custom-card-text bdi { font-family: 'Noto Sans Hebrew', sans-serif; font-size: 0.92rem; color: var(--text); }
+  .custom-card-text .ru { color: var(--text-muted); font-size: 0.76rem; }
+  .custom-card-del {
+    flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--border);
+    background: none; color: var(--text-muted); cursor: pointer; font-size: 0.78rem; line-height: 1;
+  }
+  .custom-card-del:hover { background: var(--danger, #a3402f); color: #fff; border-color: transparent; }
 </style>
 </head>
 <body>
@@ -293,6 +305,9 @@
     <div class="pool-note">В пуле сейчас: <b id="pool-count">0</b> из <span id="pool-total">0</span> фраз.
       <button class="link-btn" id="btn-pool-reset">Сбросить (включить все уровни)</button>
     </div>
+
+    <h2>Личные карточки</h2>
+    <div id="custom-cards-list"></div>
 
     <h2>Прогресс по уровням</h2>
     <div class="table-scroll">
@@ -392,7 +407,7 @@
   <footer class="bottom">
     <button class="reset-link" id="btn-reset">Сбросить прогресс</button>
   </footer>
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.8.0</div>
+  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.9.0</div>
 </div>
 
 <script>
@@ -763,6 +778,7 @@ function findChunkFor(index) {
 const CUSTOM_LEVEL_CODE = LEVELS.length;
 LEVELS.push({ sym: "🏷", label: "Личное" });
 const customCardIndexBySource = {};
+const customCardsInfo = {}; // source -> {he, ru, index} — feeds the "Личные карточки" management list
 
 function appendCustomCards(cards) {
   // cards: [{id (Firestore doc id = source string), he, ru, focusWord, addedAt, deleted}]
@@ -780,6 +796,7 @@ function appendCustomCards(cards) {
     const toks = tokenize(card.he || "");
     const focus = card.focusWord && toks.includes(card.focusWord) ? card.focusWord : (toks[0] || "");
     DATA.push({ r: card.ru || "", h: card.he || "", l: CUSTOM_LEVEL_CODE, c: focus });
+    customCardsInfo[card.id] = { he: card.he || "", ru: card.ru || "", index };
     if (!progress.pool.include.includes(index)) { progress.pool.include.push(index); changed = true; }
     // A ready-made built-in sentence for the same word, if the corpus has
     // one — free second practice example, reuses the existing fuzzy-match
@@ -794,9 +811,44 @@ function appendCustomCards(cards) {
     }
   });
   if (changed) saveProgress();
+  if (typeof renderCustomCardsPanel === "function") renderCustomCardsPanel();
   return sorted.map(card => customCardIndexBySource[card.id]);
 }
 window.appendCustomCards = appendCustomCards;
+
+// User-initiated removal from the "Личные карточки" panel — soft-deletes on
+// the server (via the same customCards doc) and, locally, excludes the card
+// from the pool without touching its DATA slot (never reused/reshuffled,
+// same append-only rule as everything else here).
+function removeCustomCard(source) {
+  const info = customCardsInfo[source];
+  if (!info) return;
+  if (!progress.pool.exclude.includes(info.index)) progress.pool.exclude.push(info.index);
+  progress.pool.include = progress.pool.include.filter(i => i !== info.index);
+  delete customCardsInfo[source];
+  saveProgress();
+  if (window.cloudRemoveCustomCard) window.cloudRemoveCustomCard(source);
+  updateStatsBar();
+  renderCustomCardsPanel();
+}
+
+function renderCustomCardsPanel() {
+  const wrap = document.getElementById("custom-cards-list");
+  if (!wrap) return;
+  const entries = Object.entries(customCardsInfo);
+  if (!entries.length) {
+    wrap.innerHTML = '<div class="pool-note">Пока пусто — карточки появляются, когда вы сохраняете слово или пример из читалки/ИИ-разбора.</div>';
+    return;
+  }
+  wrap.innerHTML = entries.map(([source, info]) => `
+    <div class="custom-card-row" data-source="${escapeHtml(source)}">
+      <div class="custom-card-text"><bdi>${escapeHtml(info.he)}</bdi><span class="ru">${escapeHtml(info.ru)}</span></div>
+      <button class="custom-card-del" title="Убрать из личного пула">✕</button>
+    </div>`).join("");
+  wrap.querySelectorAll(".custom-card-del").forEach(btn => {
+    btn.addEventListener("click", () => removeCustomCard(btn.closest(".custom-card-row").dataset.source));
+  });
+}
 
 function diffTokensGeneric(userToks, refToks, matchFn) {
   const n = userToks.length, m = refToks.length;
@@ -996,6 +1048,7 @@ function updateStatsBar() {
   renderMistakes();
   renderCapAdvice();
   renderPoolPanel();
+  renderCustomCardsPanel();
 }
 
 function renderPoolPanel() {
@@ -1541,6 +1594,13 @@ window.cloudSyncCard = function (key, state) {
 window.cloudSyncMeta = function () {
   if (!cloudUid) return;
   setDoc(metaDocRef(cloudUid), metaPayload()).catch(() => {});
+};
+// Lets the "Личные карточки" panel remove a card pushed in from the reader
+// (or picked from an AI word-analysis there) — soft-delete only, same
+// `customCards` collection and doc-id-as-source scheme the reader writes.
+window.cloudRemoveCustomCard = function (source) {
+  if (!cloudUid || !source) return;
+  setDoc(doc(fbDb, "users", cloudUid, "customCards", source), { deleted: true }, { merge: true }).catch(() => {});
 };
 async function commitInBatches(uid, keys, valueFor) {
   let batch = writeBatch(fbDb), n = 0;
