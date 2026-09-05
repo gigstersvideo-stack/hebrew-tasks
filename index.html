@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.10.0
+  Ивритский тренажёр — v1.11.0
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр</title>
@@ -279,6 +279,57 @@
     background: none; color: var(--text-muted); cursor: pointer; font-size: 0.78rem; line-height: 1;
   }
   .custom-card-del:hover { background: var(--danger, #a3402f); color: #fff; border-color: transparent; }
+
+  .hidden { display: none !important; }
+
+  /* ---- Dashboard: shown on load instead of dropping straight into a card,
+     so "what's due" is visible before committing to a session (Anki's deck
+     list / Mochi's clean summary, rather than an endless card feed). ---- */
+  .dashboard { display: flex; flex-direction: column; gap: 18px; }
+  .dash-hero { display: flex; align-items: baseline; gap: 10px; }
+  .dash-num { font-size: 2.4rem; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+  .dash-hero-label { font-size: 0.85rem; color: var(--text-muted); }
+  .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; }
+  .dash-tile { background: var(--surface); border: 1px solid var(--border); border-radius: 11px; padding: 14px 14px 12px; }
+  .dash-tile .lvl { font-family: 'David Libre', 'Noto Sans Hebrew', serif; font-weight: 700; font-size: 1.1rem; color: var(--accent-strong); margin-bottom: 8px; }
+  .dash-tile .due-label { font-size: 0.62rem; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 2px; }
+  .dash-tile .due-num { font-size: 1.3rem; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+  .dash-tile .mbar { height: 5px; border-radius: 3px; background: var(--surface-2); overflow: hidden; margin-top: 8px; }
+  .dash-tile .mbar > div { height: 100%; background: var(--accent); border-radius: 3px; }
+  .dash-start { align-self: flex-start; }
+
+  /* ---- Review layout: card + a persistent context sidebar on wide
+     screens, stacked below it on narrow ones. ---- */
+  .review-layout { display: flex; gap: 18px; align-items: flex-start; }
+  .review-layout > .card { flex: 1; min-width: 0; }
+  .side-panel {
+    width: 300px; flex-shrink: 0; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 18px 18px 16px; display: flex; flex-direction: column; gap: 4px;
+  }
+  @media (max-width: 860px) {
+    .review-layout { flex-direction: column; }
+    .side-panel { width: 100%; }
+  }
+  .side-h { margin: 0 0 10px; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-faint); font-weight: 700; }
+  .side-pre { font-size: 0.82rem; color: var(--text-faint); line-height: 1.5; }
+  .side-post { display: none; flex-direction: column; gap: 14px; }
+  .side-post.show { display: flex; }
+  .side-focusword { font-family: 'David Libre', 'Noto Sans Hebrew', serif; font-size: 1.6rem; direction: rtl; text-align: right; color: var(--text); }
+  .ai-btn {
+    font-family: inherit; font-size: 0.8rem; font-weight: 600; border-radius: 9px; padding: 9px 0;
+    cursor: pointer; border: none; background: var(--accent-strong); color: var(--surface); width: 100%;
+  }
+  .ai-btn:disabled { opacity: 0.6; cursor: default; }
+  .ai-keysetup { display: flex; flex-direction: column; gap: 6px; font-size: 0.76rem; color: var(--text-muted); }
+  .ai-keysetup a { color: var(--accent-strong); }
+  .ai-keysetup input { font-family: inherit; font-size: 0.78rem; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; }
+  .ai-result { font-size: 0.82rem; line-height: 1.55; color: var(--text); }
+  .ai-result h4 { margin: 10px 0 3px; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); }
+  .ai-result h4:first-child { margin-top: 0; }
+  .ai-result .ai-err { color: var(--bad); }
+
+  .kbd-hint { font-size: 0.7rem; color: var(--text-faint); }
+  .kbd-hint kbd { font-family: 'IBM Plex Sans', sans-serif; background: var(--surface-2); border: 1px solid var(--border); border-radius: 4px; padding: 0 5px; }
 </style>
 </head>
 <body>
@@ -308,12 +359,23 @@
     </div>
   </header>
 
+  <div class="dashboard" id="dashboard-view">
+    <div class="dash-hero">
+      <div class="dash-num" id="dash-due-total">0</div>
+      <div class="dash-hero-label">фраз готовы к повторению сегодня</div>
+    </div>
+    <div class="dash-grid" id="dash-grid"></div>
+    <button class="action primary dash-start" id="btn-dash-start">Начать →</button>
+  </div>
+
+  <div class="hidden" id="review-area">
   <div class="progress-bar"><div id="progress-fill" style="width:0%"></div></div>
 
   <div class="toolbar">
     <div class="filters">
       <select id="filter-level" aria-label="Уровень"></select>
       <select id="filter-mode" aria-label="Тип упражнения"></select>
+      <button class="link-btn" id="btn-back-dash">🏠 Обзор</button>
     </div>
     <button class="link-btn" id="btn-toggle-stats">Статистика и метод ▾</button>
   </div>
@@ -368,6 +430,7 @@
     </ul>
   </div>
 
+  <div class="review-layout">
   <div class="card">
     <div class="eyebrow-row">
       <div class="eyebrow" id="card-eyebrow">—</div>
@@ -396,6 +459,7 @@
       <button class="action ghost" id="btn-reveal">Показать ответ</button>
       <button class="action ghost" id="btn-next" disabled>Дальше →</button>
     </div>
+    <div class="kbd-hint"><kbd>Enter</kbd> проверить/дальше · <kbd>1</kbd>–<kbd>4</kbd> оценка после проверки</div>
     <button class="reset-link" id="btn-exclude-card" style="align-self:flex-start;">Убрать эту фразу из пула</button>
 
     <div class="feedback" id="feedback">
@@ -411,7 +475,6 @@
         </div>
         <div class="diff-text" id="diff-ref"></div>
       </div>
-      <div class="related-words" id="related-words"></div>
       <div class="rating-row" id="rating-row">
         <button class="rating-btn" id="rate-again" data-q="1">Снова</button>
         <button class="rating-btn" id="rate-hard" data-q="3">Трудно</button>
@@ -421,12 +484,32 @@
     </div>
   </div>
 
+  <aside class="side-panel" id="side-panel">
+    <h3 class="side-h">Слово в фокусе</h3>
+    <div class="side-pre" id="side-pre">Появится, когда проверите ответ.</div>
+    <div class="side-post" id="side-post">
+      <div class="side-focusword" id="side-focusword"></div>
+      <div class="related-words" id="related-words"></div>
+      <div class="ai-block" id="ai-block">
+        <button class="ai-btn" id="btn-ai-analyze" type="button">🎓 Разбор от ИИ-педагога</button>
+        <div class="ai-keysetup hidden" id="ai-keysetup">
+          <div>Нужен свой бесплатный ключ Gemini — <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">получить ↗</a></div>
+          <input type="password" id="ai-key-input" placeholder="Вставьте ключ (AIza...)">
+          <button class="link-btn" id="ai-key-save" type="button">Сохранить ключ</button>
+        </div>
+        <div class="ai-result" id="ai-result"></div>
+      </div>
+    </div>
+  </aside>
+  </div>
+
   <div class="queue-note" id="queue-note"></div>
+  </div><!-- /#review-area -->
 
   <footer class="bottom">
     <button class="reset-link" id="btn-reset">Сбросить прогресс</button>
   </footer>
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.10.0</div>
+  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.11.0</div>
 </div>
 
 <script>
@@ -1136,16 +1219,13 @@ function renderCapAdvice() {
   }
 }
 
-function renderLevelsTable() {
+function computeLevelStats() {
   const now = Date.now();
-  const activeModes = ALL_MODES;
-  const rows = [];
-  const totals = { total: 0, learning: 0, mastered: 0, due: 0 };
-  LEVELS.forEach((lv, code) => {
+  const perLevel = LEVELS.map((lv, code) => {
     let total = 0, learning = 0, mastered = 0, due = 0;
     for (let i = 0; i < DATA.length; i++) {
       if (DATA[i].l !== code || !inPool(i)) continue;
-      for (const m of activeModes) {
+      for (const m of ALL_MODES) {
         total++;
         const st = progress.items[i + ":" + m];
         if (!st) continue;
@@ -1153,11 +1233,38 @@ function renderLevelsTable() {
         if (st.due <= now) due++;
       }
     }
-    totals.total += total; totals.learning += learning; totals.mastered += mastered; totals.due += due;
-    rows.push(`<tr><td>${lv.sym} <span style="color:var(--text-faint)">${lv.label}</span></td><td class="num">${total}</td><td class="num">${learning}</td><td class="num">${mastered}</td><td class="num">${due}</td></tr>`);
+    return { code, sym: lv.sym, label: lv.label, total, learning, mastered, due };
   });
+  const totals = perLevel.reduce((a, l) => ({
+    total: a.total + l.total, learning: a.learning + l.learning, mastered: a.mastered + l.mastered, due: a.due + l.due,
+  }), { total: 0, learning: 0, mastered: 0, due: 0 });
+  return { perLevel, totals };
+}
+
+function renderLevelsTable() {
+  const { perLevel, totals } = computeLevelStats();
+  const rows = perLevel.map(l =>
+    `<tr><td>${l.sym} <span style="color:var(--text-faint)">${l.label}</span></td><td class="num">${l.total}</td><td class="num">${l.learning}</td><td class="num">${l.mastered}</td><td class="num">${l.due}</td></tr>`);
   rows.push(`<tr style="font-weight:700"><td>Всего</td><td class="num">${totals.total}</td><td class="num">${totals.learning}</td><td class="num">${totals.mastered}</td><td class="num">${totals.due}</td></tr>`);
   document.getElementById("levels-tbody").innerHTML = rows.join("");
+}
+
+// ---- Dashboard: shown on load in place of dropping straight into a card,
+// so "what's due, by level" is visible up front. Uses only real, already-
+// tracked numbers (per-level due/mastery) — no fabricated activity history,
+// since the app doesn't keep day-by-day logs to draw one honestly.
+function renderDashboard() {
+  const { perLevel, totals } = computeLevelStats();
+  document.getElementById("dash-due-total").textContent = totals.due;
+  document.getElementById("dash-grid").innerHTML = perLevel.filter(l => l.total > 0).map(l => {
+    const masteryPct = l.total ? Math.round((l.mastered / l.total) * 100) : 0;
+    return `<div class="dash-tile">
+      <div class="lvl">${l.sym}</div>
+      <div class="due-label">К повтору</div>
+      <div class="due-num">${l.due}</div>
+      <div class="mbar"><div style="width:${masteryPct}%"></div></div>
+    </div>`;
+  }).join("");
 }
 
 // ---- card rendering ----
@@ -1186,6 +1293,13 @@ const els = {
   clozeCaption: document.getElementById("cloze-caption"),
   relatedWords: document.getElementById("related-words"),
   ratingRow: document.getElementById("rating-row"),
+  sidePre: document.getElementById("side-pre"),
+  sidePost: document.getElementById("side-post"),
+  sideFocusword: document.getElementById("side-focusword"),
+  aiBlock: document.getElementById("ai-block"),
+  btnAiAnalyze: document.getElementById("btn-ai-analyze"),
+  aiKeysetup: document.getElementById("ai-keysetup"),
+  aiResult: document.getElementById("ai-result"),
 };
 if (!ttsSupported) els.btnAudio.style.display = "none";
 
@@ -1246,6 +1360,15 @@ function loadCard() {
   els.hintLine.innerHTML = "";
   els.relatedWords.classList.remove("show");
   els.relatedWords.innerHTML = "";
+  els.sidePost.classList.remove("show");
+  els.sidePre.classList.remove("hidden");
+  els.sideFocusword.classList.remove("hidden");
+  els.aiBlock.classList.remove("hidden");
+  els.aiResult.innerHTML = "";
+  els.aiKeysetup.classList.add("hidden");
+  els.btnAiAnalyze.disabled = false;
+  els.btnAiAnalyze.textContent = "🎓 Разбор от ИИ-педагога";
+  els.btnAiAnalyze.dataset.shown = "";
   els.ratingRow.classList.remove("show");
   document.querySelectorAll(".rating-btn").forEach(b => b.classList.remove("suggested"));
   els.answer.value = "";
@@ -1318,6 +1441,18 @@ function showFeedback(isCorrect, fb) {
       els.relatedWords.innerHTML = parts.join("<br>");
       els.relatedWords.classList.add("show");
     }
+  }
+
+  const focusWord = DATA[currentIndex].c;
+  els.sidePre.classList.add("hidden");
+  els.sidePost.classList.add("show");
+  if (focusWord) {
+    els.sideFocusword.textContent = focusWord;
+    els.sideFocusword.classList.remove("hidden");
+    els.aiBlock.classList.remove("hidden");
+  } else {
+    els.sideFocusword.classList.add("hidden");
+    els.aiBlock.classList.add("hidden");
   }
 
   els.ratingRow.classList.add("show");
@@ -1453,6 +1588,15 @@ document.querySelectorAll(".rating-btn").forEach(btn => {
 els.answer.addEventListener("keydown", (e) => {
   if (e.key === "Enter") { e.preventDefault(); if (!checked) doCheck(); else commitAndAdvance(pendingQuality); }
 });
+// 1-4 pick an explicit rating once checked, matching the on-screen button
+// order (Снова/Трудно/Хорошо/Легко) rather than their internal q-values —
+// so reviewing never requires reaching for the mouse.
+const RATING_KEYS = { "1": 1, "2": 3, "3": 4, "4": 5 };
+document.addEventListener("keydown", (e) => {
+  if (!checked || RATING_KEYS[e.key] === undefined) return;
+  e.preventDefault();
+  commitAndAdvance(RATING_KEYS[e.key]);
+});
 levelSelect.addEventListener("change", loadCard);
 modeSelect.addEventListener("change", loadCard);
 
@@ -1525,9 +1669,503 @@ resetBtn.addEventListener("click", () => {
   }
 });
 
+// ---- AI word analysis ("Разбор от ИИ-педагога") ----
+// Same BYOK pattern and pedagogy prompt as the קורא reader (own Gemini key,
+// never synced anywhere) — ported rather than reinvented so both apps give
+// the same quality of answer. Key is stored under a trainer-specific name
+// since the two apps are different origins and cannot share localStorage.
+const AI_KEY_STORAGE = "hebrew-trainer-ai-key";
+const AI_PEDAGOGY_PROMPT = ` Ты работаешь со мной как строгий, внимательный педагог иврита.
+
+Когда я спрашиваю новое ивритское слово, выражение, фразу или корень, разбирай его не как быстрый переводчик, а как преподаватель языка: через значение, употребление, источник, корень, грамматику, семантическое поле и реальные языковые связи.
+
+Моя цель — не просто узнать перевод, а понять, как слово живёт в языке: где оно звучит естественно, с чем связано, какие у него оттенки, какие у него родственники и как его правильно употреблять.
+
+1. Главный принцип: проверяемость
+
+Главный источник для нормативной информации — Академия языка иврит.
+
+В первую очередь опирайся на:
+
+Академию языка иврит;
+
+толковые словари иврита;
+
+авторитетные лексические и грамматические источники;
+
+реальные употребления в современном иврите: СМИ, литература, официальные тексты, разговорная речь.
+
+Если информация не проверена по источнику, обязательно помечай это прямо:
+"Это требует проверки по Академии языка иврит / словарю"
+или
+"По общему знанию, без проверки источника".
+
+Не придумывай этимологию, историю слова, корень, биньян, мишкаль, огласовку или сленговое значение, если нет уверенности.
+
+Если есть доступ к источникам, сначала проверь слово по Академии языка иврит и/или словарям. Если доступа к источникам нет, честно скажи об этом и отдели проверенное знание от предположения.
+
+2. Жёсткие запреты
+
+Никакого транслита
+
+Категорически запрещено автоматически транскрибировать ивритское слово русскими или латинскими буквами.
+
+Транскрипцию можно давать только если я прямо попрошу
+
+Оогласовки
+
+Первое употребление разбираемого слова должно быть с огласовками. Два написания. С огласовками и без.
+
+Но запрещено выдумывать огласовку. Если ты не уверен, напиши:
+"Я не могу уверенно поставить огласовку без проверки по источнику."
+
+Если я загрузил текст, PDF, скриншот или фрагмент с огласовками, категорически запрещено:
+
+исправлять огласовки;
+
+дописывать недостающие огласовки;
+
+"нормализовать" текст;
+
+восстанавливать повреждённые слова;
+
+переносить текст "по смыслу";
+
+подменять видимый текст предполагаемым правильным вариантом.
+
+Если огласовки нет, она повреждена или плохо видна, нужно прямо написать:
+"Я не вижу огласовку"
+или
+"Данные повреждены".
+
+Если я прошу разобрать слово без огласовок, можно разобрать его, но отдельно укажи, что огласовка требует проверки.
+
+Язык ответа
+
+Все объяснения давай на русском языке.
+
+Ивритские слова, формы и примеры пиши ивритским письмом.
+
+Не смешивай ивритский пример и русский перевод в одной строке.
+
+3. Структура разбора слова
+
+Каждый раз разбирай слово в таком порядке.
+
+1. Слово и перевод
+
+Напиши разбираемое слово с огласовками, если они проверены или надёжно известны.
+
+Дай основной перевод.
+
+Если переводов несколько, перечисли их и коротко объясни разницу между значениями.
+
+Укажи уровень и употребимость слова:
+
+очень частотное;
+
+обычное;
+
+разговорное;
+
+официальное;
+
+книжное;
+
+литературное;
+
+библейское;
+
+мишнаитское;
+
+поэтическое;
+
+устаревшее;
+
+редкое;
+
+сленговое.
+
+Если слово в современном иврите звучит странно, архаично, слишком официально или неестественно, обязательно скажи об этом.
+
+2. Значение и употребление
+
+Объясни, как слово реально используется в современном иврите.
+
+Если есть несколько значений, раздели их:
+
+основное значение;
+
+переносное значение;
+
+разговорное значение;
+
+официальное значение;
+
+редкое или книжное значение;
+
+сленговое или ироническое значение, если есть.
+
+Если у слова есть неочевидные культурные, эмоциональные или стилистические оттенки, обязательно упомяни их.
+
+3. Происхождение и история
+
+Коротко расскажи происхождение слова, если это можно проверить.
+
+Укажи, если слово:
+
+библейское;
+
+мишнаитское;
+
+средневековое;
+
+современное;
+
+заимствованное;
+
+создано или нормировано Академией языка иврит;
+
+изменило значение в современном иврите.
+
+Не делай длинную этимологическую лекцию, если история слова не помогает его понять или запомнить.
+
+Не придумывай красивую этимологию. Если происхождение неясно или спорно, так и напиши.
+
+4. Синонимы и близкие слова
+
+Если есть синонимы или близкие слова, перечисли их.
+
+Объясни, чем наше слово отличается от них:
+по уровню языка;
+
+по частотности;
+
+по официальности;
+
+по эмоциональной окраске;
+
+по современности;
+
+по контексту употребления;
+
+по оттенку смысла.
+
+Особенно важно объяснить, когда употребляется именно это слово, а не его ближайший синоним.
+
+Если есть слова, похожие по звучанию или написанию, которые легко перепутать, тоже укажи их.
+
+5. Корень и семантическое поле
+
+Укажи корень слова, если он установлен и ты в нём уверен.
+
+Если корень сомнительный, спорный или неочевидный, не утверждай его уверенно. Напиши:
+"Корень требует проверки"
+или
+"Здесь возможна неоднозначность".
+
+Опиши семантическое поле корня: с какими идеями, действиями, образами или областями значения он связан.
+
+Покажи, в каких биньянах, мишкалях и родственных словах проявляется этот корень.
+
+Для каждого родственного слова дай:
+
+слово на иврите;
+
+короткий перевод;
+
+часть речи;
+
+биньян или мишкаль, если применимо;
+
+уровень языка: разговорное, книжное, официальное, частотное, редкое и т.д.;
+
+очень короткий комментарий, если есть что-то важное.
+
+Не превращай этот блок в огромную энциклопедию. Подробности нужны только тогда, когда они реально важны для изучения языка.
+
+Лучше дать несколько живых и полезных связей, чем длинный список редких слов без объяснения их употребимости.
+
+6. Грамматика
+
+Дай грамматику в зависимости от части речи.
+
+Для существительного:
+
+род;
+
+множественное число;
+
+сопряжённую форму, если она употребима;
+
+типичные сочетания;
+
+особенности склонения, если есть.
+
+Для глагола:
+
+корень;
+
+биньян;
+
+инфинитив;
+
+основные формы в настоящем, прошедшем и будущем времени;
+
+особенности спряжения;
+
+управление и предлоги, если важно.
+
+Для прилагательного:
+
+формы мужского и женского рода;
+
+формы единственного и множественного числа;
+
+типичные существительные, с которыми оно сочетается.
+
+Для наречий, предлогов, союзов и частиц:
+
+объясни функцию;
+
+покажи типичные конструкции;
+
+предупреди о частых ошибках.
+
+4. Примеры употребления
+
+На каждое разбираемое слово давай 3–5 примеров.
+
+Сначала напиши все примеры подряд только на иврите.
+
+Только после этого дай отдельный нумерованный список с переводами на русский язык.
+
+Первые два примера должны быть простыми, примерно уровня ульпан ב или не выше.
+
+Остальные примеры могут быть сложнее и должны показывать разные оттенки значения слова.
+
+Для глаголов старайся дать примеры в:
+
+настоящем времени;
+
+прошедшем времени;
+
+будущем времени.
+
+Также по возможности чередуй:
+
+мужской и женский род;
+
+единственное и множественное число;
+
+разные лица.
+
+Если у слова есть необычное спряжение, склонение, управление или форма, пример с этой специфической формой обязателен.
+
+Если у слова есть частоупотребимые выражения, фразеологизмы, устойчивые сочетания или языковые блоки, они предпочтительнее искусственных примеров.
+
+Если используешь реальные примеры из СМИ, книг, официальных текстов или других источников, укажи источник.
+
+Если пример составлен специально для обучения, честно пометь его как учебный.
+
+Примеры должны показывать не только грамматику, но и живую употребимость слова.
+
+5. Устойчивые выражения и языковые блоки
+
+Если со словом есть частотные выражения, конструкции или фразеологизмы, обязательно добавь отдельный короткий блок.
+
+Для каждого выражения дай:
+
+выражение на иврите;
+
+русский перевод;
+
+уровень языка;
+
+короткое объяснение, где оно уместно.
+
+Если устойчивые выражения важнее отдельных искусственных предложений, отдай приоритет им.
+
+6. Частые ошибки
+
+Обязательно добавляй короткий блок "Частые ошибки".
+
+В нём объясняй:
+
+с чем русскоязычные ученики обычно путают это слово;
+
+какие есть ложные друзья;
+
+какие ошибки бывают в роде, числе, предлоге, управлении, биньяне или мишкале;
+
+какие значения нельзя напрямую переносить из русского;
+
+когда слово звучит слишком книжно, грубо, официально или неестественно;
+
+какие формы лучше не использовать без уверенности.
+
+7. Связь с уже изученными словами
+
+Учитывай слова, которые мы уже разбирали в этом чате или которые я явно прошу считать изученными.
+
+Старайся интегрировать ранее разобранные слова в новые примеры, но не делай это искусственно.
+Если ты не видишь в текущем контексте, что мы уже разбирали слово раньше, не выдумывай. Напиши:
+"Я не вижу в текущем контексте, что мы уже разбирали это слово."
+
+8. Формат и стиль ответа
+
+Объясняй точно, но человеческим языком.
+
+Не делай ответ академически тяжёлым без необходимости.
+
+Не заменяй глубокий разбор простой карточкой "слово — перевод".
+
+Не перегружай ответ редкими словами без объяснения их уровня и употребимости.
+
+Если я прошу "коротко", можно сократить объём, но нельзя нарушать жёсткие правила: никакого транслита без запроса, никакого выдумывания огласовок, корней, этимологии и источников.
+
+Если слово простое, всё равно дай структуру, но компактно.
+
+Если слово сложное, многозначное или культурно важное, разбирай глубже.
+
+Дополнительно для этого конкретного вызова: у тебя нет живого доступа к сайту Академии языка иврит или словарям — учитывай это в правилах самораскрытия неуверенности выше. Ответ верни строго в виде JSON по схеме, которую я передал через responseSchema — без markdown-обёртки, без код-блоков, каждое текстовое поле — обычный читаемый текст (можно с переносами строк), следуя всем правилам выше внутри содержимого этих полей.`
+
+const AI_RESPONSE_SCHEMA = {
+  type: "OBJECT",
+  properties: {
+    word_and_level: { type: "STRING", description: "слово с огласовками (если уверен) + основной перевод + уровень/употребимость" },
+    meanings: { type: "STRING", description: "значения и употребление по оттенкам" },
+    origin: { type: "STRING", description: "происхождение и история, кратко" },
+    synonyms: { type: "STRING", description: "синонимы и близкие/похожие слова, разница в употреблении" },
+    root_field: { type: "STRING", description: "корень, семантическое поле, семья слов по биньянам/мишкалям" },
+    grammar: { type: "STRING", description: "грамматика по части речи" },
+    set_expressions: { type: "STRING", description: "устойчивые выражения, если есть" },
+    common_mistakes: { type: "STRING", description: "частые ошибки русскоязычных" },
+    caveats: { type: "STRING", description: "сводка всего, что помечено как непроверенное/требующее проверки по Академии иврита в любом из полей выше" },
+  },
+  required: ["word_and_level", "meanings", "root_field", "grammar"],
+};
+
+const aiAnalysisCache = {};
+
+function buildAiTrainerPrompt(d) {
+  return `Разбираемое слово (в контексте фразы, лемма может отличаться от точной формы): ${d.c}
+Предложение на иврите: ${d.h}
+Перевод на русский: ${d.r}
+`;
+}
+
+function renderAiAnalysis(a) {
+  const section = (title, text) => text ? `<h4>${title}</h4><div>${escapeHtml(text).replace(/\n/g, "<br>")}</div>` : "";
+  els.aiResult.innerHTML = [
+    section("Слово и уровень", a.word_and_level),
+    section("Значение и употребление", a.meanings),
+    section("Происхождение", a.origin),
+    section("Синонимы", a.synonyms),
+    section("Корень и семантическое поле", a.root_field),
+    section("Грамматика", a.grammar),
+    section("Устойчивые выражения", a.set_expressions),
+    section("Частые ошибки", a.common_mistakes),
+    a.caveats ? `<div class="ai-err">⚠ ${escapeHtml(a.caveats)}</div>` : "",
+  ].join("");
+}
+
+async function askAiAboutWord(d, btn) {
+  const key = localStorage.getItem(AI_KEY_STORAGE);
+  if (!key) { els.aiKeysetup.classList.remove("hidden"); return; }
+  els.aiKeysetup.classList.add("hidden");
+
+  const cacheKey = d.c;
+  const forceRefresh = btn.dataset.shown === "1";
+  if (!forceRefresh && aiAnalysisCache[cacheKey]) {
+    renderAiAnalysis(aiAnalysisCache[cacheKey]);
+    btn.textContent = "🎓 Разбор ещё раз";
+    btn.dataset.shown = "1";
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = "Анализирую…";
+  const body = {
+    systemInstruction: { parts: [{ text: AI_PEDAGOGY_PROMPT }] },
+    contents: [{ parts: [{ text: buildAiTrainerPrompt(d) }] }],
+    generationConfig: { responseMimeType: "application/json", responseSchema: AI_RESPONSE_SCHEMA },
+  };
+  // Tried in order on a 503 ("model overloaded") — same fallback the reader
+  // uses; both are aliases so this list should not need updating when
+  // Google rotates which specific model each alias points to.
+  const AI_MODELS = ["gemini-flash-latest", "gemini-flash-lite-latest"];
+  async function attempt(model) {
+    const url = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + encodeURIComponent(key);
+    const resp = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    if (!resp.ok) {
+      const errText = await resp.text();
+      const err = new Error("HTTP " + resp.status + ": " + errText.slice(0, 300));
+      err.status = resp.status;
+      throw err;
+    }
+    const respJson = await resp.json();
+    const parts = respJson.candidates && respJson.candidates[0] && respJson.candidates[0].content && respJson.candidates[0].content.parts;
+    const jsonText = parts && parts[0] && parts[0].text;
+    if (!jsonText) throw new Error("пустой ответ модели");
+    return JSON.parse(jsonText);
+  }
+
+  try {
+    let analysis, lastErr;
+    for (let i = 0; i < AI_MODELS.length; i++) {
+      try { analysis = await attempt(AI_MODELS[i]); lastErr = null; break; }
+      catch (err) {
+        lastErr = err;
+        if (err.status !== 503) break;
+        if (i < AI_MODELS.length - 1) { btn.textContent = "Модель перегружена, пробую другую…"; await new Promise(r => setTimeout(r, 1200)); }
+      }
+    }
+    if (lastErr) throw lastErr;
+    aiAnalysisCache[cacheKey] = analysis;
+    renderAiAnalysis(analysis);
+    btn.textContent = "🎓 Разбор ещё раз";
+    btn.dataset.shown = "1";
+  } catch (err) {
+    els.aiResult.innerHTML = `<div class="ai-err">Не получилось: ${escapeHtml(String((err && err.message) || err))}</div>`;
+    btn.textContent = "🎓 Разбор от ИИ-педагога";
+    btn.dataset.shown = "";
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+els.btnAiAnalyze.addEventListener("click", () => askAiAboutWord(DATA[currentIndex], els.btnAiAnalyze));
+document.getElementById("ai-key-save").addEventListener("click", () => {
+  const input = document.getElementById("ai-key-input");
+  const v = input.value.trim();
+  if (!v) return;
+  localStorage.setItem(AI_KEY_STORAGE, v);
+  els.aiKeysetup.classList.add("hidden");
+  input.value = "";
+  askAiAboutWord(DATA[currentIndex], els.btnAiAnalyze);
+});
+
+
 document.getElementById("subtitle").textContent = `${DATA.length} предложений · уровни א – ג · перевод в обе стороны, аудирование и пропуск слова`;
 updateStatsBar();
-loadCard();
+
+// Dashboard-first entry: show what's due before dropping into a card, and
+// only start the review session (and its keyboard-shortcut hint, cards,
+// etc.) once the user actually asks to. "← Обзор" returns to it anytime.
+const dashboardView = document.getElementById("dashboard-view");
+const reviewArea = document.getElementById("review-area");
+document.getElementById("btn-dash-start").addEventListener("click", () => {
+  dashboardView.classList.add("hidden");
+  reviewArea.classList.remove("hidden");
+  loadCard();
+});
+document.getElementById("btn-back-dash").addEventListener("click", () => {
+  reviewArea.classList.add("hidden");
+  dashboardView.classList.remove("hidden");
+  renderDashboard();
+});
+renderDashboard();
 
 // PWA install support — safe no-op if manifest.json/sw.js aren't served
 // alongside this page (e.g. inside the Claude Artifact viewer).
