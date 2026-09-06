@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.13.1
+  Ивритский тренажёр — v1.13.2
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр</title>
@@ -575,7 +575,7 @@
   <footer class="bottom">
     <button class="reset-link" id="btn-reset">Сбросить прогресс</button>
   </footer>
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.13.1</div>
+  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.13.2</div>
 </div>
 
 <script>
@@ -1288,9 +1288,17 @@ function renderCapAdvice() {
 function computeLevelStats() {
   const now = Date.now();
   const perLevel = LEVELS.map((lv, code) => {
-    let total = 0, learning = 0, mastered = 0, due = 0;
+    // `total`/`learning`/`mastered`/`due` only count sentences currently in
+    // the active pool (via inPool()) and count sentence×mode pairs, which
+    // is what "Прогресс по уровням" and the dashboard want. `sentenceCount`
+    // is the level's real, pool-INDEPENDENT sentence count — needed so a
+    // level a user has toggled off doesn't just vanish (with total===0)
+    // from "Мои базы", where the whole point is to see and re-enable it.
+    let total = 0, learning = 0, mastered = 0, due = 0, sentenceCount = 0;
     for (let i = 0; i < DATA.length; i++) {
-      if (DATA[i].l !== code || !inPool(i)) continue;
+      if (DATA[i].l !== code) continue;
+      sentenceCount++;
+      if (!inPool(i)) continue;
       for (const m of ALL_MODES) {
         total++;
         const st = progress.items[i + ":" + m];
@@ -1299,7 +1307,7 @@ function computeLevelStats() {
         if (st.due <= now) due++;
       }
     }
-    return { code, sym: lv.sym, label: lv.label, total, learning, mastered, due };
+    return { code, sym: lv.sym, label: lv.label, total, learning, mastered, due, sentenceCount };
   });
   const totals = perLevel.reduce((a, l) => ({
     total: a.total + l.total, learning: a.learning + l.learning, mastered: a.mastered + l.mastered, due: a.due + l.due,
@@ -1362,14 +1370,15 @@ function groupCustomCards() {
 function renderDeckBases() {
   const grid = document.getElementById("deck-grid");
   const { perLevel } = computeLevelStats();
-  const levelTiles = perLevel.filter(l => l.code < CUSTOM_LEVEL_CODE && l.total > 0).map(l => {
+  const levelTiles = perLevel.filter(l => l.code < CUSTOM_LEVEL_CODE && l.sentenceCount > 0).map(l => {
     const masteryPct = l.total ? Math.round((l.mastered / l.total) * 100) : 0;
     const checked = progress.pool.levels.includes(l.code);
+    const countLine = checked ? `${l.sentenceCount} фраз · due ${l.due}` : `${l.sentenceCount} фраз · выключено`;
     return `<div class="deck-tile">
       <div class="deck-tile-top">
         <div>
           <div class="deck-tile-name"><span class="lvl">${l.sym}</span>${l.label}</div>
-          <div class="deck-tile-count">${l.total} фраз · due ${l.due}</div>
+          <div class="deck-tile-count">${countLine}</div>
         </div>
         <label class="deck-toggle"><input type="checkbox" class="deck-level-cb" data-level="${l.code}" ${checked ? "checked" : ""}></label>
       </div>
