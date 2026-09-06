@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.12.1
+  Ивритский тренажёр — v1.13.0
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр</title>
@@ -305,7 +305,29 @@
   .dash-tile .due-num { font-size: 1.3rem; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
   .dash-tile .mbar { height: 5px; border-radius: 3px; background: var(--surface-2); overflow: hidden; margin-top: 8px; }
   .dash-tile .mbar > div { height: 100%; background: var(--accent); border-radius: 3px; }
+  .dash-actions { display: flex; align-items: center; gap: 16px; }
   .dash-start { align-self: flex-start; }
+
+  /* ---- Мои базы: browse/mix where sentences come from — built-in levels
+     plus one group per reader book and one for AI-разбор, derived from
+     data that already exists (level code / customCard source string), not
+     a new hand-maintained hierarchy. Reuses the dashboard's tile language
+     so it reads as the same app, not a bolted-on third screen. ---- */
+  .deckbases-hdr { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  .deckbases-hdr h2 { font-size: 1.05rem; margin: 0; }
+  .deckbases-sub { font-size: 0.82rem; color: var(--text-muted); margin: -8px 0 4px; }
+  .deck-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+  .deck-tile { background: var(--surface); border: 1px solid var(--border); border-radius: 11px; padding: 14px 16px 12px; }
+  .deck-tile-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; cursor: pointer; }
+  .deck-tile-name { font-weight: 600; font-size: 0.92rem; }
+  .deck-tile-name .lvl { font-family: 'David Libre', 'Noto Sans Hebrew', serif; margin-right: 3px; }
+  .deck-tile-count { font-size: 0.76rem; color: var(--text-faint); margin-top: 2px; }
+  .deck-toggle { flex-shrink: 0; }
+  .deck-tile .mbar { height: 5px; border-radius: 3px; background: var(--surface-2); overflow: hidden; margin-top: 10px; }
+  .deck-tile .mbar > div { height: 100%; background: var(--accent); border-radius: 3px; }
+  .deck-tile-list { display: none; flex-direction: column; gap: 0; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); max-height: 220px; overflow-y: auto; }
+  .deck-tile-list.show { display: flex; }
+  .deck-tile-empty { font-size: 0.78rem; color: var(--text-faint); }
 
   /* ---- Review layout: card + a persistent context sidebar on wide
      screens, stacked below it on narrow ones. Lives inside `.page`, which
@@ -377,7 +399,19 @@
       <div class="dash-hero-label">фраз готовы к повторению сегодня</div>
     </div>
     <div class="dash-grid" id="dash-grid"></div>
-    <button class="action primary dash-start" id="btn-dash-start">Начать →</button>
+    <div class="dash-actions">
+      <button class="action primary dash-start" id="btn-dash-start">Начать →</button>
+      <button class="link-btn" id="btn-open-deckbases">🗂 Мои базы</button>
+    </div>
+  </div>
+
+  <div class="hidden" id="deckbases-view">
+    <div class="deckbases-hdr">
+      <h2>🗂 Мои базы</h2>
+      <button class="link-btn" id="btn-deckbases-back">🏠 Обзор</button>
+    </div>
+    <div class="deckbases-sub">Откуда идут ваши фразы — включайте или выключайте, чтобы смешивать в практике.</div>
+    <div class="deck-grid" id="deck-grid"></div>
   </div>
 
   <div class="hidden" id="review-area">
@@ -388,6 +422,7 @@
       <select id="filter-level" aria-label="Уровень"></select>
       <select id="filter-mode" aria-label="Тип упражнения"></select>
       <button class="link-btn" id="btn-back-dash">🏠 Обзор</button>
+      <button class="link-btn" id="btn-back-deckbases">🗂 Мои базы</button>
     </div>
     <button class="link-btn" id="btn-toggle-stats">Статистика и метод ▾</button>
   </div>
@@ -524,7 +559,7 @@
   <footer class="bottom">
     <button class="reset-link" id="btn-reset">Сбросить прогресс</button>
   </footer>
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.12.1</div>
+  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.13.0</div>
 </div>
 
 <script>
@@ -1280,6 +1315,111 @@ function renderDashboard() {
       <div class="mbar"><div style="width:${masteryPct}%"></div></div>
     </div>`;
   }).join("");
+}
+
+// ---- Мои базы: where sentences come from, browsable and mixable. Groups
+// are DERIVED from data that already exists — the built-in level code and
+// the "reader:<bookId>:..." / "ai:<lemma>:..." shape of a customCard's own
+// source id — rather than a new hand-maintained hierarchy, so this needs
+// no migration and no retroactive tagging of the corpus.
+function groupCustomCards() {
+  const groups = {};
+  Object.entries(customCardsInfo).forEach(([source, info]) => {
+    let key, label;
+    const readerMatch = source.match(/^reader:([^:]+):/);
+    if (readerMatch) {
+      key = "reader:" + readerMatch[1];
+      label = "📖 " + readerMatch[1].replace(/[-_]/g, " ");
+    } else if (source.startsWith("ai:")) {
+      key = "ai";
+      label = "🎓 ИИ-разбор";
+    } else {
+      key = "other";
+      label = "✎ Другое";
+    }
+    if (!groups[key]) groups[key] = { key, label, entries: [] };
+    groups[key].entries.push([source, info]);
+  });
+  return Object.values(groups);
+}
+
+function renderDeckBases() {
+  const grid = document.getElementById("deck-grid");
+  const { perLevel } = computeLevelStats();
+  const levelTiles = perLevel.filter(l => l.code < CUSTOM_LEVEL_CODE && l.total > 0).map(l => {
+    const masteryPct = l.total ? Math.round((l.mastered / l.total) * 100) : 0;
+    const checked = progress.pool.levels.includes(l.code);
+    return `<div class="deck-tile">
+      <div class="deck-tile-top">
+        <div>
+          <div class="deck-tile-name"><span class="lvl">${l.sym}</span>${l.label}</div>
+          <div class="deck-tile-count">${l.total} фраз · due ${l.due}</div>
+        </div>
+        <label class="deck-toggle"><input type="checkbox" class="deck-level-cb" data-level="${l.code}" ${checked ? "checked" : ""}></label>
+      </div>
+      <div class="mbar"><div style="width:${masteryPct}%"></div></div>
+    </div>`;
+  }).join("");
+
+  const groups = groupCustomCards();
+  const groupTiles = groups.map(g => {
+    const indices = g.entries.map(([, info]) => info.index);
+    const allIn = indices.every(i => !progress.pool.exclude.includes(i));
+    const rows = g.entries.map(([source, info]) => `
+      <div class="custom-card-row" data-source="${escapeHtml(source)}">
+        <div class="custom-card-text"><bdi>${escapeHtml(info.he)}</bdi><span class="ru">${escapeHtml(info.ru)}</span></div>
+        <button class="custom-card-del" title="Убрать из личного пула">✕</button>
+      </div>`).join("");
+    return `<div class="deck-tile">
+      <div class="deck-tile-top" data-group="${g.key}">
+        <div>
+          <div class="deck-tile-name">${escapeHtml(g.label)}</div>
+          <div class="deck-tile-count">${indices.length} фраз</div>
+        </div>
+        <label class="deck-toggle"><input type="checkbox" class="deck-group-cb" data-group="${g.key}" ${allIn ? "checked" : ""}></label>
+      </div>
+      <div class="deck-tile-list" id="deck-list-${g.key}">${rows}</div>
+    </div>`;
+  }).join("");
+
+  grid.innerHTML = levelTiles + groupTiles || '<div class="deck-tile-empty">Пока пусто.</div>';
+
+  grid.querySelectorAll(".deck-level-cb").forEach(cb => {
+    cb.addEventListener("click", (e) => e.stopPropagation());
+    cb.addEventListener("change", () => {
+      const code = Number(cb.dataset.level);
+      const set = new Set(progress.pool.levels);
+      if (cb.checked) set.add(code); else set.delete(code);
+      progress.pool.levels = Array.from(set);
+      saveProgress(); cloudSyncMeta(); updateStatsBar();
+    });
+  });
+  grid.querySelectorAll(".deck-group-cb").forEach(cb => {
+    cb.addEventListener("click", (e) => e.stopPropagation());
+    cb.addEventListener("change", () => {
+      const group = groups.find(g => g.key === cb.dataset.group);
+      const indices = group.entries.map(([, info]) => info.index);
+      if (cb.checked) {
+        progress.pool.exclude = progress.pool.exclude.filter(i => !indices.includes(i));
+        indices.forEach(i => { if (!progress.pool.include.includes(i)) progress.pool.include.push(i); });
+      } else {
+        indices.forEach(i => { if (!progress.pool.exclude.includes(i)) progress.pool.exclude.push(i); });
+      }
+      saveProgress(); cloudSyncMeta(); updateStatsBar();
+    });
+  });
+  grid.querySelectorAll(".deck-tile-top[data-group]").forEach(top => {
+    top.addEventListener("click", () => {
+      document.getElementById("deck-list-" + top.dataset.group).classList.toggle("show");
+    });
+  });
+  grid.querySelectorAll(".custom-card-del").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      removeCustomCard(btn.closest(".custom-card-row").dataset.source);
+      renderDeckBases();
+    });
+  });
 }
 
 // ---- card rendering ----
@@ -2195,14 +2335,29 @@ updateStatsBar();
 // etc.) once the user actually asks to. "← Обзор" returns to it anytime.
 const dashboardView = document.getElementById("dashboard-view");
 const reviewArea = document.getElementById("review-area");
+const deckbasesView = document.getElementById("deckbases-view");
+function showView(view) {
+  [dashboardView, reviewArea, deckbasesView].forEach(v => v.classList.add("hidden"));
+  view.classList.remove("hidden");
+}
 document.getElementById("btn-dash-start").addEventListener("click", () => {
-  dashboardView.classList.add("hidden");
-  reviewArea.classList.remove("hidden");
+  showView(reviewArea);
   loadCard();
 });
 document.getElementById("btn-back-dash").addEventListener("click", () => {
-  reviewArea.classList.add("hidden");
-  dashboardView.classList.remove("hidden");
+  showView(dashboardView);
+  renderDashboard();
+});
+document.getElementById("btn-open-deckbases").addEventListener("click", () => {
+  showView(deckbasesView);
+  renderDeckBases();
+});
+document.getElementById("btn-back-deckbases").addEventListener("click", () => {
+  showView(deckbasesView);
+  renderDeckBases();
+});
+document.getElementById("btn-deckbases-back").addEventListener("click", () => {
+  showView(dashboardView);
   renderDashboard();
 });
 renderDashboard();
