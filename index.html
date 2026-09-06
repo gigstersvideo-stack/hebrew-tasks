@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.17.0
+  Ивритский тренажёр — v1.18.0
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр</title>
@@ -29,8 +29,10 @@
     --accent-soft: #DCEAE6;
     --good: #2E7D46;
     --good-soft: #E1F3E5;
+    --good-deep: #1F5C34;
     --bad: #B23A2E;
     --bad-soft: #FBE6E2;
+    --bad-pale: #C97B6F;
     --amber: #9A6B12;
     --amber-soft: #F5E9D2;
     --border: #D6DCD4;
@@ -45,7 +47,7 @@
       --bg: #12171A; --bg-grid: #171D20; --surface: #1B2226; --surface-2: #212A2E;
       --text: #E7EDE9; --text-muted: #93A29C; --text-faint: #667069;
       --accent: #6FBFAE; --accent-strong: #8FD1C2; --accent-soft: #223330;
-      --good: #6FCB8B; --good-soft: #1E3323; --bad: #E08579; --bad-soft: #3A211E;
+      --good: #6FCB8B; --good-soft: #1E3323; --good-deep: #8FE0A8; --bad: #E08579; --bad-soft: #3A211E; --bad-pale: #B8887F;
       --amber: #E0B75C; --amber-soft: #3A3016;
       --border: #2A3236; --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
       --del-bg: rgba(224,133,121,0.16); --ins-bg: rgba(111,203,139,0.18);
@@ -56,7 +58,7 @@
     --bg: #12171A; --bg-grid: #171D20; --surface: #1B2226; --surface-2: #212A2E;
     --text: #E7EDE9; --text-muted: #93A29C; --text-faint: #667069;
     --accent: #6FBFAE; --accent-strong: #8FD1C2; --accent-soft: #223330;
-    --good: #6FCB8B; --good-soft: #1E3323; --bad: #E08579; --bad-soft: #3A211E;
+    --good: #6FCB8B; --good-soft: #1E3323; --good-deep: #8FE0A8; --bad: #E08579; --bad-soft: #3A211E; --bad-pale: #B8887F;
     --amber: #E0B75C; --amber-soft: #3A3016;
     --border: #2A3236; --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
     --del-bg: rgba(224,133,121,0.16); --ins-bg: rgba(111,203,139,0.18);
@@ -238,7 +240,6 @@
   }
   button.icon-btn:hover { background: var(--surface-2); }
 
-  footer.bottom { display: flex; justify-content: center; margin-top: 4px; }
   .reset-link { background: none; border: none; color: var(--text-faint); font-size: 0.74rem; text-decoration: underline; text-underline-offset: 2px; padding: 4px 8px; font-weight: 400; cursor: pointer; font-family: inherit; }
   .reset-link:hover { color: var(--text-muted); }
   .reset-link.confirming { color: var(--bad); font-weight: 600; }
@@ -256,14 +257,14 @@
     color: var(--text-muted); flex: 1 1 auto; transition: filter 0.12s ease;
   }
   button.rating-btn:hover { filter: brightness(0.96); }
-  /* Same red→amber→green→teal ladder spaced-repetition tools conventionally
-     use for Again/Hard/Good/Easy — reuses the existing semantic tokens
-     rather than inventing new hues, and gives the four choices a scannable
-     identity instead of four identical grey buttons. */
+  /* Two hues, not four: red for the "still wrong" pair (Again/Hard),
+     green for the "got it" pair (Good/Easy) — saturation within each
+     pair signals degree, so the row reads as one axis instead of four
+     unrelated colors competing for attention. */
   #rate-again { border-color: var(--bad); color: var(--bad); background: var(--bad-soft); }
-  #rate-hard { border-color: var(--amber); color: var(--amber); background: var(--amber-soft); }
+  #rate-hard { border-color: var(--bad-pale); color: var(--bad-pale); background: var(--bad-soft); }
   #rate-good { border-color: var(--good); color: var(--good); background: var(--good-soft); }
-  #rate-easy { border-color: var(--accent-strong); color: var(--accent-strong); background: var(--accent-soft); }
+  #rate-easy { border-color: var(--good-deep); color: var(--good-deep); background: var(--good-soft); }
   button.rating-btn.suggested { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px currentColor; font-weight: 700; }
 
   .mistakes-block { display: flex; flex-direction: column; gap: 4px; }
@@ -562,6 +563,9 @@
       <li>Вход через Google синхронизирует прогресс, ошибки, серию и пул между устройствами и с читалкой קורא — без входа всё работает так же, только локально в этом браузере.</li>
       <li>Личный пул: какие уровни вообще участвуют в вашей практике — можно постепенно подключать новые или убирать отдельные фразы, не теряя расписание по остальным.</li>
     </ul>
+
+    <h2>Данные</h2>
+    <button class="reset-link" id="btn-reset">Сбросить прогресс</button>
   </div>
 
   <div class="review-layout">
@@ -620,7 +624,7 @@
       <div class="side-focusword" id="side-focusword"></div>
       <div class="related-words" id="related-words"></div>
       <div class="ai-block" id="ai-block">
-        <button class="ai-btn" id="btn-ai-analyze" type="button">🎓 Разбор слова</button>
+        <button class="ai-btn" id="btn-ai-analyze" type="button">Разбор слова</button>
         <div class="ai-keysetup hidden" id="ai-keysetup">
           <div>Нужен свой бесплатный ключ Gemini — <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">получить ↗</a></div>
           <input type="password" id="ai-key-input" placeholder="Вставьте ключ (AIza...)">
@@ -635,10 +639,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <footer class="bottom">
-    <button class="reset-link" id="btn-reset">Сбросить прогресс</button>
-  </footer>
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.17.0</div>
+  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.18.0</div>
 </div>
 
 <script>
@@ -1614,7 +1615,7 @@ function loadCard() {
   els.aiResult.innerHTML = "";
   els.aiKeysetup.classList.add("hidden");
   els.btnAiAnalyze.disabled = false;
-  els.btnAiAnalyze.textContent = "🎓 Разбор слова";
+  els.btnAiAnalyze.textContent = "Разбор слова";
   els.btnAiAnalyze.dataset.shown = "";
   els.ratingRow.classList.remove("show");
   document.querySelectorAll(".rating-btn").forEach(b => b.classList.remove("suggested"));
@@ -2341,7 +2342,7 @@ async function askAiAboutWord(d, btn) {
   const forceRefresh = btn.dataset.shown === "1";
   if (!forceRefresh && aiAnalysisCache[cacheKey]) {
     renderAiAnalysis(aiAnalysisCache[cacheKey]);
-    btn.textContent = "🎓 Разбор ещё раз";
+    btn.textContent = "Разбор ещё раз";
     btn.dataset.shown = "1";
     return;
   }
@@ -2386,11 +2387,11 @@ async function askAiAboutWord(d, btn) {
     if (lastErr) throw lastErr;
     aiAnalysisCache[cacheKey] = analysis;
     renderAiAnalysis(analysis);
-    btn.textContent = "🎓 Разбор ещё раз";
+    btn.textContent = "Разбор ещё раз";
     btn.dataset.shown = "1";
   } catch (err) {
     els.aiResult.innerHTML = `<div class="ai-err">Не получилось: ${escapeHtml(String((err && err.message) || err))}</div>`;
-    btn.textContent = "🎓 Разбор слова";
+    btn.textContent = "Разбор слова";
     btn.dataset.shown = "";
   } finally {
     btn.disabled = false;
