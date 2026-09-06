@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.12.0
+  Ивритский тренажёр — v1.12.1
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр</title>
@@ -79,7 +79,7 @@
   }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 
-  .page { width: 100%; max-width: 640px; display: flex; flex-direction: column; gap: 18px; }
+  .page { width: 100%; max-width: 860px; display: flex; flex-direction: column; gap: 18px; }
 
   header.top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
   header.top h1 { font-size: 1.25rem; font-weight: 700; margin: 0; letter-spacing: -0.01em; }
@@ -308,22 +308,15 @@
   .dash-start { align-self: flex-start; }
 
   /* ---- Review layout: card + a persistent context sidebar on wide
-     screens, stacked below it on narrow ones. `.page` caps at 640px for
-     everything else (header, dashboard, single-column card) — but with
-     the sidebar attached that leaves the desktop view squeezed into a
-     narrow column with dead space on both sides, so this specifically
-     breaks out of that parent width on screens wide enough to use it. */
+     screens, stacked below it on narrow ones. Lives inside `.page`, which
+     is now wide enough (860px) for both at once — no separate breakout,
+     so this section stays the same width as the header/toolbar/dashboard
+     above and below it instead of jumping to a different column width. */
   .review-layout { display: flex; gap: 18px; align-items: flex-start; }
   .review-layout > .card { flex: 1; min-width: 0; }
   .side-panel {
     width: 300px; flex-shrink: 0; background: var(--surface); border: 1px solid var(--border);
     border-radius: 12px; padding: 18px 18px 16px; display: flex; flex-direction: column; gap: 4px;
-  }
-  @media (min-width: 861px) {
-    .review-layout {
-      width: 100vw; max-width: 1040px;
-      margin-left: calc(50% - 50vw); padding: 0 24px; box-sizing: border-box;
-    }
   }
   @media (max-width: 860px) {
     .review-layout { flex-direction: column; }
@@ -531,7 +524,7 @@
   <footer class="bottom">
     <button class="reset-link" id="btn-reset">Сбросить прогресс</button>
   </footer>
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.12.0</div>
+  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.12.1</div>
 </div>
 
 <script>
