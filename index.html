@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.13.2
+  Ивритский тренажёр — v1.14.0
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр</title>
@@ -373,12 +373,74 @@
 
   .kbd-hint { font-size: 0.7rem; color: var(--text-faint); }
   .kbd-hint kbd { font-family: 'IBM Plex Sans', sans-serif; background: var(--surface-2); border: 1px solid var(--border); border-radius: 4px; padding: 0 5px; }
+
+  /* ---- Feedback: low-friction in-app form (no GitHub account needed)
+     instead of the old external-issue-tracker approach, plus an
+     owner-only review list gated by Firebase uid. ---- */
+  .feedback-fab {
+    position: fixed; bottom: 18px; left: 18px; z-index: 50; width: 44px; height: 44px; border-radius: 50%;
+    background: var(--text); color: var(--surface); border: none; font-size: 18px; cursor: pointer;
+    box-shadow: 0 6px 16px rgba(0,0,0,.2); display: flex; align-items: center; justify-content: center;
+  }
+  .fb-modal-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 60;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+  .fb-modal { background: var(--surface); border-radius: 12px; padding: 20px 22px; width: 100%; max-width: 420px; box-shadow: var(--shadow); }
+  .fb-modal h3 { margin: 0 0 12px; font-size: 1rem; }
+  .fb-type-row { display: flex; gap: 14px; font-size: 0.85rem; margin-bottom: 10px; }
+  .fb-type-row label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+  .fb-modal textarea {
+    width: 100%; min-height: 100px; font-family: inherit; font-size: 0.9rem; padding: 8px 10px;
+    border: 1px solid var(--border); border-radius: 8px; background: var(--surface-2); color: var(--text); resize: vertical;
+  }
+  .fb-modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 12px; }
+  .fb-status { font-size: 0.8rem; margin-top: 8px; }
+  .fb-status.ok { color: var(--good); }
+  .fb-status.err { color: var(--bad); }
+
+  .fb-review-list { display: flex; flex-direction: column; gap: 10px; }
+  .fb-review-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+  .fb-review-item.is-new { border-color: var(--accent-strong); }
+  .fb-review-meta { display: flex; gap: 8px; align-items: center; font-size: 0.72rem; color: var(--text-faint); margin-bottom: 6px; }
+  .fb-review-badge { font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 1px 7px; border-radius: 999px; font-size: 0.66rem; }
+  .fb-review-badge.bug { background: var(--bad-soft); color: var(--bad); }
+  .fb-review-badge.suggestion { background: var(--accent-soft); color: var(--accent-strong); }
+  .fb-review-text { font-size: 0.9rem; white-space: pre-wrap; margin-bottom: 8px; }
+  .fb-review-actions { display: flex; gap: 8px; }
 </style>
 </head>
 <body>
 
 
+<button class="feedback-fab" id="btn-feedback-open" title="Оставить отзыв или сообщить о проблеме">💬</button>
+
+<div class="fb-modal-backdrop hidden" id="fb-modal-backdrop">
+  <div class="fb-modal">
+    <h3>Отзыв о тренажёре</h3>
+    <div class="fb-type-row">
+      <label><input type="radio" name="fb-type" value="bug" checked> Жалоба / баг</label>
+      <label><input type="radio" name="fb-type" value="suggestion"> Предложение</label>
+    </div>
+    <textarea id="fb-text" placeholder="Опишите, что не так или что улучшить..."></textarea>
+    <div class="fb-modal-actions">
+      <button class="action ghost" id="fb-cancel" type="button">Отмена</button>
+      <button class="action primary" id="fb-submit" type="button">Отправить</button>
+    </div>
+    <div class="fb-status" id="fb-status"></div>
+  </div>
+</div>
+
 <div class="page">
+  <div class="hidden" id="feedback-review-view">
+    <div class="deckbases-hdr">
+      <h2>📋 Отзывы</h2>
+      <button class="link-btn" id="btn-feedback-review-back">🏠 Обзор</button>
+    </div>
+    <div class="deckbases-sub">Видно только вам — жалобы и предложения от посетителей сайта.</div>
+    <div class="fb-review-list" id="fb-review-list"></div>
+  </div>
+
   <header class="top">
     <div>
       <h1>Ивритский тренажёр</h1>
@@ -397,6 +459,7 @@
         <img class="auth-avatar" id="auth-avatar" alt="">
         <span id="auth-name"></span>
         <button class="link-btn" id="btn-signout">Выйти</button>
+        <button class="link-btn hidden" id="btn-open-feedback-review">📋 Отзывы (<span id="feedback-unread-count">0</span>)</button>
       </div>
       <div class="auth-status" id="auth-status"></div>
     </div>
@@ -575,7 +638,7 @@
   <footer class="bottom">
     <button class="reset-link" id="btn-reset">Сбросить прогресс</button>
   </footer>
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.13.2</div>
+  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.14.0</div>
 </div>
 
 <script>
@@ -2361,8 +2424,9 @@ updateStatsBar();
 const dashboardView = document.getElementById("dashboard-view");
 const reviewArea = document.getElementById("review-area");
 const deckbasesView = document.getElementById("deckbases-view");
+const feedbackReviewView = document.getElementById("feedback-review-view");
 function showView(view) {
-  [dashboardView, reviewArea, deckbasesView].forEach(v => v.classList.add("hidden"));
+  [dashboardView, reviewArea, deckbasesView, feedbackReviewView].forEach(v => v.classList.add("hidden"));
   view.classList.remove("hidden");
 }
 document.getElementById("btn-dash-start").addEventListener("click", () => {
@@ -2388,6 +2452,89 @@ document.getElementById("btn-deckbases-back").addEventListener("click", () => {
 document.getElementById("btn-deckbases-help").addEventListener("click", () => {
   document.getElementById("deckbases-tip").classList.toggle("hidden");
 });
+
+// ---- Feedback: in-app bug/suggestion form (no GitHub account needed) +
+// an owner-only review list. OWNER_UID gates the review panel's
+// visibility here AND (mirrored server-side by a Firestore rule — the
+// client-side check alone isn't real security) actual read access.
+// Replace with the real uid from Firebase Console -> Authentication -> Users.
+const OWNER_UID = "JYkCrXPmBwhFaW5fyb6eQcWkihf1";
+window.OWNER_UID = OWNER_UID;
+
+const fbModal = document.getElementById("fb-modal-backdrop");
+const fbTextEl = document.getElementById("fb-text");
+const fbStatusEl = document.getElementById("fb-status");
+document.getElementById("btn-feedback-open").addEventListener("click", () => {
+  fbModal.classList.remove("hidden");
+  fbTextEl.value = "";
+  fbStatusEl.textContent = "";
+  fbStatusEl.className = "fb-status";
+  fbTextEl.focus();
+});
+document.getElementById("fb-cancel").addEventListener("click", () => fbModal.classList.add("hidden"));
+document.getElementById("fb-submit").addEventListener("click", async () => {
+  const text = fbTextEl.value.trim();
+  if (!text) { fbStatusEl.textContent = "Напишите пару слов."; fbStatusEl.className = "fb-status err"; return; }
+  const type = document.querySelector('input[name="fb-type"]:checked').value;
+  fbStatusEl.textContent = "Отправляю…"; fbStatusEl.className = "fb-status";
+  try {
+    if (!window.cloudSubmitFeedback) throw new Error("нет соединения с базой");
+    await window.cloudSubmitFeedback(type, text, "trainer");
+    fbStatusEl.textContent = "Спасибо, отправлено!"; fbStatusEl.className = "fb-status ok";
+    setTimeout(() => fbModal.classList.add("hidden"), 900);
+  } catch (e) {
+    fbStatusEl.textContent = "Не получилось отправить: " + ((e && e.message) || e); fbStatusEl.className = "fb-status err";
+  }
+});
+
+document.getElementById("btn-open-feedback-review").addEventListener("click", () => {
+  showView(feedbackReviewView);
+  renderFeedbackReview();
+});
+document.getElementById("btn-feedback-review-back").addEventListener("click", () => {
+  showView(dashboardView);
+  renderDashboard();
+});
+
+async function renderFeedbackReview() {
+  const list = document.getElementById("fb-review-list");
+  list.innerHTML = "Загрузка…";
+  if (!window.cloudFetchFeedback) { list.innerHTML = "Нет соединения с базой."; return; }
+  let items;
+  try { items = await window.cloudFetchFeedback(); }
+  catch (e) { list.innerHTML = "Не получилось загрузить: " + escapeHtml(String((e && e.message) || e)); return; }
+  if (!items.length) { list.innerHTML = '<div class="deck-tile-empty">Пока пусто.</div>'; return; }
+  list.innerHTML = items.map(it => `
+    <div class="fb-review-item ${it.status === "new" ? "is-new" : ""}">
+      <div class="fb-review-meta">
+        <span class="fb-review-badge ${it.type}">${it.type === "bug" ? "Баг" : "Предложение"}</span>
+        <span>${escapeHtml(it.app || "?")}</span>
+        <span>${it.createdAt ? new Date(it.createdAt).toLocaleString("ru-RU") : ""}</span>
+      </div>
+      <div class="fb-review-text">${escapeHtml(it.text || "")}</div>
+      <div class="fb-review-actions">
+        ${it.status === "new" ? `<button class="action ghost fb-mark-reviewed" data-id="${it.id}">Просмотрено</button>` : ""}
+        <button class="action ghost fb-delete" data-id="${it.id}">Удалить</button>
+      </div>
+    </div>`).join("");
+  list.querySelectorAll(".fb-mark-reviewed").forEach(btn => btn.addEventListener("click", async () => {
+    await window.cloudUpdateFeedbackStatus(btn.dataset.id, "reviewed");
+    renderFeedbackReview(); updateFeedbackUnreadBadge();
+  }));
+  list.querySelectorAll(".fb-delete").forEach(btn => btn.addEventListener("click", async () => {
+    await window.cloudDeleteFeedback(btn.dataset.id);
+    renderFeedbackReview(); updateFeedbackUnreadBadge();
+  }));
+}
+
+async function updateFeedbackUnreadBadge() {
+  if (!window.cloudFetchFeedback) return;
+  try {
+    const items = await window.cloudFetchFeedback();
+    document.getElementById("feedback-unread-count").textContent = items.filter(i => i.status === "new").length;
+  } catch (e) { /* not the owner, or offline — badge just stays at 0 */ }
+}
+
 renderDashboard();
 
 // PWA install support — safe no-op if manifest.json/sw.js aren't served
@@ -2419,7 +2566,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 import {
   getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
-  doc, getDoc, setDoc, collection, getDocs, writeBatch,
+  doc, getDoc, setDoc, deleteDoc, collection, getDocs, writeBatch,
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -2496,6 +2643,31 @@ window.cloudFetchAiKey = async function () {
   if (!cloudUid) return null;
   const snap = await getDoc(aiKeyDocRef(cloudUid));
   return snap.exists() ? snap.data() : null;
+};
+
+// Feedback: a single top-level "feedback" collection (not under
+// /users/{uid}/, since the owner needs to read across everyone's
+// submissions) — anyone can create a doc, only OWNER_UID can read/update/
+// delete one, enforced by a matching Firestore security rule. Submitting
+// doesn't require being signed in at all — the whole point is a lower
+// bar than the old "file a GitHub issue" flow.
+window.cloudSubmitFeedback = function (type, text, app) {
+  return setDoc(doc(collection(fbDb, "feedback")), {
+    type, text, app, url: location.href, uid: cloudUid || null,
+    userAgent: navigator.userAgent, createdAt: Date.now(), status: "new",
+  });
+};
+window.cloudFetchFeedback = async function () {
+  const snap = await getDocs(collection(fbDb, "feedback"));
+  const out = [];
+  snap.forEach(d => out.push(Object.assign({ id: d.id }, d.data())));
+  return out.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+};
+window.cloudUpdateFeedbackStatus = function (id, status) {
+  return setDoc(doc(fbDb, "feedback", id), { status }, { merge: true });
+};
+window.cloudDeleteFeedback = function (id) {
+  return deleteDoc(doc(fbDb, "feedback", id));
 };
 async function commitInBatches(uid, keys, valueFor) {
   let batch = writeBatch(fbDb), n = 0;
@@ -2622,6 +2794,13 @@ onAuthStateChanged(fbAuth, async (user) => {
     } catch (e) {
       console.error("[ivrit] AI key sync failed:", e);
     }
+    const feedbackBtn = document.getElementById("btn-open-feedback-review");
+    if (user.uid === window.OWNER_UID) {
+      feedbackBtn.classList.remove("hidden");
+      if (typeof updateFeedbackUnreadBadge === "function") updateFeedbackUnreadBadge();
+    } else {
+      feedbackBtn.classList.add("hidden");
+    }
     updateStatsBar();
     loadCard();
     updateCloudStatusIndicator();
@@ -2630,6 +2809,7 @@ onAuthStateChanged(fbAuth, async (user) => {
     signinBtn.style.display = "inline";
     userBox.style.display = "none";
     authStatusEl.textContent = "";
+    document.getElementById("btn-open-feedback-review").classList.add("hidden");
   }
 });
 </script>
