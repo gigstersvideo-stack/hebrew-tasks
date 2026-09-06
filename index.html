@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.11.0
+  Ивритский тренажёр — v1.11.1
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр</title>
@@ -509,7 +509,7 @@
   <footer class="bottom">
     <button class="reset-link" id="btn-reset">Сбросить прогресс</button>
   </footer>
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.11.0</div>
+  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.11.1</div>
 </div>
 
 <script>
@@ -1675,6 +1675,7 @@ resetBtn.addEventListener("click", () => {
 // the same quality of answer. Key is stored under a trainer-specific name
 // since the two apps are different origins and cannot share localStorage.
 const AI_KEY_STORAGE = "hebrew-trainer-ai-key";
+window.AI_KEY_STORAGE = AI_KEY_STORAGE; // readable from the module script below
 const AI_PEDAGOGY_PROMPT = ` Ты работаешь со мной как строгий, внимательный педагог иврита.
 
 Когда я спрашиваю новое ивритское слово, выражение, фразу или корень, разбирай его не как быстрый переводчик, а как преподаватель языка: через значение, употребление, источник, корень, грамматику, семантическое поле и реальные языковые связи.
@@ -2072,6 +2073,7 @@ function renderAiAnalysis(a) {
 
 async function askAiAboutWord(d, btn) {
   const key = localStorage.getItem(AI_KEY_STORAGE);
+  if (key && window.cloudSyncAiKey) window.cloudSyncAiKey(key);
   if (!key) { els.aiKeysetup.classList.remove("hidden"); return; }
   els.aiKeysetup.classList.add("hidden");
 
@@ -2141,6 +2143,7 @@ document.getElementById("ai-key-save").addEventListener("click", () => {
   const v = input.value.trim();
   if (!v) return;
   localStorage.setItem(AI_KEY_STORAGE, v);
+  if (window.cloudSyncAiKey) window.cloudSyncAiKey(v);
   els.aiKeysetup.classList.add("hidden");
   input.value = "";
   askAiAboutWord(DATA[currentIndex], els.btnAiAnalyze);
@@ -2259,6 +2262,21 @@ window.cloudRemoveCustomCard = function (source) {
   if (!cloudUid || !source) return;
   setDoc(doc(fbDb, "users", cloudUid, "customCards", source), { deleted: true }, { merge: true }).catch(() => {});
 };
+// Own Gemini key for the ИИ-педагог feature — deliberately a separate doc
+// from meta/state, and deliberately the SAME path+shape the קורא reader
+// uses, so signing in with the same Google account carries one key to
+// both apps (each still mirrors it into its own origin's localStorage,
+// since the two sites can't share storage directly).
+function aiKeyDocRef(uid) { return doc(fbDb, "users", uid, "settings", "ai"); }
+window.cloudSyncAiKey = function (key) {
+  if (!cloudUid || !key) return;
+  setDoc(aiKeyDocRef(cloudUid), { geminiKey: key }, { merge: true }).catch(() => {});
+};
+window.cloudFetchAiKey = async function () {
+  if (!cloudUid) return null;
+  const snap = await getDoc(aiKeyDocRef(cloudUid));
+  return snap.exists() ? snap.data() : null;
+};
 async function commitInBatches(uid, keys, valueFor) {
   let batch = writeBatch(fbDb), n = 0;
   const pending = [];
@@ -2372,6 +2390,17 @@ onAuthStateChanged(fbAuth, async (user) => {
       await pullCustomCards(user.uid);
     } catch (e) {
       console.error("[ivrit] custom cards sync failed:", e);
+    }
+    try {
+      const local = localStorage.getItem(window.AI_KEY_STORAGE);
+      const remote = await window.cloudFetchAiKey();
+      if (remote && remote.geminiKey && remote.geminiKey !== local) {
+        localStorage.setItem(window.AI_KEY_STORAGE, remote.geminiKey);
+      } else if (!remote && local) {
+        window.cloudSyncAiKey(local);
+      }
+    } catch (e) {
+      console.error("[ivrit] AI key sync failed:", e);
     }
     updateStatsBar();
     loadCard();
