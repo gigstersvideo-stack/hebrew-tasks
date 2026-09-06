@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.15.0
+  Ивритский тренажёр — v1.16.0
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр</title>
@@ -167,22 +167,20 @@
 
   .answer-row { display: flex; flex-direction: column; gap: 6px; }
   .answer-row label { font-size: 0.72rem; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
-  .answer-label-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-  /* Shown only for Hebrew fields — that typing works off physical key
-     position, not the OS layout, so switching the system layout by hand
-     is never necessary here. For Russian fields there's nothing to flag
-     (no remap happens), and the label text already says "на русский". */
-  .lang-badge {
-    font-family: 'IBM Plex Sans', sans-serif; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.04em;
-    border-radius: 999px; padding: 2px 8px; border: 1px solid var(--accent-strong); color: var(--accent-strong);
-  }
   input#answer {
     font-family: 'David Libre', 'Noto Sans Hebrew', 'Arial Hebrew', serif; font-size: 1.4rem; direction: rtl; text-align: right;
     width: 100%; background: var(--surface-2); border: none; border-bottom: 2px solid var(--border);
-    border-radius: 4px 4px 0 0; padding: 10px 12px; color: var(--text); transition: border-color 0.15s ease;
+    border-radius: 4px 4px 0 0; padding: 10px 12px; color: var(--text); transition: border-color 0.15s ease; box-sizing: border-box;
   }
   input#answer:focus { outline: none; border-bottom-color: var(--accent); }
-  input#answer:disabled { opacity: 0.75; }
+  /* Once checked, the input is swapped for this — the same typed text,
+     now with per-word right/wrong highlighting — instead of repeating it
+     a second time in a separate "Вы написали" block below: one line,
+     not two saying the same thing at different levels of detail. */
+  .answer-diff {
+    width: 100%; background: var(--surface-2); border-bottom: 2px solid var(--border);
+    border-radius: 4px 4px 0 0; padding: 10px 12px; box-sizing: border-box; min-height: 1.4rem;
+  }
 
   .buttons { display: flex; gap: 10px; flex-wrap: wrap; }
   button.action {
@@ -364,9 +362,10 @@
   .side-post.show { display: flex; }
   .side-focusword { font-family: 'David Libre', 'Noto Sans Hebrew', serif; font-size: 1.6rem; direction: rtl; text-align: right; color: var(--text); }
   .ai-btn {
-    font-family: inherit; font-size: 0.8rem; font-weight: 600; border-radius: 9px; padding: 9px 0;
-    cursor: pointer; border: none; background: var(--accent-strong); color: var(--surface); width: 100%;
+    font-family: inherit; font-size: 0.8rem; font-weight: 600; border-radius: 9px; padding: 8px 0;
+    cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--text-muted); width: 100%;
   }
+  .ai-btn:hover { border-color: var(--accent-strong); color: var(--accent-strong); }
   .ai-btn:disabled { opacity: 0.6; cursor: default; }
   .ai-keysetup { display: flex; flex-direction: column; gap: 6px; font-size: 0.76rem; color: var(--text-muted); }
   .ai-keysetup a { color: var(--accent-strong); }
@@ -502,15 +501,16 @@
   <div class="progress-bar"><div id="progress-fill" style="width:0%"></div></div>
 
   <div class="toolbar">
-    <div class="filters">
-      <select id="filter-level" aria-label="Уровень"></select>
-      <select id="filter-mode" aria-label="Тип упражнения"></select>
-      <button class="link-btn" id="btn-back-dash">🏠 Обзор</button>
-    </div>
+    <button class="link-btn" id="btn-back-dash">🏠 Обзор</button>
     <button class="link-btn" id="btn-toggle-stats">Статистика и метод ▾</button>
   </div>
 
   <div class="panel" id="stats-panel">
+    <h2>Фильтр текущей сессии</h2>
+    <div class="filters">
+      <select id="filter-level" aria-label="Уровень"></select>
+      <select id="filter-mode" aria-label="Тип упражнения"></select>
+    </div>
     <h2>Мой пул предложений</h2>
     <div class="pool-levels" id="pool-levels"></div>
     <div class="pool-note">В пуле сейчас: <b id="pool-count">0</b> из <span id="pool-total">0</span> фраз.
@@ -579,11 +579,9 @@
     <div class="hint-line" id="hint-line"></div>
 
     <div class="answer-row">
-      <div class="answer-label-row">
-        <label for="answer" id="answer-label">Ваш перевод на иврит</label>
-        <span class="lang-badge" id="lang-badge">HE</span>
-      </div>
+      <label for="answer" id="answer-label">Ваш перевод на иврит</label>
       <input id="answer" type="text" dir="rtl" lang="he" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="הקלידו כאן..." />
+      <div class="answer-diff diff-text hidden" id="answer-diff"></div>
     </div>
 
     <div class="buttons">
@@ -591,14 +589,9 @@
       <button class="action ghost" id="btn-hint">Подсказка</button>
     </div>
     <div class="kbd-hint"><kbd>Enter</kbd> проверить/дальше · <kbd>1</kbd>–<kbd>4</kbd> оценка после проверки</div>
-    <button class="reset-link" id="btn-exclude-card" style="align-self:flex-start;">Убрать эту фразу из пула</button>
 
     <div class="feedback" id="feedback">
       <div class="verdict" id="verdict"></div>
-      <div class="diff-line" id="diff-user-wrap">
-        <div class="diff-label" id="diff-user-label">Вы написали</div>
-        <div class="diff-text" id="diff-user"></div>
-      </div>
       <div class="diff-line">
         <div class="diff-label-row">
           <div class="diff-label" id="diff-ref-label">Правильный ответ</div>
@@ -613,6 +606,7 @@
         <button class="rating-btn" id="rate-easy" data-q="5">Легко</button>
       </div>
     </div>
+    <button class="reset-link" id="btn-exclude-card" style="align-self:flex-start;">Убрать эту фразу из пула</button>
   </div>
 
   <aside class="side-panel" id="side-panel">
@@ -622,7 +616,7 @@
       <div class="side-focusword" id="side-focusword"></div>
       <div class="related-words" id="related-words"></div>
       <div class="ai-block" id="ai-block">
-        <button class="ai-btn" id="btn-ai-analyze" type="button">🎓 Разбор от ИИ-педагога</button>
+        <button class="ai-btn" id="btn-ai-analyze" type="button">🎓 Разбор слова</button>
         <div class="ai-keysetup hidden" id="ai-keysetup">
           <div>Нужен свой бесплатный ключ Gemini — <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">получить ↗</a></div>
           <input type="password" id="ai-key-input" placeholder="Вставьте ключ (AIza...)">
@@ -640,7 +634,7 @@
   <footer class="bottom">
     <button class="reset-link" id="btn-reset">Сбросить прогресс</button>
   </footer>
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.15.0</div>
+  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.16.0</div>
 </div>
 
 <script>
@@ -1522,15 +1516,12 @@ const els = {
   btnPlay: document.getElementById("btn-play"),
   hintLine: document.getElementById("hint-line"),
   answer: document.getElementById("answer"),
+  answerDiff: document.getElementById("answer-diff"),
   answerLabel: document.getElementById("answer-label"),
-  langBadge: document.getElementById("lang-badge"),
   btnCheck: document.getElementById("btn-check"),
   btnHint: document.getElementById("btn-hint"),
   feedback: document.getElementById("feedback"),
   verdict: document.getElementById("verdict"),
-  diffUserWrap: document.getElementById("diff-user-wrap"),
-  diffUserLabel: document.getElementById("diff-user-label"),
-  diffUser: document.getElementById("diff-user"),
   diffRefLabel: document.getElementById("diff-ref-label"),
   diffRef: document.getElementById("diff-ref"),
   btnAudio: document.getElementById("btn-audio"),
@@ -1576,7 +1567,6 @@ function configureAnswerInput(mode) {
     els.answer.placeholder = "Напишите по-русски...";
     Object.assign(els.answer.style, { direction: "ltr", textAlign: "left", fontFamily: "'IBM Plex Sans', sans-serif", fontSize: "1.05rem" });
     els.answerLabel.textContent = "Ваш перевод на русский";
-    els.langBadge.classList.add("hidden");
   } else {
     els.answer.setAttribute("dir", "rtl"); els.answer.setAttribute("lang", "he");
     els.answer.placeholder = "הקלידו כאן...";
@@ -1584,7 +1574,6 @@ function configureAnswerInput(mode) {
     els.answerLabel.textContent = mode === "listen" ? "Что вы услышали? (на иврите)"
       : mode === "cloze" ? "Пропущенное слово"
       : "Ваш перевод на иврит";
-    els.langBadge.textContent = "HE"; els.langBadge.classList.remove("hidden");
   }
 }
 
@@ -1613,12 +1602,15 @@ function loadCard() {
   els.aiResult.innerHTML = "";
   els.aiKeysetup.classList.add("hidden");
   els.btnAiAnalyze.disabled = false;
-  els.btnAiAnalyze.textContent = "🎓 Разбор от ИИ-педагога";
+  els.btnAiAnalyze.textContent = "🎓 Разбор слова";
   els.btnAiAnalyze.dataset.shown = "";
   els.ratingRow.classList.remove("show");
   document.querySelectorAll(".rating-btn").forEach(b => b.classList.remove("suggested"));
   els.answer.value = "";
   els.answer.disabled = false;
+  els.answer.classList.remove("hidden");
+  els.answerDiff.classList.add("hidden");
+  els.answerDiff.innerHTML = "";
   els.feedback.classList.remove("show", "good", "bad");
   els.btnCheck.disabled = false;
   const hintRefLen = currentMode === "he2ru" ? tokenize(d.r).length
@@ -1635,16 +1627,24 @@ function showFeedback(isCorrect, fb) {
   els.verdict.className = "verdict " + (isCorrect ? "good" : "bad");
   els.verdict.textContent = isCorrect ? "✓ Верно" : (fb.kind === "ru" ? "✕ Не хватает смысла" : "✕ Есть ошибки");
 
+  // The typed answer no longer repeats as a separate "Вы написали" block —
+  // once checked, the input itself is swapped for this element showing
+  // the same text with per-word highlighting, so there's one line saying
+  // what you wrote (with more detail after checking), not two.
+  function showAnswerDiff(html, ltr) {
+    els.answerDiff.classList.toggle("ltr", !!ltr);
+    els.answerDiff.innerHTML = html;
+    els.answer.classList.add("hidden");
+    els.answerDiff.classList.remove("hidden");
+  }
+
   if (fb.kind === "ru") {
-    els.diffUser.classList.add("ltr"); els.diffRef.classList.add("ltr");
-    els.diffUserLabel.textContent = "Вы написали";
+    els.diffRef.classList.add("ltr");
     els.diffRefLabel.textContent = "Эталонный перевод";
-    els.diffUserWrap.style.display = "flex";
-    els.diffUser.innerHTML = fb.userText.trim() ? renderUserRuHighlighted(fb.userText, fb.result) : '<span class="tok">(пусто)</span>';
+    showAnswerDiff(fb.userText.trim() ? renderUserRuHighlighted(fb.userText, fb.result) : '<span class="tok">(пусто)</span>', true);
     els.diffRef.innerHTML = renderRefRuHighlighted(fb.refText, fb.result.missing);
   } else if (fb.kind === "cloze") {
-    els.diffUser.classList.remove("ltr"); els.diffRef.classList.remove("ltr");
-    els.diffUserLabel.textContent = "Вы написали";
+    els.diffRef.classList.remove("ltr");
     els.diffRefLabel.textContent = "Полное предложение";
     const d = DATA[currentIndex];
     const toks = tokenize(d.h);
@@ -1654,18 +1654,11 @@ function showFeedback(isCorrect, fb) {
       ? `<span class="${cls}">${escapeHtml(t)}</span>`
       : escapeHtml(t)
     ).join(" ");
-    if (isCorrect) {
-      els.diffUserWrap.style.display = "none";
-    } else {
-      els.diffUserWrap.style.display = "flex";
-      els.diffUser.innerHTML = fb.userWord ? `<span class="tok del">${escapeHtml(fb.userWord)}</span>` : '<span class="tok">(пусто)</span>';
-    }
+    if (!isCorrect) showAnswerDiff(fb.userWord ? `<span class="tok del">${escapeHtml(fb.userWord)}</span>` : '<span class="tok">(пусто)</span>', false);
   } else {
-    els.diffUser.classList.remove("ltr"); els.diffRef.classList.remove("ltr");
-    els.diffUserLabel.textContent = "Вы написали";
+    els.diffRef.classList.remove("ltr");
     els.diffRefLabel.textContent = "Правильный ответ";
-    els.diffUserWrap.style.display = isCorrect ? "none" : "flex";
-    if (!isCorrect) els.diffUser.innerHTML = fb.userOps.length ? renderOps(fb.userOps) : '<span class="tok">(пусто)</span>';
+    if (!isCorrect) showAnswerDiff(fb.userOps.length ? renderOps(fb.userOps) : '<span class="tok">(пусто)</span>', false);
     els.diffRef.innerHTML = renderOps(fb.refOps);
     if (currentMode === "listen") {
       els.diffRef.innerHTML += `<div class="listen-meaning">${escapeHtml(DATA[currentIndex].r)}</div>`;
@@ -1806,21 +1799,28 @@ document.querySelectorAll(".rating-btn").forEach(btn => {
 els.answer.addEventListener("keydown", (e) => {
   if (e.key === "Enter") { e.preventDefault(); if (!checked) doCheck(); else commitAndAdvance(pendingQuality); }
 });
-// Types the standard Israeli layout by physical key position (event.code
-// names the slot, not what the OS layout or the keycap prints there) —
-// so switching the system's keyboard language by hand is never necessary
-// for a Hebrew answer, regardless of what layout is actually active.
-// Untouched when the field expects Russian, and any held modifier (so
+// Types the standard layout for whichever language the field expects, by
+// physical key position (event.code names the slot, not what the OS
+// layout or the keycap prints there) — so switching the system's
+// keyboard language by hand is never necessary either direction,
+// regardless of what layout is actually active. Any held modifier (so
 // Ctrl+A/Ctrl+V/etc. keep working) or unmapped key passes straight through.
 const HEBREW_KEYMAP = {
   KeyQ: "/", KeyW: "'", KeyE: "ק", KeyR: "ר", KeyT: "א", KeyY: "ט", KeyU: "ו", KeyI: "ן", KeyO: "ם", KeyP: "פ",
   KeyA: "ש", KeyS: "ד", KeyD: "ג", KeyF: "כ", KeyG: "ע", KeyH: "י", KeyJ: "ח", KeyK: "ל", KeyL: "ך", Semicolon: "ף", Quote: ",",
   KeyZ: "ז", KeyX: "ס", KeyC: "ב", KeyV: "ה", KeyB: "נ", KeyN: "מ", KeyM: "צ", Comma: "ת", Period: "ץ", Slash: ".",
 };
+const RUSSIAN_KEYMAP = {
+  KeyQ: "й", KeyW: "ц", KeyE: "у", KeyR: "к", KeyT: "е", KeyY: "н", KeyU: "г", KeyI: "ш", KeyO: "щ", KeyP: "з", BracketLeft: "х", BracketRight: "ъ",
+  KeyA: "ф", KeyS: "ы", KeyD: "в", KeyF: "а", KeyG: "п", KeyH: "р", KeyJ: "о", KeyK: "л", KeyL: "д", Semicolon: "ж", Quote: "э",
+  KeyZ: "я", KeyX: "ч", KeyC: "с", KeyV: "м", KeyB: "и", KeyN: "т", KeyM: "ь", Comma: "б", Period: "ю", Slash: ".",
+};
 els.answer.addEventListener("keydown", (e) => {
-  if (els.answer.getAttribute("lang") !== "he") return;
+  const lang = els.answer.getAttribute("lang");
+  const map = lang === "he" ? HEBREW_KEYMAP : lang === "ru" ? RUSSIAN_KEYMAP : null;
+  if (!map) return;
   if (e.ctrlKey || e.metaKey || e.altKey) return;
-  const ch = HEBREW_KEYMAP[e.code];
+  const ch = map[e.code];
   if (!ch) return;
   e.preventDefault();
   els.answer.setRangeText(ch, els.answer.selectionStart, els.answer.selectionEnd, "end");
@@ -1906,7 +1906,7 @@ resetBtn.addEventListener("click", () => {
   }
 });
 
-// ---- AI word analysis ("Разбор от ИИ-педагога") ----
+// ---- AI word analysis ("Разбор слова") ----
 // Same BYOK pattern and pedagogy prompt as the קורא reader (own Gemini key,
 // never synced anywhere) — ported rather than reinvented so both apps give
 // the same quality of answer. Key is stored under a trainer-specific name
@@ -2367,7 +2367,7 @@ async function askAiAboutWord(d, btn) {
     btn.dataset.shown = "1";
   } catch (err) {
     els.aiResult.innerHTML = `<div class="ai-err">Не получилось: ${escapeHtml(String((err && err.message) || err))}</div>`;
-    btn.textContent = "🎓 Разбор от ИИ-педагога";
+    btn.textContent = "🎓 Разбор слова";
     btn.dataset.shown = "";
   } finally {
     btn.disabled = false;
