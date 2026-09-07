@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.18.1
+  Ивритский тренажёр — v1.18.2
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр</title>
@@ -639,7 +639,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.18.1</div>
+  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.18.2</div>
 </div>
 
 <script>
@@ -1391,10 +1391,17 @@ function renderLevelsTable() {
 // so "what's due, by level" is visible up front. Uses only real, already-
 // tracked numbers (per-level due/mastery) — no fabricated activity history,
 // since the app doesn't keep day-by-day logs to draw one honestly.
+//
+// Tile visibility is gated on the SAME "checked" flag "Мои базы" shows,
+// not merely on total > 0 — a level's own bulk toggle can be off while a
+// handful of its sentences are still individually in the pool (e.g. a
+// built-in sentence auto-matched to a word saved in the reader/AI-разбор,
+// see appendCustomCards). Those still get practiced, but a tile for a
+// level the user just told us is off would look like a lie.
 function renderDashboard() {
   const { perLevel, totals } = computeLevelStats();
   document.getElementById("dash-due-total").textContent = totals.due;
-  document.getElementById("dash-grid").innerHTML = perLevel.filter(l => l.total > 0).map(l => {
+  const levelTiles = perLevel.filter(l => l.code < CUSTOM_LEVEL_CODE && progress.pool.levels.includes(l.code) && l.total > 0).map(l => {
     const masteryPct = l.total ? Math.round((l.mastered / l.total) * 100) : 0;
     return `<div class="dash-tile">
       <div class="lvl">${l.sym}</div>
@@ -1403,6 +1410,16 @@ function renderDashboard() {
       <div class="mbar"><div style="width:${masteryPct}%"></div></div>
     </div>`;
   }).join("");
+  const groupTiles = computeCustomGroupStats().filter(g => g.checked && g.total > 0).map(g => {
+    const masteryPct = g.total ? Math.round((g.mastered / g.total) * 100) : 0;
+    return `<div class="dash-tile">
+      <div class="lvl" style="font-size:0.82rem;">${g.label}</div>
+      <div class="due-label">К повтору</div>
+      <div class="due-num">${g.due}</div>
+      <div class="mbar"><div style="width:${masteryPct}%"></div></div>
+    </div>`;
+  }).join("");
+  document.getElementById("dash-grid").innerHTML = levelTiles + groupTiles;
 }
 
 // ---- Мои базы: where sentences come from, browsable and mixable. Groups
@@ -1429,6 +1446,31 @@ function groupCustomCards() {
     groups[key].entries.push([source, info]);
   });
   return Object.values(groups);
+}
+
+// Per-group due/mastery numbers, same shape as computeLevelStats()'s
+// perLevel entries — needed because all custom cards share one DATA level
+// code (CUSTOM_LEVEL_CODE, "🏷 Личное") regardless of which book/source
+// they came from, so computeLevelStats() alone can't tell them apart.
+// "checked" mirrors renderDeckBases()'s own group-checkbox test.
+function computeCustomGroupStats() {
+  const now = Date.now();
+  return groupCustomCards().map(g => {
+    const indices = g.entries.map(([, info]) => info.index);
+    const checked = indices.every(i => !progress.pool.exclude.includes(i));
+    let total = 0, learning = 0, mastered = 0, due = 0;
+    for (const i of indices) {
+      if (!inPool(i)) continue;
+      for (const m of ALL_MODES) {
+        total++;
+        const st = progress.items[i + ":" + m];
+        if (!st) continue;
+        if (isMastered(st)) mastered++; else learning++;
+        if (st.due <= now) due++;
+      }
+    }
+    return { key: g.key, label: g.label, checked, total, learning, mastered, due, sentenceCount: indices.length };
+  });
 }
 
 function renderDeckBases() {
