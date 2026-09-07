@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.18.2
+  Ивритский тренажёр — v1.18.3
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр</title>
@@ -324,15 +324,6 @@
   .deckbases-hdr { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
   .deckbases-hdr h2 { font-size: 1.05rem; margin: 0; }
   .deckbases-sub { font-size: 0.82rem; color: var(--text-muted); margin: -8px 0 4px; display: flex; align-items: center; gap: 6px; }
-  .deckbases-help-btn {
-    width: 16px; height: 16px; border-radius: 50%; border: 1px solid var(--text-faint); background: none;
-    color: var(--text-faint); font-size: 0.68rem; line-height: 1; cursor: pointer; padding: 0; flex-shrink: 0;
-  }
-  .deckbases-help-btn:hover { border-color: var(--accent-strong); color: var(--accent-strong); }
-  .deckbases-tip {
-    font-size: 0.8rem; color: var(--text-muted); line-height: 1.55; background: var(--surface-2);
-    border-radius: 8px; padding: 10px 12px; margin: -2px 0 10px;
-  }
   .deck-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
   .deck-tile { background: var(--surface); border: 1px solid var(--border); border-radius: 11px; padding: 14px 16px 12px; }
   .deck-tile-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; cursor: pointer; }
@@ -491,14 +482,6 @@
       <h2>🗂 Мои базы</h2>
       <button class="link-btn" id="btn-deckbases-back">🏠 Обзор</button>
     </div>
-    <div class="deckbases-sub">Откуда идут ваши фразы — включайте или выключайте, чтобы смешивать в практике.
-      <button class="deckbases-help-btn" id="btn-deckbases-help" type="button" aria-label="Как пользоваться">?</button>
-    </div>
-    <div class="deckbases-tip hidden" id="deckbases-tip">
-      Плитка — источник фраз. Включена — участвует в практике, выключена — нет; можно держать включённым сразу
-      несколько источников. У книг и ИИ-разбора плитка разворачивается в список конкретных фраз — любую можно
-      убрать отдельно. Выключите все плитки — практиковать будет нечего.
-    </div>
     <div class="deck-grid" id="deck-grid"></div>
   </div>
 
@@ -581,7 +564,7 @@
     <div class="cloze-caption" id="cloze-caption"></div>
     <div class="listen-box" id="listen-box">
       <button class="btn-play-big" id="btn-play" type="button" aria-label="Прослушать">▶</button>
-      <div class="listen-hint">Нажмите, чтобы прослушать фразу на иврите. Можно переслушивать сколько угодно.</div>
+      <div class="listen-hint">Можно переслушивать сколько угодно.</div>
     </div>
 
     <div class="hint-line" id="hint-line"></div>
@@ -639,7 +622,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.18.2</div>
+  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.18.3</div>
 </div>
 
 <script>
@@ -2506,9 +2489,6 @@ document.getElementById("btn-open-deckbases").addEventListener("click", () => {
 document.getElementById("btn-deckbases-back").addEventListener("click", () => {
   showView(dashboardView);
   renderDashboard();
-});
-document.getElementById("btn-deckbases-help").addEventListener("click", () => {
-  document.getElementById("deckbases-tip").classList.toggle("hidden");
 });
 
 // ---- Feedback: in-app bug/suggestion form (no GitHub account needed) +
