@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.18.6
+  Ивритский тренажёр — v1.18.7
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -640,7 +640,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.18.6</div>
+  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.18.7</div>
 </div>
 
 <script>
@@ -1926,7 +1926,17 @@ const RUSSIAN_KEYMAP = {
   KeyA: "ф", KeyS: "ы", KeyD: "в", KeyF: "а", KeyG: "п", KeyH: "р", KeyJ: "о", KeyK: "л", KeyL: "д", Semicolon: "ж", Quote: "э",
   KeyZ: "я", KeyX: "ч", KeyC: "с", KeyV: "м", KeyB: "и", KeyN: "т", KeyM: "ь", Comma: "б", Period: "ю", Slash: ".",
 };
+// Physical-position remapping only makes sense for an actual physical
+// keyboard — a touchscreen's on-screen keyboard already shows the right
+// glyph per key for whatever language it's set to, so remapping it by
+// "position" just overrides a correct tap with an unrelated character
+// (reported live: iPhone's own Hebrew keyboard shows the right letters,
+// but tapping "?" typed "." and tapping "." typed "ץ", because those
+// virtual keys still happened to report the same event.code a physical
+// US keyboard would at that slot).
+const IS_TOUCH_DEVICE = navigator.maxTouchPoints > 0 || "ontouchstart" in window;
 els.answer.addEventListener("keydown", (e) => {
+  if (IS_TOUCH_DEVICE) return;
   const lang = els.answer.getAttribute("lang");
   const map = lang === "he" ? HEBREW_KEYMAP : lang === "ru" ? RUSSIAN_KEYMAP : null;
   if (!map) return;
