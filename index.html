@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.18.8
+  Ивритский тренажёр — v1.19.0
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -644,7 +644,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.18.8</div>
+  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.19.0</div>
 </div>
 
 <script>
@@ -1190,16 +1190,24 @@ function renderRefRuHighlighted(refText, missingList) {
 // some other installed voice and reads the Hebrew text through THAT
 // voice's (wrong) pronunciation rules, which is exactly what a user
 // reported hearing as the English word "dogs" instead of Hebrew audio.
+// A first fix just checked *whether* a Hebrew voice existed and left
+// selection to `lang: "he-IL"` alone — a follow-up report showed that's
+// not reliable on Safari/iOS even when a Hebrew voice IS installed
+// (setting only `.lang` doesn't guarantee the engine actually picks the
+// matching voice). Now the real SpeechSynthesisVoice object is looked up
+// and set explicitly as `.voice`, which every reference on the Web Speech
+// API calls out as the reliable way — `.lang` is kept too, but only as a
+// hint for whichever browser doesn't need `.voice` set explicitly.
 // getVoices() can return [] on the very first call before the browser has
-// finished loading its voice list — hasHebrewVoice stays null (unknown,
+// finished loading its voice list — hebrewVoice stays null (unknown,
 // don't block playback) until voiceschanged fires or a non-empty list
-// shows up, and only flips to a definite true/false after that.
-let hasHebrewVoice = null;
+// shows up, and only flips to a definite object/false after that.
+let hebrewVoice = null;
 function checkHebrewVoice() {
-  if (!ttsSupported || !window.speechSynthesis || !window.speechSynthesis.getVoices) { hasHebrewVoice = false; return; }
+  if (!ttsSupported || !window.speechSynthesis || !window.speechSynthesis.getVoices) { hebrewVoice = false; return; }
   const voices = window.speechSynthesis.getVoices();
   if (voices.length) {
-    hasHebrewVoice = voices.some(v => v.lang && v.lang.toLowerCase().startsWith("he"));
+    hebrewVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith("he")) || false;
   }
 }
 if (ttsSupported && window.speechSynthesis && window.speechSynthesis.addEventListener) {
@@ -1208,7 +1216,7 @@ if (ttsSupported && window.speechSynthesis && window.speechSynthesis.addEventLis
 }
 function speak(text, rate) {
   if (!ttsSupported) return;
-  if (hasHebrewVoice === false) {
+  if (hebrewVoice === false) {
     if (els.ttsNotice) {
       els.ttsNotice.textContent = "На этом устройстве не установлен голос для иврита, поэтому озвучка звучит неправильно (например, вместо иврита слышно английское слово). На iPhone: Настройки → Специальные возможности → Контент, зачитываемый вслух → Голоса → добавить иврит.";
       els.ttsNotice.classList.remove("hidden");
@@ -1219,6 +1227,7 @@ function speak(text, rate) {
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = "he-IL";
+    if (hebrewVoice) u.voice = hebrewVoice;
     if (rate) u.rate = rate;
     window.speechSynthesis.speak(u);
   } catch (e) {}
@@ -2698,7 +2707,7 @@ if ("serviceWorker" in navigator) {
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
 import {
-  getAuth, GoogleAuthProvider, signInWithPopup,
+  getAuth, GoogleAuthProvider, signInWithPopup, signInWithCredential,
   onAuthStateChanged, signOut,
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 import {
@@ -2879,13 +2888,62 @@ const authStatusEl = document.getElementById("auth-status");
 document.getElementById("btn-signin").addEventListener("click", () => {
   authStatusEl.textContent = "";
   signInWithPopup(fbAuth, new GoogleAuthProvider())
-    .then((result) => { console.log("[ivrit] signInWithPopup ok, uid:", result.user.uid); })
+    .then((result) => {
+      console.log("[ivrit] signInWithPopup ok, uid:", result.user.uid);
+      stashAuthHandoffToken(result);
+    })
     .catch((e) => {
       console.error("[ivrit] signInWithPopup error:", e);
       authStatusEl.textContent = "Ошибка входа: " + (e && e.code ? e.code : e);
     });
 });
 document.getElementById("btn-signout").addEventListener("click", () => { signOut(fbAuth); });
+
+// ---- cross-domain login handoff ----
+// trainivrit.pages.dev and readivrit.pages.dev are different origins, so
+// Firebase Auth's local session (indexedDB) can't carry over automatically
+// when following the cross-link. Ride the short-lived Google ID token from
+// the popup sign-in across via the URL fragment instead (fragments never
+// reach a server, unlike query strings) — best-effort only: if there's no
+// fresh token, the other app just shows its normal signed-out state.
+const AUTH_HANDOFF_KEY = "hebrewAuthHandoffGoogleIdToken";
+function stashAuthHandoffToken(signInResult) {
+  try {
+    const cred = GoogleAuthProvider.credentialFromResult(signInResult);
+    if (!cred || !cred.idToken) return;
+    sessionStorage.setItem(AUTH_HANDOFF_KEY, JSON.stringify({ idToken: cred.idToken, ts: Date.now() }));
+  } catch (e) {}
+}
+function readAuthHandoffToken() {
+  try {
+    const raw = sessionStorage.getItem(AUTH_HANDOFF_KEY);
+    if (!raw) return null;
+    const { idToken, ts } = JSON.parse(raw);
+    if (!idToken || Date.now() - ts > 30 * 60 * 1000) return null;
+    return idToken;
+  } catch (e) { return null; }
+}
+const crossLinkEl = document.getElementById("cross-link-reader");
+if (crossLinkEl) {
+  crossLinkEl.addEventListener("click", () => {
+    const idToken = readAuthHandoffToken();
+    if (!idToken) return;
+    try {
+      const url = new URL(crossLinkEl.href);
+      url.hash = "authHandoff=" + encodeURIComponent(idToken);
+      crossLinkEl.href = url.toString();
+    } catch (e) {}
+  });
+}
+(() => {
+  if (typeof location === "undefined") return;
+  const m = /authHandoff=([^&]+)/.exec(location.hash.slice(1));
+  if (!m) return;
+  history.replaceState(null, "", location.pathname + location.search);
+  signInWithCredential(fbAuth, GoogleAuthProvider.credential(decodeURIComponent(m[1])))
+    .then((result) => { console.log("[ivrit] auth handoff sign-in ok, uid:", result.user.uid); })
+    .catch((e) => { console.warn("[ivrit] auth handoff sign-in failed:", e); });
+})();
 
 // Persistent sync status (not just a one-off message) — reflects real
 // connectivity, since the persistent Firestore cache above means writes
