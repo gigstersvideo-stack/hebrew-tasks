@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.19.0
+  Ивритский тренажёр — v1.19.1
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -644,7 +644,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.19.0</div>
+  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.19.1</div>
 </div>
 
 <script>
@@ -2466,7 +2466,19 @@ function renderAiAnalysis(a) {
 }
 
 async function askAiAboutWord(d, btn) {
-  const key = localStorage.getItem(AI_KEY_STORAGE);
+  let key = localStorage.getItem(AI_KEY_STORAGE);
+  // Signed in, key not in localStorage yet, but a cloud pull for it is still
+  // in flight (e.g. user opened this popover seconds after signing in) —
+  // wait for that pull instead of jumping straight to "no key set".
+  if (!key && cloudUid && window.aiKeyPullPromise) {
+    const prevText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "Проверяю ключ…";
+    try { await Promise.race([window.aiKeyPullPromise, new Promise((r) => setTimeout(r, 4000))]); } catch (e) {}
+    btn.disabled = false;
+    btn.textContent = prevText;
+    key = localStorage.getItem(AI_KEY_STORAGE);
+  }
   if (key && window.cloudSyncAiKey) window.cloudSyncAiKey(key);
   if (!key) { els.aiKeysetup.classList.remove("hidden"); return; }
   els.aiKeysetup.classList.add("hidden");
@@ -2790,6 +2802,21 @@ window.cloudFetchAiKey = async function () {
   const snap = await getDoc(aiKeyDocRef(cloudUid));
   return snap.exists() ? snap.data() : null;
 };
+// Kicked off as early as possible on sign-in (see onAuthStateChanged below)
+// and kept on window so askAiAboutWord can wait on it — otherwise a user who
+// opens the word-analysis popover right after signing in can hit the "no key
+// set" prompt purely because this cloud round-trip hasn't landed yet, even
+// though the key is already synced under their account.
+function pullCloudAiKey() {
+  const local = localStorage.getItem(window.AI_KEY_STORAGE);
+  return window.cloudFetchAiKey().then((remote) => {
+    if (remote && remote.geminiKey && remote.geminiKey !== local) {
+      localStorage.setItem(window.AI_KEY_STORAGE, remote.geminiKey);
+    } else if (!remote && local) {
+      window.cloudSyncAiKey(local);
+    }
+  }).catch((e) => console.error("[ivrit] AI key sync failed:", e));
+}
 
 // Feedback: a single top-level "feedback" collection (not under
 // /users/{uid}/, since the owner needs to read across everyone's
@@ -2963,6 +2990,11 @@ onAuthStateChanged(fbAuth, async (user) => {
   const userBox = document.getElementById("auth-user");
   if (user) {
     cloudUid = user.uid;
+    // Fired off immediately (not awaited here) so it runs in parallel with
+    // the progress/cards sync below instead of queuing behind them — the
+    // sooner it lands, the smaller the window where askAiAboutWord's own
+    // wait-for-it fallback would otherwise have to kick in.
+    window.aiKeyPullPromise = pullCloudAiKey();
     signinBtn.style.display = "none";
     userBox.style.display = "flex";
     document.getElementById("auth-avatar").src = user.photoURL || "";
@@ -2977,17 +3009,6 @@ onAuthStateChanged(fbAuth, async (user) => {
       await pullCustomCards(user.uid);
     } catch (e) {
       console.error("[ivrit] custom cards sync failed:", e);
-    }
-    try {
-      const local = localStorage.getItem(window.AI_KEY_STORAGE);
-      const remote = await window.cloudFetchAiKey();
-      if (remote && remote.geminiKey && remote.geminiKey !== local) {
-        localStorage.setItem(window.AI_KEY_STORAGE, remote.geminiKey);
-      } else if (!remote && local) {
-        window.cloudSyncAiKey(local);
-      }
-    } catch (e) {
-      console.error("[ivrit] AI key sync failed:", e);
     }
     const feedbackBtn = document.getElementById("btn-open-feedback-review");
     if (user.uid === window.OWNER_UID) {
