@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.19.1
+  Ивритский тренажёр — v1.19.2
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -644,7 +644,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.19.1</div>
+  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.19.2</div>
 </div>
 
 <script>
@@ -2755,12 +2755,33 @@ let cloudUid = null;
 function cardsCol(uid) { return collection(fbDb, "users", uid, "cards"); }
 function metaDocRef(uid) { return doc(fbDb, "users", uid, "meta", "state"); }
 
+// Firestore's auth token can take a beat to attach to outgoing requests
+// right after a fresh signInWithPopup — onAuthStateChanged can fire (and
+// trigger the pulls below) a moment before the SDK has it wired in, so the
+// very first read right after signing in can get bounced with
+// "permission-denied" even though the security rules are correct (seen
+// live on the reader: a fresh sign-in immediately followed by that exact
+// error on its first progress pull — same architecture here). One retry
+// after a short delay clears it up without masking a genuine rules
+// problem, which would fail the retry too.
+async function withAuthRaceRetry(fn) {
+  try {
+    return await fn();
+  } catch (e) {
+    if (e && e.code === "permission-denied") {
+      await new Promise((r) => setTimeout(r, 1000));
+      return await fn();
+    }
+    throw e;
+  }
+}
+
 // Whole-sentence practice cards pushed in from the reader (or picked from an
 // AI word-analysis there) — see window.appendCustomCards in the classic
 // script for why these are append-only/never-reordered.
 async function pullCustomCards(uid) {
   if (!window.appendCustomCards) return;
-  const snap = await getDocs(collection(fbDb, "users", uid, "customCards"));
+  const snap = await withAuthRaceRetry(() => getDocs(collection(fbDb, "users", uid, "customCards")));
   const cards = [];
   snap.forEach(d => cards.push(Object.assign({ id: d.id }, d.data())));
   if (cards.length) window.appendCustomCards(cards);
@@ -2799,8 +2820,10 @@ window.cloudSyncAiKey = function (key) {
 };
 window.cloudFetchAiKey = async function () {
   if (!cloudUid) return null;
-  const snap = await getDoc(aiKeyDocRef(cloudUid));
-  return snap.exists() ? snap.data() : null;
+  return withAuthRaceRetry(async () => {
+    const snap = await getDoc(aiKeyDocRef(cloudUid));
+    return snap.exists() ? snap.data() : null;
+  });
 };
 // Kicked off as early as possible on sign-in (see onAuthStateChanged below)
 // and kept on window so askAiAboutWord can wait on it — otherwise a user who
@@ -2886,13 +2909,13 @@ function mergeCounterMaps(a, b) {
 async function pullAndMerge(uid) {
   const localItems = progress.items;
   const remoteItems = {};
-  const snap = await getDocs(cardsCol(uid));
+  const snap = await withAuthRaceRetry(() => getDocs(cardsCol(uid)));
   snap.forEach(d => { remoteItems[d.id] = d.data(); });
   const allKeys = new Set([...Object.keys(localItems), ...Object.keys(remoteItems)]);
   const mergedItems = {};
   allKeys.forEach(k => { mergedItems[k] = mergeCardStates(localItems[k], remoteItems[k]); });
 
-  const metaSnap = await getDoc(metaDocRef(uid));
+  const metaSnap = await withAuthRaceRetry(() => getDoc(metaDocRef(uid)));
   const remoteMeta = metaSnap.exists() ? metaSnap.data() : null;
 
   progress.items = mergedItems;
