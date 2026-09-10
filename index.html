@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.18.7
+  Ивритский тренажёр — v1.18.8
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -455,6 +455,10 @@
       <button class="link-btn" id="btn-feedback-review-back">🏠 Обзор</button>
     </div>
     <div class="deckbases-sub">Видно только вам — жалобы и предложения от посетителей сайта.</div>
+    <div style="display:flex; align-items:center; gap:10px; margin:-2px 0 10px;">
+      <button class="link-btn" id="btn-feedback-export" type="button">📋 Скопировать всё текстом</button>
+      <span id="fb-export-status" style="font-size:0.78rem; color:var(--text-faint);"></span>
+    </div>
     <div class="fb-review-list" id="fb-review-list"></div>
   </div>
 
@@ -640,7 +644,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.18.7</div>
+  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.18.8</div>
 </div>
 
 <script>
@@ -2636,6 +2640,29 @@ async function renderFeedbackReview() {
     renderFeedbackReview(); updateFeedbackUnreadBadge();
   }));
 }
+
+// One-click plain-text export of every feedback item, so it can be pasted
+// straight into a chat with Claude for triage — no direct DB access exists
+// (or should exist) outside this owner-gated panel, so copy/paste is the
+// deliberately simple, no-new-credentials way to hand that data over.
+document.getElementById("btn-feedback-export").addEventListener("click", async () => {
+  const statusEl = document.getElementById("fb-export-status");
+  statusEl.textContent = "Собираю…";
+  try {
+    if (!window.cloudFetchFeedback) throw new Error("нет соединения с базой");
+    const items = await window.cloudFetchFeedback();
+    if (!items.length) { statusEl.textContent = "Пока пусто — нечего копировать."; return; }
+    const text = items.map(it => {
+      const when = it.createdAt ? new Date(it.createdAt).toLocaleString("ru-RU") : "?";
+      const kind = it.type === "bug" ? "БАГ" : "ПРЕДЛОЖЕНИЕ";
+      return `[${kind}] ${it.app || "?"} · ${when} · ${it.status || "?"}\n${it.text || ""}`;
+    }).join("\n\n---\n\n");
+    await navigator.clipboard.writeText(`Отзывы с сайта (${items.length}):\n\n${text}`);
+    statusEl.textContent = `Скопировано (${items.length}) — вставьте в чат.`;
+  } catch (e) {
+    statusEl.textContent = "Не получилось: " + ((e && e.message) || e);
+  }
+});
 
 async function updateFeedbackUnreadBadge() {
   if (!window.cloudFetchFeedback) return;
