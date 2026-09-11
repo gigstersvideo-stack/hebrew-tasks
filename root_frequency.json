@@ -1,0 +1,4482 @@
+[
+  {
+    "position": 1,
+    "root": "ה-י-ה",
+    "score": 0.2345,
+    "member_count": 9,
+    "members": [
+      {
+        "he": "היה",
+        "translit": "haya",
+        "en": "was (m.s.)",
+        "rank": 8
+      },
+      {
+        "he": "היו",
+        "translit": "hayu",
+        "en": "were (m.)",
+        "rank": 23
+      },
+      {
+        "he": "הייתה",
+        "translit": "haita",
+        "en": "she was",
+        "rank": 28
+      },
+      {
+        "he": "שהיה",
+        "translit": "shehaya",
+        "en": "that was (m.s.)",
+        "rank": 110
+      },
+      {
+        "he": "להיות",
+        "translit": "lihiyot",
+        "en": "to be",
+        "rank": 116
+      },
+      {
+        "he": "שהיו",
+        "translit": "shehayu",
+        "en": "that were",
+        "rank": 227
+      },
+      {
+        "he": "יהיה",
+        "translit": "yihiye",
+        "en": "will be (m.s.)",
+        "rank": 313
+      },
+      {
+        "he": "הייתי",
+        "translit": "hayiti",
+        "en": "I was",
+        "rank": 397
+      },
+      {
+        "he": "שהייתה",
+        "translit": "shehaita",
+        "en": "that/who was (f.)",
+        "rank": 403
+      }
+    ]
+  },
+  {
+    "position": 2,
+    "root": "ש-נ-ה",
+    "score": 0.11594,
+    "member_count": 16,
+    "members": [
+      {
+        "he": "בשנת",
+        "translit": "bishnat",
+        "en": "in the year [X]",
+        "rank": 29
+      },
+      {
+        "he": "שני",
+        "translit": "sheni",
+        "en": "second",
+        "rank": 58
+      },
+      {
+        "he": "שונים",
+        "translit": "shonim",
+        "en": "different / various (m.pl.)",
+        "rank": 97
+      },
+      {
+        "he": "שנים",
+        "translit": "shanim",
+        "en": "years",
+        "rank": 99
+      },
+      {
+        "he": "שנה",
+        "translit": "shana",
+        "en": "year / studied (m.s.)",
+        "rank": 130
+      },
+      {
+        "he": "שנות",
+        "translit": "shnot",
+        "en": "the years of",
+        "rank": 162
+      },
+      {
+        "he": "שונות",
+        "translit": "shonut",
+        "en": "difference / variation",
+        "rank": 223
+      },
+      {
+        "he": "השנים",
+        "translit": "hashanim",
+        "en": "the years",
+        "rank": 231
+      },
+      {
+        "he": "שנת",
+        "translit": "shnat",
+        "en": "year [X] / year of",
+        "rank": 283
+      },
+      {
+        "he": "בשנים",
+        "translit": "bashanim",
+        "en": "in the years",
+        "rank": 287
+      },
+      {
+        "he": "בשנות",
+        "translit": "bishnot",
+        "en": "in the years of",
+        "rank": 297
+      },
+      {
+        "he": "שונה",
+        "translit": "shone",
+        "en": "different (m.s.)",
+        "rank": 402
+      },
+      {
+        "he": "משנת",
+        "translit": "mishnat",
+        "en": "from the year of",
+        "rank": 422
+      },
+      {
+        "he": "השנה",
+        "translit": "hashana",
+        "en": "this year",
+        "rank": 429
+      },
+      {
+        "he": "השונים",
+        "translit": "hashonim",
+        "en": "the different (m.pl.)",
+        "rank": 543
+      },
+      {
+        "he": "שינוי",
+        "translit": "shinui",
+        "en": "change",
+        "rank": 584
+      }
+    ]
+  },
+  {
+    "position": 3,
+    "root": "י-ת-ר",
+    "score": 0.08925,
+    "member_count": 4,
+    "members": [
+      {
+        "he": "יותר",
+        "translit": "yoter",
+        "en": "more",
+        "rank": 18
+      },
+      {
+        "he": "ביותר",
+        "translit": "beyoter",
+        "en": "most, very much",
+        "rank": 33
+      },
+      {
+        "he": "ויותר",
+        "translit": "veyoter",
+        "en": "and more",
+        "rank": 575
+      },
+      {
+        "he": "היתר",
+        "translit": "hayeter",
+        "en": "the rest",
+        "rank": 606
+      }
+    ]
+  },
+  {
+    "position": 4,
+    "root": "א-ח-ר",
+    "score": 0.08744,
+    "member_count": 9,
+    "members": [
+      {
+        "he": "לאחר",
+        "translit": "le'akhar",
+        "en": "after",
+        "rank": 20
+      },
+      {
+        "he": "אחרים",
+        "translit": "akherim",
+        "en": "other (m.pl.) / others (m.)",
+        "rank": 79
+      },
+      {
+        "he": "אחר",
+        "translit": "akher",
+        "en": "other",
+        "rank": 87
+      },
+      {
+        "he": "אחרות",
+        "translit": "akherot",
+        "en": "other (f.pl.)",
+        "rank": 318
+      },
+      {
+        "he": "אחרת",
+        "translit": "akheret",
+        "en": "other (f.s.) / otherwise",
+        "rank": 428
+      },
+      {
+        "he": "האחרון",
+        "translit": "ha'akharon",
+        "en": "the last (m.s.)",
+        "rank": 437
+      },
+      {
+        "he": "מאוחר",
+        "translit": "me'ukhar",
+        "en": "late",
+        "rank": 515
+      },
+      {
+        "he": "האחרים",
+        "translit": "ha'akherim",
+        "en": "the others (m.)",
+        "rank": 526
+      },
+      {
+        "he": "האחרונות",
+        "translit": "ha'akhronot",
+        "en": "the last (f.pl.)",
+        "rank": 597
+      }
+    ]
+  },
+  {
+    "position": 5,
+    "root": "ר-ב-ב",
+    "score": 0.0628,
+    "member_count": 6,
+    "members": [
+      {
+        "he": "רבים",
+        "translit": "rabim",
+        "en": "many",
+        "rank": 36
+      },
+      {
+        "he": "רב",
+        "translit": "rav",
+        "en": "Rabbi / fought (m.s.) / many / much",
+        "rank": 101
+      },
+      {
+        "he": "הרב",
+        "translit": "harav",
+        "en": "the many / the rabbi",
+        "rank": 112
+      },
+      {
+        "he": "רבות",
+        "translit": "rabot",
+        "en": "many (f.) / a lot",
+        "rank": 128
+      },
+      {
+        "he": "רוב",
+        "translit": "rov",
+        "en": "most",
+        "rank": 174
+      },
+      {
+        "he": "לרוב",
+        "translit": "larov",
+        "en": "mostly",
+        "rank": 380
+      }
+    ]
+  },
+  {
+    "position": 6,
+    "root": "ב-י-ת",
+    "score": 0.04041,
+    "member_count": 5,
+    "members": [
+      {
+        "he": "בית",
+        "translit": "bayit",
+        "en": "home / house",
+        "rank": 38
+      },
+      {
+        "he": "בבית",
+        "translit": "babayit",
+        "en": "at home / in the house",
+        "rank": 196
+      },
+      {
+        "he": "בתי",
+        "translit": "batei",
+        "en": "the houses of",
+        "rank": 243
+      },
+      {
+        "he": "הבית",
+        "translit": "habayit",
+        "en": "the house / the home",
+        "rank": 349
+      },
+      {
+        "he": "לבית",
+        "translit": "leveit",
+        "en": "to the house of",
+        "rank": 497
+      }
+    ]
+  },
+  {
+    "position": 7,
+    "root": "י-ו-ם",
+    "score": 0.03705,
+    "member_count": 6,
+    "members": [
+      {
+        "he": "כיום",
+        "translit": "kayom",
+        "en": "today / nowadays",
+        "rank": 96
+      },
+      {
+        "he": "היום",
+        "translit": "hayom",
+        "en": "today",
+        "rank": 108
+      },
+      {
+        "he": "יום",
+        "translit": "yom",
+        "en": "day / daylight",
+        "rank": 143
+      },
+      {
+        "he": "ימים",
+        "translit": "yamim",
+        "en": "days",
+        "rank": 199
+      },
+      {
+        "he": "ביום",
+        "translit": "beyom",
+        "en": "on [day / date] / per day",
+        "rank": 291
+      },
+      {
+        "he": "בימי",
+        "translit": "bimei",
+        "en": "on [days] / in the days of",
+        "rank": 520
+      }
+    ]
+  },
+  {
+    "position": 8,
+    "root": "ב-נ-ה",
+    "score": 0.03386,
+    "member_count": 6,
+    "members": [
+      {
+        "he": "בן",
+        "translit": "ben",
+        "en": "son",
+        "rank": 84
+      },
+      {
+        "he": "בני",
+        "translit": "bni",
+        "en": "my son",
+        "rank": 85
+      },
+      {
+        "he": "מבנה",
+        "translit": "mivne",
+        "en": "structure",
+        "rank": 325
+      },
+      {
+        "he": "המבנה",
+        "translit": "hamivne",
+        "en": "the structure",
+        "rank": 348
+      },
+      {
+        "he": "בניין",
+        "translit": "binyan",
+        "en": "building",
+        "rank": 411
+      },
+      {
+        "he": "בת",
+        "translit": "bat",
+        "en": "girl / daughter",
+        "rank": 552
+      }
+    ]
+  },
+  {
+    "position": 9,
+    "root": "ס-פ-ר",
+    "score": 0.0312,
+    "member_count": 4,
+    "members": [
+      {
+        "he": "מספר",
+        "translit": "mispar",
+        "en": "number",
+        "rank": 48
+      },
+      {
+        "he": "הספר",
+        "translit": "hasefer",
+        "en": "the book",
+        "rank": 209
+      },
+      {
+        "he": "ספר",
+        "translit": "sefer",
+        "en": "book",
+        "rank": 279
+      },
+      {
+        "he": "במספר",
+        "translit": "bemispar",
+        "en": "at a number",
+        "rank": 500
+      }
+    ]
+  },
+  {
+    "position": 10,
+    "root": "ק-ו-ם",
+    "score": 0.02774,
+    "member_count": 7,
+    "members": [
+      {
+        "he": "במקום",
+        "translit": "bimkom",
+        "en": "instead of / in place",
+        "rank": 109
+      },
+      {
+        "he": "מקום",
+        "translit": "makom",
+        "en": "place",
+        "rank": 123
+      },
+      {
+        "he": "הקמת",
+        "translit": "hakamat",
+        "en": "(the) establishment of",
+        "rank": 329
+      },
+      {
+        "he": "קיים",
+        "translit": "kayam",
+        "en": "exists (m.s.)",
+        "rank": 502
+      },
+      {
+        "he": "המקום",
+        "translit": "hamakom",
+        "en": "the place",
+        "rank": 503
+      },
+      {
+        "he": "במקומות",
+        "translit": "bimkomot",
+        "en": "in/at places",
+        "rank": 577
+      },
+      {
+        "he": "קיימים",
+        "translit": "kayamim",
+        "en": "exist (m.pl.)",
+        "rank": 593
+      }
+    ]
+  },
+  {
+    "position": 11,
+    "root": "ע-ו-ר",
+    "score": 0.02757,
+    "member_count": 3,
+    "members": [
+      {
+        "he": "העיר",
+        "translit": "ha'ir",
+        "en": "the city",
+        "rank": 50
+      },
+      {
+        "he": "בעיר",
+        "translit": "be'ir",
+        "en": "in a city",
+        "rank": 168
+      },
+      {
+        "he": "הערות",
+        "translit": "he'arot",
+        "en": "comments",
+        "rank": 618
+      }
+    ]
+  },
+  {
+    "position": 12,
+    "root": "י-ה-ד",
+    "score": 0.02722,
+    "member_count": 5,
+    "members": [
+      {
+        "he": "יהודים",
+        "translit": "yehudim",
+        "en": "Jews",
+        "rank": 118
+      },
+      {
+        "he": "היהודים",
+        "translit": "hayehudim",
+        "en": "the Jews",
+        "rank": 119
+      },
+      {
+        "he": "יהודי",
+        "translit": "yehudi",
+        "en": "Jew / Jewish (m.s.)",
+        "rank": 233
+      },
+      {
+        "he": "היהודית",
+        "translit": "hayehudit",
+        "en": "the Jewish (f.s.)",
+        "rank": 322
+      },
+      {
+        "he": "היהודי",
+        "translit": "hayehudi",
+        "en": "the Jew / the Jewish (m.s.)",
+        "rank": 340
+      }
+    ]
+  },
+  {
+    "position": 13,
+    "root": "א-ר-ץ",
+    "score": 0.02511,
+    "member_count": 6,
+    "members": [
+      {
+        "he": "ארצות",
+        "translit": "aratsot",
+        "en": "countries",
+        "rank": 178
+      },
+      {
+        "he": "הארץ",
+        "translit": "ha'arets",
+        "en": "the country / the earth",
+        "rank": 189
+      },
+      {
+        "he": "בארץ",
+        "translit": "be'arets",
+        "en": "in a country",
+        "rank": 191
+      },
+      {
+        "he": "בארצות",
+        "translit": "be'aratsot",
+        "en": "in countries",
+        "rank": 298
+      },
+      {
+        "he": "ארץ",
+        "translit": "erets",
+        "en": "country / land / earth",
+        "rank": 347
+      },
+      {
+        "he": "לארץ",
+        "translit": "la'arets",
+        "en": "to the country / to Israel",
+        "rank": 366
+      }
+    ]
+  },
+  {
+    "position": 14,
+    "root": "ג-ד-ל",
+    "score": 0.02496,
+    "member_count": 6,
+    "members": [
+      {
+        "he": "גדול",
+        "translit": "gadol",
+        "en": "big / large (m.s.)",
+        "rank": 104
+      },
+      {
+        "he": "הגדול",
+        "translit": "hagadol",
+        "en": "the big / the large (m.s.)",
+        "rank": 207
+      },
+      {
+        "he": "גדולה",
+        "translit": "gdola",
+        "en": "big / large (f.s.)",
+        "rank": 247
+      },
+      {
+        "he": "גדולים",
+        "translit": "gdolim",
+        "en": "big / large (m.pl.)",
+        "rank": 415
+      },
+      {
+        "he": "הגדולה",
+        "translit": "hagdola",
+        "en": "the big / the large (f.s.)",
+        "rank": 438
+      },
+      {
+        "he": "הגדולים",
+        "translit": "hagdolim",
+        "en": "the big (m.pl.)",
+        "rank": 565
+      }
+    ]
+  },
+  {
+    "position": 15,
+    "root": "ד-ב-ר",
+    "score": 0.0237,
+    "member_count": 2,
+    "members": [
+      {
+        "he": "דבר",
+        "translit": "davar",
+        "en": "thing / matter / something",
+        "rank": 54
+      },
+      {
+        "he": "הדבר",
+        "translit": "hadavar",
+        "en": "the thing / the object",
+        "rank": 193
+      }
+    ]
+  },
+  {
+    "position": 16,
+    "root": "ע-ל-ם",
+    "score": 0.02357,
+    "member_count": 4,
+    "members": [
+      {
+        "he": "העולם",
+        "translit": "ha'olam",
+        "en": "the world",
+        "rank": 70
+      },
+      {
+        "he": "בעולם",
+        "translit": "ba'olam",
+        "en": "in the world",
+        "rank": 186
+      },
+      {
+        "he": "מעולם",
+        "translit": "me'olam",
+        "en": "never",
+        "rank": 473
+      },
+      {
+        "he": "לעולם",
+        "translit": "le'olam",
+        "en": "forever",
+        "rank": 559
+      }
+    ]
+  },
+  {
+    "position": 17,
+    "root": "ד-ר-ך",
+    "score": 0.02304,
+    "member_count": 3,
+    "members": [
+      {
+        "he": "דרך",
+        "translit": "derekh",
+        "en": "way / road",
+        "rank": 80
+      },
+      {
+        "he": "בדרך",
+        "translit": "baderekh",
+        "en": "on the way",
+        "rank": 139
+      },
+      {
+        "he": "הדרך",
+        "translit": "haderekh",
+        "en": "the way / the road",
+        "rank": 299
+      }
+    ]
+  },
+  {
+    "position": 18,
+    "root": "ב-ע-ל",
+    "score": 0.0225,
+    "member_count": 3,
+    "members": [
+      {
+        "he": "בעל",
+        "translit": "ba'al",
+        "en": "owner / husband",
+        "rank": 78
+      },
+      {
+        "he": "בעלי",
+        "translit": "ba'ali",
+        "en": "my husband",
+        "rank": 131
+      },
+      {
+        "he": "בעלות",
+        "translit": "ba'alut",
+        "en": "ownership",
+        "rank": 488
+      }
+    ]
+  },
+  {
+    "position": 19,
+    "root": "א-מ-ר",
+    "score": 0.02238,
+    "member_count": 2,
+    "members": [
+      {
+        "he": "אמר",
+        "translit": "amar",
+        "en": "said (m.s.)",
+        "rank": 62
+      },
+      {
+        "he": "אמרה",
+        "translit": "amra",
+        "en": "said (f.s.)",
+        "rank": 160
+      }
+    ]
+  },
+  {
+    "position": 20,
+    "root": "ל-ח-ם",
+    "score": 0.02156,
+    "member_count": 4,
+    "members": [
+      {
+        "he": "המלחמה",
+        "translit": "hamilkhama",
+        "en": "the war",
+        "rank": 98
+      },
+      {
+        "he": "מלחמת",
+        "translit": "milkhemet",
+        "en": "the war of",
+        "rank": 135
+      },
+      {
+        "he": "מלחמה",
+        "translit": "milkhama",
+        "en": "war",
+        "rank": 459
+      },
+      {
+        "he": "הלחימה",
+        "translit": "halekhima",
+        "en": "the warfare / the fighting",
+        "rank": 566
+      }
+    ]
+  },
+  {
+    "position": 21,
+    "root": "י-ד-ד",
+    "score": 0.02095,
+    "member_count": 2,
+    "members": [
+      {
+        "he": "ידי",
+        "translit": "yadai",
+        "en": "my hands",
+        "rank": 67
+      },
+      {
+        "he": "בידי",
+        "translit": "bidei",
+        "en": "in the hands of",
+        "rank": 166
+      }
+    ]
+  },
+  {
+    "position": 22,
+    "root": "פ-נ-ה",
+    "score": 0.01997,
+    "member_count": 2,
+    "members": [
+      {
+        "he": "לפני",
+        "translit": "lifnei",
+        "en": "before / in front of / ago",
+        "rank": 68
+      },
+      {
+        "he": "פני",
+        "translit": "pnei",
+        "en": "the face of",
+        "rank": 190
+      }
+    ]
+  },
+  {
+    "position": 23,
+    "root": "ח-ל-ל",
+    "score": 0.01921,
+    "member_count": 4,
+    "members": [
+      {
+        "he": "החל",
+        "translit": "hekhel",
+        "en": "started (m.s.)",
+        "rank": 90
+      },
+      {
+        "he": "החלו",
+        "translit": "hekhelu",
+        "en": "started (pl.)",
+        "rank": 236
+      },
+      {
+        "he": "החלה",
+        "translit": "hekhela",
+        "en": "started (f.s.)",
+        "rank": 449
+      },
+      {
+        "he": "תחילת",
+        "translit": "tkhilat",
+        "en": "the beginning of",
+        "rank": 610
+      }
+    ]
+  },
+  {
+    "position": 24,
+    "root": "כ-ו-ח",
+    "score": 0.01807,
+    "member_count": 4,
+    "members": [
+      {
+        "he": "כוחות",
+        "translit": "kokhot",
+        "en": "powers / forces / strength",
+        "rank": 187
+      },
+      {
+        "he": "כוח",
+        "translit": "ko'akh",
+        "en": "power / force / strength",
+        "rank": 195
+      },
+      {
+        "he": "הכוחות",
+        "translit": "hakokhot",
+        "en": "the powers / the forces",
+        "rank": 238
+      },
+      {
+        "he": "הכוח",
+        "translit": "hako'akh",
+        "en": "the power / the force",
+        "rank": 295
+      }
+    ]
+  },
+  {
+    "position": 25,
+    "root": "א-ד-ם",
+    "score": 0.01785,
+    "member_count": 3,
+    "members": [
+      {
+        "he": "אדם",
+        "translit": "adam",
+        "en": "person / man / human being",
+        "rank": 136
+      },
+      {
+        "he": "האדם",
+        "translit": "ha'adam",
+        "en": "the man / the person",
+        "rank": 149
+      },
+      {
+        "he": "האדמה",
+        "translit": "ha'adama",
+        "en": "the land / the earth",
+        "rank": 264
+      }
+    ]
+  },
+  {
+    "position": 26,
+    "root": "י-ס-ף",
+    "score": 0.01768,
+    "member_count": 3,
+    "members": [
+      {
+        "he": "נוספים",
+        "translit": "nosafim",
+        "en": "additional (m.pl.)",
+        "rank": 120
+      },
+      {
+        "he": "נוספת",
+        "translit": "nosefet",
+        "en": "additional (f.s.)",
+        "rank": 140
+      },
+      {
+        "he": "נוספות",
+        "translit": "nosafot",
+        "en": "additional (f.pl.)",
+        "rank": 454
+      }
+    ]
+  },
+  {
+    "position": 27,
+    "root": "ש-מ-ש",
+    "score": 0.0168,
+    "member_count": 5,
+    "members": [
+      {
+        "he": "שימוש",
+        "translit": "shimush",
+        "en": "use",
+        "rank": 141
+      },
+      {
+        "he": "השמש",
+        "translit": "hashemesh",
+        "en": "the sun",
+        "rank": 278
+      },
+      {
+        "he": "השימוש",
+        "translit": "hashimush",
+        "en": "the use",
+        "rank": 423
+      },
+      {
+        "he": "להשתמש",
+        "translit": "lehishtamesh",
+        "en": "to use",
+        "rank": 499
+      },
+      {
+        "he": "שימש",
+        "translit": "shimesh",
+        "en": "was used / served (m.s.)",
+        "rank": 574
+      }
+    ]
+  },
+  {
+    "position": 28,
+    "root": "ז-מ-ן",
+    "score": 0.01623,
+    "member_count": 3,
+    "members": [
+      {
+        "he": "זמן",
+        "translit": "zman",
+        "en": "time",
+        "rank": 114
+      },
+      {
+        "he": "בזמן",
+        "translit": "bizman",
+        "en": "at the time [of]",
+        "rank": 237
+      },
+      {
+        "he": "הזמן",
+        "translit": "hazman",
+        "en": "the time",
+        "rank": 309
+      }
+    ]
+  },
+  {
+    "position": 29,
+    "root": "א-ו-פ-ן",
+    "score": 0.01587,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "באופן",
+        "translit": "beofen",
+        "en": "in a way",
+        "rank": 63
+      }
+    ]
+  },
+  {
+    "position": 30,
+    "root": "מ-א-ה",
+    "score": 0.01585,
+    "member_count": 3,
+    "members": [
+      {
+        "he": "המאה",
+        "translit": "hame'a",
+        "en": "the century / the hundred",
+        "rank": 89
+      },
+      {
+        "he": "במאה",
+        "translit": "beme'a",
+        "en": "in a hundred",
+        "rank": 398
+      },
+      {
+        "he": "מאות",
+        "translit": "me'ot",
+        "en": "hundreds / centuries",
+        "rank": 475
+      }
+    ]
+  },
+  {
+    "position": 31,
+    "root": "ב-ר-ת",
+    "score": 0.01562,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "הברית",
+        "translit": "habrit",
+        "en": "the pact / the alliance / the covenant",
+        "rank": 64
+      }
+    ]
+  },
+  {
+    "position": 32,
+    "root": "ע-ב-ר",
+    "score": 0.0155,
+    "member_count": 5,
+    "members": [
+      {
+        "he": "עבור",
+        "translit": "avur",
+        "en": "for",
+        "rank": 175
+      },
+      {
+        "he": "עבר",
+        "translit": "avar",
+        "en": "passed / crossed (m.s.)",
+        "rank": 317
+      },
+      {
+        "he": "מעבר",
+        "translit": "ma'avar",
+        "en": "transition / pass",
+        "rank": 361
+      },
+      {
+        "he": "בעבר",
+        "translit": "ba'avar",
+        "en": "in the past",
+        "rank": 495
+      },
+      {
+        "he": "העברית",
+        "translit": "ha'ivrit",
+        "en": "the Hebrew",
+        "rank": 544
+      }
+    ]
+  },
+  {
+    "position": 33,
+    "root": "ח-ד-ש",
+    "score": 0.01538,
+    "member_count": 7,
+    "members": [
+      {
+        "he": "החדשה",
+        "translit": "hakhadasha",
+        "en": "the new (f.s.)",
+        "rank": 326
+      },
+      {
+        "he": "מחדש",
+        "translit": "mekhadash",
+        "en": "from the beginning / again",
+        "rank": 365
+      },
+      {
+        "he": "חדש",
+        "translit": "khadash",
+        "en": "new (m.s.)",
+        "rank": 481
+      },
+      {
+        "he": "חדשים",
+        "translit": "khadashim",
+        "en": "new (m.pl.)",
+        "rank": 486
+      },
+      {
+        "he": "החדש",
+        "translit": "hakhadash",
+        "en": "the new (m.s.)",
+        "rank": 498
+      },
+      {
+        "he": "חדשה",
+        "translit": "khadasha",
+        "en": "new (f.s.)",
+        "rank": 548
+      },
+      {
+        "he": "חודשים",
+        "translit": "khodashim",
+        "en": "months",
+        "rank": 623
+      }
+    ]
+  },
+  {
+    "position": 34,
+    "root": "כ-ל-ל",
+    "score": 0.01534,
+    "member_count": 3,
+    "members": [
+      {
+        "he": "כלל",
+        "translit": "klal",
+        "en": "rule / all",
+        "rank": 94
+      },
+      {
+        "he": "כולל",
+        "translit": "kolel",
+        "en": "includes / including",
+        "rank": 333
+      },
+      {
+        "he": "בכלל",
+        "translit": "bikhlal",
+        "en": "at all",
+        "rank": 587
+      }
+    ]
+  },
+  {
+    "position": 35,
+    "root": "י-מ-ם",
+    "score": 0.01513,
+    "member_count": 3,
+    "members": [
+      {
+        "he": "הים",
+        "translit": "hayam",
+        "en": "the sea",
+        "rank": 121
+      },
+      {
+        "he": "ים",
+        "translit": "yam",
+        "en": "sea",
+        "rank": 258
+      },
+      {
+        "he": "ימי",
+        "translit": "yami",
+        "en": "marine (m.s.)",
+        "rank": 335
+      }
+    ]
+  },
+  {
+    "position": 36,
+    "root": "ר-א-ש",
+    "score": 0.01487,
+    "member_count": 4,
+    "members": [
+      {
+        "he": "ראש",
+        "translit": "rosh",
+        "en": "head",
+        "rank": 134
+      },
+      {
+        "he": "ראשי",
+        "translit": "rashi",
+        "en": "main / principal",
+        "rank": 373
+      },
+      {
+        "he": "לראשונה",
+        "translit": "larishona",
+        "en": "for the first time",
+        "rank": 405
+      },
+      {
+        "he": "בראש",
+        "translit": "berosh",
+        "en": "at the top / leading",
+        "rank": 443
+      }
+    ]
+  },
+  {
+    "position": 37,
+    "root": "י-ח-ד",
+    "score": 0.01476,
+    "member_count": 5,
+    "members": [
+      {
+        "he": "במיוחד",
+        "translit": "bimyukhad",
+        "en": "especially",
+        "rank": 222
+      },
+      {
+        "he": "יחד",
+        "translit": "yakhad",
+        "en": "together",
+        "rank": 249
+      },
+      {
+        "he": "יחידה",
+        "translit": "yekhida",
+        "en": "unit / squad / only",
+        "rank": 385
+      },
+      {
+        "he": "היחיד",
+        "translit": "hayakhid",
+        "en": "the only / the single",
+        "rank": 482
+      },
+      {
+        "he": "היחידה",
+        "translit": "hayekhida",
+        "en": "the unit / the only",
+        "rank": 639
+      }
+    ]
+  },
+  {
+    "position": 38,
+    "root": "א-נ-ש",
+    "score": 0.01451,
+    "member_count": 2,
+    "members": [
+      {
+        "he": "אנשי",
+        "translit": "anshei",
+        "en": "the people of",
+        "rank": 92
+      },
+      {
+        "he": "אנשים",
+        "translit": "anashim",
+        "en": "people",
+        "rank": 275
+      }
+    ]
+  },
+  {
+    "position": 39,
+    "root": "פ-ו-ה",
+    "score": 0.01408,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "פי",
+        "translit": "pi",
+        "en": "my mouth / multiplied by",
+        "rank": 71
+      }
+    ]
+  },
+  {
+    "position": 40,
+    "root": "י-כ-ל",
+    "score": 0.01389,
+    "member_count": 3,
+    "members": [
+      {
+        "he": "יכול",
+        "translit": "yakhol",
+        "en": "can (m.s.)",
+        "rank": 115
+      },
+      {
+        "he": "יכולים",
+        "translit": "yekholim",
+        "en": "can (m.pl.)",
+        "rank": 356
+      },
+      {
+        "he": "יכולה",
+        "translit": "yakhola",
+        "en": "can (f.s.)",
+        "rank": 419
+      }
+    ]
+  },
+  {
+    "position": 41,
+    "root": "ה-ל-ך",
+    "score": 0.01389,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "במהלך",
+        "translit": "bemahalakh",
+        "en": "during",
+        "rank": 72
+      }
+    ]
+  },
+  {
+    "position": 42,
+    "root": "ע-ת-ת",
+    "score": 0.01389,
+    "member_count": 3,
+    "members": [
+      {
+        "he": "לעתים",
+        "translit": "le'itim",
+        "en": "sometimes",
+        "rank": 156
+      },
+      {
+        "he": "בעת",
+        "translit": "be'et",
+        "en": "at a time (of)",
+        "rank": 177
+      },
+      {
+        "he": "עת",
+        "translit": "et",
+        "en": "time",
+        "rank": 547
+      }
+    ]
+  },
+  {
+    "position": 43,
+    "root": "נ-ת-ן",
+    "score": 0.01316,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "ניתן",
+        "translit": "nitan",
+        "en": "possible",
+        "rank": 76
+      }
+    ]
+  },
+  {
+    "position": 44,
+    "root": "נ-ג-ד",
+    "score": 0.01303,
+    "member_count": 2,
+    "members": [
+      {
+        "he": "נגד",
+        "translit": "neged",
+        "en": "against",
+        "rank": 91
+      },
+      {
+        "he": "בניגוד",
+        "translit": "benigud",
+        "en": "in contrast / contrary to",
+        "rank": 489
+      }
+    ]
+  },
+  {
+    "position": 45,
+    "root": "ר-א-ה",
+    "score": 0.01294,
+    "member_count": 3,
+    "members": [
+      {
+        "he": "ראו",
+        "translit": "ra'u",
+        "en": "saw (m.pl.)",
+        "rank": 211
+      },
+      {
+        "he": "נראה",
+        "translit": "nir'e",
+        "en": "looks",
+        "rank": 213
+      },
+      {
+        "he": "לראות",
+        "translit": "lir'ot",
+        "en": "to see",
+        "rank": 285
+      }
+    ]
+  },
+  {
+    "position": 46,
+    "root": "ת-ו-ך",
+    "score": 0.01284,
+    "member_count": 2,
+    "members": [
+      {
+        "he": "תוך",
+        "translit": "tokh",
+        "en": "inside / interior / content",
+        "rank": 133
+      },
+      {
+        "he": "בתוך",
+        "translit": "betokh",
+        "en": "inside",
+        "rank": 188
+      }
+    ]
+  },
+  {
+    "position": 47,
+    "root": "ח-ל-ק",
+    "score": 0.0122,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "חלק",
+        "translit": "khelek",
+        "en": "part",
+        "rank": 82
+      }
+    ]
+  },
+  {
+    "position": 48,
+    "root": "מ-ש-ל",
+    "score": 0.01212,
+    "member_count": 2,
+    "members": [
+      {
+        "he": "הממשלה",
+        "translit": "hamemshala",
+        "en": "the government",
+        "rank": 153
+      },
+      {
+        "he": "למשל",
+        "translit": "lemashal",
+        "en": "for example",
+        "rank": 179
+      }
+    ]
+  },
+  {
+    "position": 49,
+    "root": "א-ל-ם",
+    "score": 0.01163,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "אולם",
+        "translit": "ulam",
+        "en": "but / hall",
+        "rank": 86
+      }
+    ]
+  },
+  {
+    "position": 50,
+    "root": "ק-ר-ב",
+    "score": 0.01155,
+    "member_count": 3,
+    "members": [
+      {
+        "he": "בקרב",
+        "translit": "bekerev",
+        "en": "among",
+        "rank": 170
+      },
+      {
+        "he": "הקרב",
+        "translit": "hakrav",
+        "en": "the battle",
+        "rank": 289
+      },
+      {
+        "he": "קרב",
+        "translit": "krav",
+        "en": "battle",
+        "rank": 453
+      }
+    ]
+  },
+  {
+    "position": 51,
+    "root": "נ-ס-ף",
+    "score": 0.01153,
+    "member_count": 2,
+    "members": [
+      {
+        "he": "בנוסף",
+        "translit": "benosaf",
+        "en": "in addition",
+        "rank": 165
+      },
+      {
+        "he": "נוסף",
+        "translit": "nosaf",
+        "en": "additional (m.s.)",
+        "rank": 183
+      }
+    ]
+  },
+  {
+    "position": 52,
+    "root": "מ-ש-ך",
+    "score": 0.01123,
+    "member_count": 3,
+    "members": [
+      {
+        "he": "במשך",
+        "translit": "bemeshekh",
+        "en": "during / in the course of",
+        "rank": 146
+      },
+      {
+        "he": "המשיך",
+        "translit": "himshikh",
+        "en": "continued (m.s.)",
+        "rank": 432
+      },
+      {
+        "he": "בהמשך",
+        "translit": "bahemshekh",
+        "en": "later on",
+        "rank": 483
+      }
+    ]
+  },
+  {
+    "position": 53,
+    "root": "ד-י-ן",
+    "score": 0.01095,
+    "member_count": 2,
+    "members": [
+      {
+        "he": "המדינה",
+        "translit": "hamedina",
+        "en": "the state",
+        "rank": 125
+      },
+      {
+        "he": "מדינות",
+        "translit": "medinot",
+        "en": "states",
+        "rank": 339
+      }
+    ]
+  },
+  {
+    "position": 54,
+    "root": "מ-נ-ה",
+    "score": 0.01053,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "מנת",
+        "translit": "menat",
+        "en": "a portion of",
+        "rank": 95
+      }
+    ]
+  },
+  {
+    "position": 55,
+    "root": "ע-צ-ה",
+    "score": 0.0097,
+    "member_count": 4,
+    "members": [
+      {
+        "he": "עץ",
+        "translit": "ets",
+        "en": "tree / wood",
+        "rank": 239
+      },
+      {
+        "he": "העץ",
+        "translit": "ha'ets",
+        "en": "the tree",
+        "rank": 513
+      },
+      {
+        "he": "העצים",
+        "translit": "ha'etsim",
+        "en": "the trees",
+        "rank": 541
+      },
+      {
+        "he": "עצים",
+        "translit": "etsim",
+        "en": "trees / logs",
+        "rank": 583
+      }
+    ]
+  },
+  {
+    "position": 56,
+    "root": "נ-ג-ע",
+    "score": 0.00964,
+    "member_count": 3,
+    "members": [
+      {
+        "he": "הגיע",
+        "translit": "hegi'a",
+        "en": "arrived (m.s.)",
+        "rank": 248
+      },
+      {
+        "he": "הגיעו",
+        "translit": "hegi'u",
+        "en": "arrived (pl.)",
+        "rank": 296
+      },
+      {
+        "he": "להגיע",
+        "translit": "lehagi'a",
+        "en": "to arrive",
+        "rank": 448
+      }
+    ]
+  },
+  {
+    "position": 57,
+    "root": "צ-ב-א",
+    "score": 0.00954,
+    "member_count": 2,
+    "members": [
+      {
+        "he": "הצבא",
+        "translit": "hatsava",
+        "en": "the army",
+        "rank": 180
+      },
+      {
+        "he": "צבא",
+        "translit": "tsava",
+        "en": "army",
+        "rank": 251
+      }
+    ]
+  },
+  {
+    "position": 58,
+    "root": "ש-ח-ק",
+    "score": 0.0095,
+    "member_count": 3,
+    "members": [
+      {
+        "he": "המשחק",
+        "translit": "hamis'khak",
+        "en": "the game",
+        "rank": 172
+      },
+      {
+        "he": "במשחק",
+        "translit": "bemis'khak",
+        "en": "in a game",
+        "rank": 493
+      },
+      {
+        "he": "השחקן",
+        "translit": "hasakhkan",
+        "en": "the player / the actor",
+        "rank": 604
+      }
+    ]
+  },
+  {
+    "position": 59,
+    "root": "מ-י-ם",
+    "score": 0.00944,
+    "member_count": 2,
+    "members": [
+      {
+        "he": "מים",
+        "translit": "mayim",
+        "en": "water",
+        "rank": 201
+      },
+      {
+        "he": "המים",
+        "translit": "hamayim",
+        "en": "the water",
+        "rank": 224
+      }
+    ]
+  },
+  {
+    "position": 60,
+    "root": "ע-ק-ר",
+    "score": 0.00943,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "בעיקר",
+        "translit": "be'ikar",
+        "en": "mainly / principally / especially",
+        "rank": 106
+      }
+    ]
+  },
+  {
+    "position": 61,
+    "root": "פ-ע-ם",
+    "score": 0.00936,
+    "member_count": 3,
+    "members": [
+      {
+        "he": "פעם",
+        "translit": "pa'am",
+        "en": "once / once upon a time",
+        "rank": 210
+      },
+      {
+        "he": "הפעם",
+        "translit": "hapa'am",
+        "en": "this time",
+        "rank": 424
+      },
+      {
+        "he": "פעמים",
+        "translit": "pe'amim",
+        "en": "times",
+        "rank": 446
+      }
+    ]
+  },
+  {
+    "position": 62,
+    "root": "ע-ש-ה",
+    "score": 0.00933,
+    "member_count": 3,
+    "members": [
+      {
+        "he": "למעשה",
+        "translit": "lema'ase",
+        "en": "actually / in fact",
+        "rank": 250
+      },
+      {
+        "he": "נעשה",
+        "translit": "na'asa",
+        "en": "done",
+        "rank": 306
+      },
+      {
+        "he": "לעשות",
+        "translit": "la'asot",
+        "en": "to do",
+        "rank": 485
+      }
+    ]
+  },
+  {
+    "position": 63,
+    "root": "ע-ק-ב",
+    "score": 0.00928,
+    "member_count": 2,
+    "members": [
+      {
+        "he": "בעקבות",
+        "translit": "be'ikvot",
+        "en": "in the footsteps of / following",
+        "rank": 167
+      },
+      {
+        "he": "עקב",
+        "translit": "ekev",
+        "en": "due to / because of",
+        "rank": 304
+      }
+    ]
+  },
+  {
+    "position": 64,
+    "root": "ע-ל-ה",
+    "score": 0.00921,
+    "member_count": 4,
+    "members": [
+      {
+        "he": "למעלה",
+        "translit": "lemala",
+        "en": "up / upward",
+        "rank": 338
+      },
+      {
+        "he": "עלה",
+        "translit": "ala",
+        "en": "went up / climbed / increased (m.s.)",
+        "rank": 418
+      },
+      {
+        "he": "העליון",
+        "translit": "ha'elyon",
+        "en": "the upper / the top (m.s.)",
+        "rank": 452
+      },
+      {
+        "he": "העלייה",
+        "translit": "ha'aliya",
+        "en": "the rise / the immigration",
+        "rank": 608
+      }
+    ]
+  },
+  {
+    "position": 65,
+    "root": "כ-ו-ן",
+    "score": 0.0086,
+    "member_count": 4,
+    "members": [
+      {
+        "he": "המכונה",
+        "translit": "hamekhona",
+        "en": "the machine",
+        "rank": 350
+      },
+      {
+        "he": "מכיוון",
+        "translit": "mekivun",
+        "en": "from the direction of / since",
+        "rank": 460
+      },
+      {
+        "he": "נכון",
+        "translit": "nakhon",
+        "en": "correct / ready (m.s.)",
+        "rank": 512
+      },
+      {
+        "he": "כיוון",
+        "translit": "kivun",
+        "en": "direction / adjustment",
+        "rank": 617
+      }
+    ]
+  },
+  {
+    "position": 66,
+    "root": "מ-י-ן",
+    "score": 0.00859,
+    "member_count": 4,
+    "members": [
+      {
+        "he": "מינים",
+        "translit": "minim",
+        "en": "kinds / species / genders",
+        "rank": 344
+      },
+      {
+        "he": "מין",
+        "translit": "min",
+        "en": "kind / species / gender",
+        "rank": 426
+      },
+      {
+        "he": "מיני",
+        "translit": "minei",
+        "en": "kinds of / species of",
+        "rank": 572
+      },
+      {
+        "he": "המין",
+        "translit": "hamin",
+        "en": "the kind / the species / the sex",
+        "rank": 630
+      }
+    ]
+  },
+  {
+    "position": 67,
+    "root": "ס-ו-פ",
+    "score": 0.00829,
+    "member_count": 2,
+    "members": [
+      {
+        "he": "בסוף",
+        "translit": "basof",
+        "en": "at the end",
+        "rank": 220
+      },
+      {
+        "he": "סוף",
+        "translit": "sof",
+        "en": "end",
+        "rank": 267
+      }
+    ]
+  },
+  {
+    "position": 68,
+    "root": "ח-י-י",
+    "score": 0.00806,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "חיים",
+        "translit": "khaim",
+        "en": "life",
+        "rank": 124
+      }
+    ]
+  },
+  {
+    "position": 69,
+    "root": "ע-צ-ם",
+    "score": 0.00801,
+    "member_count": 2,
+    "members": [
+      {
+        "he": "עצמו",
+        "translit": "atsmo",
+        "en": "himself",
+        "rank": 161
+      },
+      {
+        "he": "עצמם",
+        "translit": "atsmam",
+        "en": "themselves",
+        "rank": 556
+      }
+    ]
+  },
+  {
+    "position": 70,
+    "root": "ר-ג-ן",
+    "score": 0.00794,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "הארגון",
+        "translit": "ha'irgun",
+        "en": "the organization",
+        "rank": 126
+      }
+    ]
+  },
+  {
+    "position": 71,
+    "root": "ש-ו-ב",
+    "score": 0.00789,
+    "member_count": 2,
+    "members": [
+      {
+        "he": "שבה",
+        "translit": "shava",
+        "en": "returned (f.s.)",
+        "rank": 218
+      },
+      {
+        "he": "שוב",
+        "translit": "shuv",
+        "en": "again / return (m.s. imperative)",
+        "rank": 303
+      }
+    ]
+  },
+  {
+    "position": 72,
+    "root": "ב-ו-א",
+    "score": 0.00782,
+    "member_count": 4,
+    "members": [
+      {
+        "he": "בא",
+        "translit": "ba",
+        "en": "coming / came (m.s.)",
+        "rank": 387
+      },
+      {
+        "he": "הביא",
+        "translit": "hevi",
+        "en": "brought (m.s.)",
+        "rank": 542
+      },
+      {
+        "he": "הביאו",
+        "translit": "hevi'u",
+        "en": "brought (pl.)",
+        "rank": 576
+      },
+      {
+        "he": "להביא",
+        "translit": "lehavi",
+        "en": "to bring",
+        "rank": 603
+      }
+    ]
+  },
+  {
+    "position": 73,
+    "root": "א-ז-ר",
+    "score": 0.00781,
+    "member_count": 2,
+    "members": [
+      {
+        "he": "באזור",
+        "translit": "be'ezor",
+        "en": "in an area",
+        "rank": 184
+      },
+      {
+        "he": "אזור",
+        "translit": "ezor",
+        "en": "area / region / zone",
+        "rank": 421
+      }
+    ]
+  },
+  {
+    "position": 74,
+    "root": "ח-י-ל",
+    "score": 0.0075,
+    "member_count": 2,
+    "members": [
+      {
+        "he": "חיל",
+        "translit": "khayal",
+        "en": "soldier (m)",
+        "rank": 240
+      },
+      {
+        "he": "חיילים",
+        "translit": "khayalim",
+        "en": "soldiers",
+        "rank": 300
+      }
+    ]
+  },
+  {
+    "position": 75,
+    "root": "א-י-ש",
+    "score": 0.00725,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "איש",
+        "translit": "ish",
+        "en": "person / man / husband",
+        "rank": 138
+      }
+    ]
+  },
+  {
+    "position": 76,
+    "root": "מ-צ-ע",
+    "score": 0.00694,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "באמצעות",
+        "translit": "be'emtsa'ut",
+        "en": "through / by way of / by",
+        "rank": 144
+      }
+    ]
+  },
+  {
+    "position": 77,
+    "root": "ק-ו-ף",
+    "score": 0.00691,
+    "member_count": 3,
+    "members": [
+      {
+        "he": "תקופה",
+        "translit": "tkufa",
+        "en": "period / era",
+        "rank": 390
+      },
+      {
+        "he": "תקופת",
+        "translit": "tkufat",
+        "en": "period of / era of",
+        "rank": 391
+      },
+      {
+        "he": "התקופה",
+        "translit": "hatkufa",
+        "en": "the period / the era",
+        "rank": 558
+      }
+    ]
+  },
+  {
+    "position": 78,
+    "root": "ח-ב-ר",
+    "score": 0.00689,
+    "member_count": 3,
+    "members": [
+      {
+        "he": "החברה",
+        "translit": "hakhavera",
+        "en": "the friend (f.s.) / the company",
+        "rank": 346
+      },
+      {
+        "he": "חברת",
+        "translit": "khavrat",
+        "en": "friend of / company of",
+        "rank": 445
+      },
+      {
+        "he": "חברי",
+        "translit": "khaveri",
+        "en": "my friend / friendly",
+        "rank": 570
+      }
+    ]
+  },
+  {
+    "position": 79,
+    "root": "פ-ע-ל",
+    "score": 0.00677,
+    "member_count": 3,
+    "members": [
+      {
+        "he": "פעולה",
+        "translit": "pe'ula",
+        "en": "action / operation",
+        "rank": 383
+      },
+      {
+        "he": "פעולות",
+        "translit": "pe'ulot",
+        "en": "actions / operations",
+        "rank": 472
+      },
+      {
+        "he": "פעילות",
+        "translit": "pe'ilut",
+        "en": "activity",
+        "rank": 490
+      }
+    ]
+  },
+  {
+    "position": 80,
+    "root": "ת-כ-ן",
+    "score": 0.00672,
+    "member_count": 2,
+    "members": [
+      {
+        "he": "תוכן",
+        "translit": "tokhen",
+        "en": "content",
+        "rank": 294
+      },
+      {
+        "he": "תוכנית",
+        "translit": "tokhnit",
+        "en": "program / plan",
+        "rank": 301
+      }
+    ]
+  },
+  {
+    "position": 81,
+    "root": "ח-ו-ץ",
+    "score": 0.00671,
+    "member_count": 2,
+    "members": [
+      {
+        "he": "מחוץ",
+        "translit": "mikhuts",
+        "en": "outside of",
+        "rank": 269
+      },
+      {
+        "he": "חיצוניים",
+        "translit": "khitsonim",
+        "en": "external (m.pl.)",
+        "rank": 334
+      }
+    ]
+  },
+  {
+    "position": 82,
+    "root": "ח-י-ה",
+    "score": 0.0067,
+    "member_count": 2,
+    "members": [
+      {
+        "he": "החיים",
+        "translit": "hakhaim",
+        "en": "the life",
+        "rank": 198
+      },
+      {
+        "he": "חייו",
+        "translit": "khayav",
+        "en": "his life",
+        "rank": 605
+      }
+    ]
+  },
+  {
+    "position": 83,
+    "root": "ק-ב-ץ",
+    "score": 0.00668,
+    "member_count": 3,
+    "members": [
+      {
+        "he": "קבוצת",
+        "translit": "kvutsat",
+        "en": "group of",
+        "rank": 331
+      },
+      {
+        "he": "הקבוצה",
+        "translit": "hakvutsa",
+        "en": "the group",
+        "rank": 501
+      },
+      {
+        "he": "קבוצות",
+        "translit": "kvutsot",
+        "en": "groups",
+        "rank": 602
+      }
+    ]
+  },
+  {
+    "position": 84,
+    "root": "ש-ו-ם",
+    "score": 0.00662,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "בשם",
+        "translit": "beshem",
+        "en": "in the name of / called",
+        "rank": 151
+      }
+    ]
+  },
+  {
+    "position": 85,
+    "root": "ר-ח-ב",
+    "score": 0.00652,
+    "member_count": 3,
+    "members": [
+      {
+        "he": "ברחבי",
+        "translit": "berakhvei",
+        "en": "all over",
+        "rank": 337
+      },
+      {
+        "he": "מורחב",
+        "translit": "murkhav",
+        "en": "widened / broadened",
+        "rank": 533
+      },
+      {
+        "he": "ברחוב",
+        "translit": "barekhov",
+        "en": "on the street",
+        "rank": 596
+      }
+    ]
+  },
+  {
+    "position": 86,
+    "root": "י-צ-א",
+    "score": 0.00642,
+    "member_count": 3,
+    "members": [
+      {
+        "he": "יצא",
+        "translit": "yatsa",
+        "en": "went out / came out (m.s.)",
+        "rank": 401
+      },
+      {
+        "he": "כתוצאה",
+        "translit": "ketotsa'a",
+        "en": "as a result",
+        "rank": 434
+      },
+      {
+        "he": "יצאו",
+        "translit": "yats'u",
+        "en": "went out (pl.)",
+        "rank": 616
+      }
+    ]
+  },
+  {
+    "position": 87,
+    "root": "ק-ב-ל",
+    "score": 0.00598,
+    "member_count": 3,
+    "members": [
+      {
+        "he": "קיבל",
+        "translit": "kibel",
+        "en": "received / accepted (m.s.)",
+        "rank": 416
+      },
+      {
+        "he": "במקביל",
+        "translit": "bemakbil",
+        "en": "in parallel",
+        "rank": 494
+      },
+      {
+        "he": "לקבל",
+        "translit": "lekabel",
+        "en": "to receive / to accept",
+        "rank": 645
+      }
+    ]
+  },
+  {
+    "position": 88,
+    "root": "י-ד-ע",
+    "score": 0.00579,
+    "member_count": 3,
+    "members": [
+      {
+        "he": "ידוע",
+        "translit": "yadu'a",
+        "en": "known",
+        "rank": 388
+      },
+      {
+        "he": "ידע",
+        "translit": "yada",
+        "en": "knew (m.s.)",
+        "rank": 615
+      },
+      {
+        "he": "יודע",
+        "translit": "yode'a",
+        "en": "knows (m.s.)",
+        "rank": 631
+      }
+    ]
+  },
+  {
+    "position": 89,
+    "root": "מ-צ-א",
+    "score": 0.00564,
+    "member_count": 2,
+    "members": [
+      {
+        "he": "נמצא",
+        "translit": "nimtsa",
+        "en": "is found / is [at] (m.s.)",
+        "rank": 323
+      },
+      {
+        "he": "למצוא",
+        "translit": "limtso",
+        "en": "to find",
+        "rank": 393
+      }
+    ]
+  },
+  {
+    "position": 90,
+    "root": "צ-ל-ח",
+    "score": 0.00558,
+    "member_count": 2,
+    "members": [
+      {
+        "he": "הצליחו",
+        "translit": "hitslikhu",
+        "en": "succeeded (pl.)",
+        "rank": 353
+      },
+      {
+        "he": "הצליח",
+        "translit": "hitsliakh",
+        "en": "succeeded (m.s.)",
+        "rank": 364
+      }
+    ]
+  },
+  {
+    "position": 91,
+    "root": "ג-נ-ן",
+    "score": 0.00552,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "ההגנה",
+        "translit": "hahagana",
+        "en": "the defense",
+        "rank": 181
+      }
+    ]
+  },
+  {
+    "position": 92,
+    "root": "ז-כ-ה",
+    "score": 0.00551,
+    "member_count": 2,
+    "members": [
+      {
+        "he": "זכה",
+        "translit": "zakha",
+        "en": "won (m.s.)",
+        "rank": 268
+      },
+      {
+        "he": "זכויות",
+        "translit": "zkhuyot",
+        "en": "rights / privileges",
+        "rank": 563
+      }
+    ]
+  },
+  {
+    "position": 93,
+    "root": "כ-ל-ה",
+    "score": 0.00549,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "כלי",
+        "translit": "kli",
+        "en": "article / dish / vessel / ware",
+        "rank": 182
+      }
+    ]
+  },
+  {
+    "position": 94,
+    "root": "ט-ו-ב",
+    "score": 0.00541,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "טוב",
+        "translit": "tov",
+        "en": "good (m.s.)",
+        "rank": 185
+      }
+    ]
+  },
+  {
+    "position": 95,
+    "root": "ד-ו-ן",
+    "score": 0.00534,
+    "member_count": 3,
+    "members": [
+      {
+        "he": "הדין",
+        "translit": "hadin",
+        "en": "the judgment / the law",
+        "rank": 539
+      },
+      {
+        "he": "מדינת",
+        "translit": "medinat",
+        "en": "the state of",
+        "rank": 554
+      },
+      {
+        "he": "המדינות",
+        "translit": "hamedinot",
+        "en": "the states",
+        "rank": 594
+      }
+    ]
+  },
+  {
+    "position": 96,
+    "root": "ל-ב-ד",
+    "score": 0.00515,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "בלבד",
+        "translit": "bilvad",
+        "en": "only",
+        "rank": 194
+      }
+    ]
+  },
+  {
+    "position": 97,
+    "root": "ג-ו-ף",
+    "score": 0.00511,
+    "member_count": 2,
+    "members": [
+      {
+        "he": "גוף",
+        "translit": "guf",
+        "en": "body",
+        "rank": 384
+      },
+      {
+        "he": "הגוף",
+        "translit": "haguf",
+        "en": "the body",
+        "rank": 399
+      }
+    ]
+  },
+  {
+    "position": 98,
+    "root": "נ-ו-ע",
+    "score": 0.00505,
+    "member_count": 2,
+    "members": [
+      {
+        "he": "התנועה",
+        "translit": "hatnu'a",
+        "en": "the movement / the traffic",
+        "rank": 342
+      },
+      {
+        "he": "תנועת",
+        "translit": "tnu'at",
+        "en": "movement of",
+        "rank": 471
+      }
+    ]
+  },
+  {
+    "position": 99,
+    "root": "א-ר-ך",
+    "score": 0.005,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "לאורך",
+        "translit": "le'orekh",
+        "en": "through / along",
+        "rank": 200
+      }
+    ]
+  },
+  {
+    "position": 100,
+    "root": "י-ד-י",
+    "score": 0.00497,
+    "member_count": 2,
+    "members": [
+      {
+        "he": "יד",
+        "translit": "yad",
+        "en": "hand",
+        "rank": 382
+      },
+      {
+        "he": "מיד",
+        "translit": "miyad",
+        "en": "immediately",
+        "rank": 425
+      }
+    ]
+  },
+  {
+    "position": 101,
+    "root": "ר-ב-ה",
+    "score": 0.00495,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "הרבה",
+        "translit": "harbe",
+        "en": "many / a lot",
+        "rank": 202
+      }
+    ]
+  },
+  {
+    "position": 102,
+    "root": "א-ב-ב",
+    "score": 0.00488,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "אביב",
+        "translit": "aviv",
+        "en": "spring",
+        "rank": 205
+      }
+    ]
+  },
+  {
+    "position": 103,
+    "root": "צ-ד-ד",
+    "score": 0.00463,
+    "member_count": 2,
+    "members": [
+      {
+        "he": "לצד",
+        "translit": "letsad",
+        "en": "to a side / next to",
+        "rank": 395
+      },
+      {
+        "he": "מצד",
+        "translit": "mitsad",
+        "en": "from a side / from the",
+        "rank": 477
+      }
+    ]
+  },
+  {
+    "position": 104,
+    "root": "מ-ו-ת",
+    "score": 0.00461,
+    "member_count": 2,
+    "members": [
+      {
+        "he": "מותו",
+        "translit": "moto",
+        "en": "his death",
+        "rank": 358
+      },
+      {
+        "he": "מת",
+        "translit": "met",
+        "en": "dead / died (m.s.)",
+        "rank": 550
+      }
+    ]
+  },
+  {
+    "position": 105,
+    "root": "ר-י-ב",
+    "score": 0.00461,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "רבה",
+        "translit": "rava",
+        "en": "fought (f.s.)",
+        "rank": 217
+      }
+    ]
+  },
+  {
+    "position": 106,
+    "root": "פ-ל-ג",
+    "score": 0.00452,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "המפלגה",
+        "translit": "hamiflaga",
+        "en": "the party (political)",
+        "rank": 221
+      }
+    ]
+  },
+  {
+    "position": 107,
+    "root": "ק-ש-ר",
+    "score": 0.00451,
+    "member_count": 2,
+    "members": [
+      {
+        "he": "קישורים",
+        "translit": "kishurim",
+        "en": "links / connections",
+        "rank": 370
+      },
+      {
+        "he": "קשר",
+        "translit": "kesher",
+        "en": "tie / bond / connection",
+        "rank": 553
+      }
+    ]
+  },
+  {
+    "position": 108,
+    "root": "ת-ל-ל",
+    "score": 0.00441,
+    "member_count": 2,
+    "members": [
+      {
+        "he": "תל",
+        "translit": "tel",
+        "en": "hill",
+        "rank": 375
+      },
+      {
+        "he": "בתל",
+        "translit": "betel",
+        "en": "on a hill",
+        "rank": 573
+      }
+    ]
+  },
+  {
+    "position": 109,
+    "root": "נ-ק-פ",
+    "score": 0.00439,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "בתקופה",
+        "translit": "bitkufa",
+        "en": "in a period / in an era",
+        "rank": 228
+      }
+    ]
+  },
+  {
+    "position": 110,
+    "root": "ע-ר-ך",
+    "score": 0.00427,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "ערך",
+        "translit": "erekh",
+        "en": "value",
+        "rank": 234
+      }
+    ]
+  },
+  {
+    "position": 111,
+    "root": "פ-ש-ר",
+    "score": 0.00415,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "אפשר",
+        "translit": "efshar",
+        "en": "possible (adv.)",
+        "rank": 241
+      }
+    ]
+  },
+  {
+    "position": 112,
+    "root": "א-ו-י",
+    "score": 0.00408,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "האי",
+        "translit": "ha'i",
+        "en": "the island",
+        "rank": 245
+      }
+    ]
+  },
+  {
+    "position": 113,
+    "root": "מ-ע-ט",
+    "score": 0.00397,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "מעט",
+        "translit": "me'at",
+        "en": "a little / a few",
+        "rank": 252
+      }
+    ]
+  },
+  {
+    "position": 114,
+    "root": "ר-כ-ז",
+    "score": 0.00387,
+    "member_count": 2,
+    "members": [
+      {
+        "he": "מרכז",
+        "translit": "merkaz",
+        "en": "center",
+        "rank": 457
+      },
+      {
+        "he": "מרכזי",
+        "translit": "merkazi",
+        "en": "central (m.s.)",
+        "rank": 595
+      }
+    ]
+  },
+  {
+    "position": 115,
+    "root": "ת-ח-ל",
+    "score": 0.0038,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "בתחילת",
+        "translit": "bitkhilat",
+        "en": "at the beginning of",
+        "rank": 263
+      }
+    ]
+  },
+  {
+    "position": 116,
+    "root": "י-ע-ר",
+    "score": 0.00378,
+    "member_count": 2,
+    "members": [
+      {
+        "he": "היער",
+        "translit": "haya'ar",
+        "en": "the forest",
+        "rank": 465
+      },
+      {
+        "he": "ביער",
+        "translit": "beya'ar",
+        "en": "in a forest",
+        "rank": 613
+      }
+    ]
+  },
+  {
+    "position": 117,
+    "root": "ש-פ-ט",
+    "score": 0.00377,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "המשפט",
+        "translit": "hamishpat",
+        "en": "the sentence / the trial",
+        "rank": 265
+      }
+    ]
+  },
+  {
+    "position": 118,
+    "root": "צ-ו-ר",
+    "score": 0.00376,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "בצורה",
+        "translit": "betsura",
+        "en": "in a way / in a shape",
+        "rank": 266
+      }
+    ]
+  },
+  {
+    "position": 119,
+    "root": "ד-ג-ל",
+    "score": 0.00375,
+    "member_count": 2,
+    "members": [
+      {
+        "he": "דגל",
+        "translit": "degel",
+        "en": "flag",
+        "rank": 491
+      },
+      {
+        "he": "הדגל",
+        "translit": "hadegel",
+        "en": "the flag",
+        "rank": 585
+      }
+    ]
+  },
+  {
+    "position": 120,
+    "root": "ח-ש-ב",
+    "score": 0.00371,
+    "member_count": 2,
+    "members": [
+      {
+        "he": "חשוב",
+        "translit": "khashuv",
+        "en": "important (m.s.)",
+        "rank": 522
+      },
+      {
+        "he": "נחשב",
+        "translit": "nekhshav",
+        "en": "is considered (m.s.)",
+        "rank": 557
+      }
+    ]
+  },
+  {
+    "position": 121,
+    "root": "ק-ו-פ",
+    "score": 0.0037,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "בתקופת",
+        "translit": "bitkufat",
+        "en": "in the time of",
+        "rank": 270
+      }
+    ]
+  },
+  {
+    "position": 122,
+    "root": "ד-מ-ה",
+    "score": 0.00368,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "דומה",
+        "translit": "dome",
+        "en": "similar",
+        "rank": 272
+      }
+    ]
+  },
+  {
+    "position": 123,
+    "root": "ס-ג-ר",
+    "score": 0.00366,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "במסגרת",
+        "translit": "bemisgeret",
+        "en": "in a frame / in a framework",
+        "rank": 273
+      }
+    ]
+  },
+  {
+    "position": 124,
+    "root": "ע-ר-כ",
+    "score": 0.00362,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "מערכת",
+        "translit": "ma'arekhet",
+        "en": "system / editorial board",
+        "rank": 276
+      }
+    ]
+  },
+  {
+    "position": 125,
+    "root": "ס-י-ם",
+    "score": 0.00362,
+    "member_count": 2,
+    "members": [
+      {
+        "he": "מסוימים",
+        "translit": "mesuyamim",
+        "en": "specific (m.pl.)",
+        "rank": 492
+      },
+      {
+        "he": "מסוים",
+        "translit": "mesuyam",
+        "en": "specific (m.s.)",
+        "rank": 629
+      }
+    ]
+  },
+  {
+    "position": 126,
+    "root": "ע-נ-י-ן",
+    "score": 0.00357,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "עניינים",
+        "translit": "inyanim",
+        "en": "matters",
+        "rank": 280
+      }
+    ]
+  },
+  {
+    "position": 127,
+    "root": "כ-ת-ב",
+    "score": 0.00347,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "כתב",
+        "translit": "ktav",
+        "en": "writing",
+        "rank": 288
+      }
+    ]
+  },
+  {
+    "position": 128,
+    "root": "ג-ב-ה",
+    "score": 0.00345,
+    "member_count": 2,
+    "members": [
+      {
+        "he": "גבוה",
+        "translit": "gavoha",
+        "en": "high / tall (m.s.)",
+        "rank": 538
+      },
+      {
+        "he": "גבוהה",
+        "translit": "gvoha",
+        "en": "high / tall (f.s.)",
+        "rank": 627
+      }
+    ]
+  },
+  {
+    "position": 129,
+    "root": "ק-ט-ן",
+    "score": 0.00345,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "קטן",
+        "translit": "katan",
+        "en": "small / little (m.s.)",
+        "rank": 290
+      }
+    ]
+  },
+  {
+    "position": 130,
+    "root": "ש-ט-ח",
+    "score": 0.00344,
+    "member_count": 2,
+    "members": [
+      {
+        "he": "שטח",
+        "translit": "shetakh",
+        "en": "area / field / territory",
+        "rank": 532
+      },
+      {
+        "he": "השטח",
+        "translit": "hashetakh",
+        "en": "the area / the territory",
+        "rank": 641
+      }
+    ]
+  },
+  {
+    "position": 131,
+    "root": "ק-ר-א",
+    "score": 0.00338,
+    "member_count": 2,
+    "members": [
+      {
+        "he": "קרא",
+        "translit": "kara",
+        "en": "read / called (m.s.)",
+        "rank": 564
+      },
+      {
+        "he": "לקריאה",
+        "translit": "likri'a",
+        "en": "for reading / for calling",
+        "rank": 621
+      }
+    ]
+  },
+  {
+    "position": 132,
+    "root": "ס-ר-ט",
+    "score": 0.00331,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "הסרט",
+        "translit": "haseret",
+        "en": "the movie / the ribbon/strip",
+        "rank": 302
+      }
+    ]
+  },
+  {
+    "position": 133,
+    "root": "מ-ל-ך",
+    "score": 0.00322,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "המלך",
+        "translit": "hamelekh",
+        "en": "the king",
+        "rank": 311
+      }
+    ]
+  },
+  {
+    "position": 134,
+    "root": "ש-כ-ן",
+    "score": 0.00321,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "שכן",
+        "translit": "shakhen",
+        "en": "neighbor (m.s.)",
+        "rank": 312
+      }
+    ]
+  },
+  {
+    "position": 135,
+    "root": "י-ע-ץ",
+    "score": 0.00318,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "המועצות",
+        "translit": "mo'etset",
+        "en": "council of",
+        "rank": 314
+      }
+    ]
+  },
+  {
+    "position": 136,
+    "root": "ק-ש-ה",
+    "score": 0.00316,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "קשה",
+        "translit": "kashe",
+        "en": "difficult / hard (m.s.)",
+        "rank": 316
+      }
+    ]
+  },
+  {
+    "position": 137,
+    "root": "ש-ל-ט",
+    "score": 0.00313,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "השלטון",
+        "translit": "hashilton",
+        "en": "the authority / the government",
+        "rank": 319
+      }
+    ]
+  },
+  {
+    "position": 138,
+    "root": "צ-ר-ך",
+    "score": 0.00313,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "צריך",
+        "translit": "tsarikh",
+        "en": "need / necessary / should",
+        "rank": 320
+      }
+    ]
+  },
+  {
+    "position": 139,
+    "root": "ח-י-ד-ק",
+    "score": 0.00312,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "חידק",
+        "translit": "khaydak",
+        "en": "bacterium",
+        "rank": 321
+      }
+    ]
+  },
+  {
+    "position": 140,
+    "root": "ה-ר-ר",
+    "score": 0.00309,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "הר",
+        "translit": "har",
+        "en": "mountain",
+        "rank": 324
+      }
+    ]
+  },
+  {
+    "position": 141,
+    "root": "ב-י-ן",
+    "score": 0.00298,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "הביניים",
+        "translit": "habeinayim",
+        "en": "the mid / the middle",
+        "rank": 336
+      }
+    ]
+  },
+  {
+    "position": 142,
+    "root": "י-ח-ס",
+    "score": 0.00293,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "יחסית",
+        "translit": "yakhasit",
+        "en": "relatively",
+        "rank": 341
+      }
+    ]
+  },
+  {
+    "position": 143,
+    "root": "א-ל-ה",
+    "score": 0.00292,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "האלים",
+        "translit": "ha'elim",
+        "en": "the gods",
+        "rank": 343
+      }
+    ]
+  },
+  {
+    "position": 144,
+    "root": "ע-מ-ם",
+    "score": 0.00285,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "העם",
+        "translit": "ha'am",
+        "en": "the people",
+        "rank": 351
+      }
+    ]
+  },
+  {
+    "position": 145,
+    "root": "מ-ר-ד",
+    "score": 0.00282,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "המרד",
+        "translit": "hamered",
+        "en": "the rebellion",
+        "rank": 354
+      }
+    ]
+  },
+  {
+    "position": 146,
+    "root": "ס-ב-ב",
+    "score": 0.0028,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "סביב",
+        "translit": "saviv",
+        "en": "around",
+        "rank": 357
+      }
+    ]
+  },
+  {
+    "position": 147,
+    "root": "ל-ב-ב",
+    "score": 0.00279,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "לב",
+        "translit": "lev",
+        "en": "heart",
+        "rank": 359
+      }
+    ]
+  },
+  {
+    "position": 148,
+    "root": "ד-ג-ם",
+    "score": 0.00276,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "לדוגמה",
+        "translit": "ledugma",
+        "en": "for example",
+        "rank": 362
+      }
+    ]
+  },
+  {
+    "position": 149,
+    "root": "ע-נ-ה",
+    "score": 0.00272,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "העונה",
+        "translit": "ha'ona",
+        "en": "the season",
+        "rank": 367
+      }
+    ]
+  },
+  {
+    "position": 150,
+    "root": "ב-ר-ה",
+    "score": 0.00272,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "ברית",
+        "translit": "brit",
+        "en": "pact / alliance / covenant",
+        "rank": 368
+      }
+    ]
+  },
+  {
+    "position": 151,
+    "root": "ע-מ-ד",
+    "score": 0.00267,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "עמד",
+        "translit": "amad",
+        "en": "stood / endured (m.s.)",
+        "rank": 374
+      }
+    ]
+  },
+  {
+    "position": 152,
+    "root": "צ-פ-ן",
+    "score": 0.00266,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "בצפון",
+        "translit": "batsafon",
+        "en": "in the north",
+        "rank": 376
+      }
+    ]
+  },
+  {
+    "position": 153,
+    "root": "ה-נ-ד-ס",
+    "score": 0.00265,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "ההנדסה",
+        "translit": "hahandasa",
+        "en": "the engineering",
+        "rank": 378
+      }
+    ]
+  },
+  {
+    "position": 154,
+    "root": "ק-ד-ם",
+    "score": 0.00254,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "קודם",
+        "translit": "kodem",
+        "en": "earlier",
+        "rank": 394
+      }
+    ]
+  },
+  {
+    "position": 155,
+    "root": "ק-ה-ל",
+    "score": 0.00253,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "הקהילה",
+        "translit": "hakehila",
+        "en": "the community",
+        "rank": 396
+      }
+    ]
+  },
+  {
+    "position": 156,
+    "root": "ב-ח-ן",
+    "score": 0.0025,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "מבחינה",
+        "translit": "mibkhina",
+        "en": "from an aspect",
+        "rank": 400
+      }
+    ]
+  },
+  {
+    "position": 157,
+    "root": "א-ב-ן",
+    "score": 0.00248,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "אבן",
+        "translit": "even",
+        "en": "stone",
+        "rank": 404
+      }
+    ]
+  },
+  {
+    "position": 158,
+    "root": "ז-ו-ן",
+    "score": 0.00246,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "מזון",
+        "translit": "mazon",
+        "en": "food",
+        "rank": 407
+      }
+    ]
+  },
+  {
+    "position": 159,
+    "root": "ה-פ-ך",
+    "score": 0.00245,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "הפך",
+        "translit": "hafakh",
+        "en": "inverted / turned (m.s.)",
+        "rank": 408
+      }
+    ]
+  },
+  {
+    "position": 160,
+    "root": "ק-ו-ה",
+    "score": 0.00244,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "קו",
+        "translit": "kav",
+        "en": "line",
+        "rank": 409
+      }
+    ]
+  },
+  {
+    "position": 161,
+    "root": "ב-ח-ר",
+    "score": 0.00244,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "הבחירות",
+        "translit": "habkhirot",
+        "en": "the elections",
+        "rank": 410
+      }
+    ]
+  },
+  {
+    "position": 162,
+    "root": "ש-ל-ש-ל",
+    "score": 0.00243,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "שושלת",
+        "translit": "shoshelet",
+        "en": "dynasty",
+        "rank": 412
+      }
+    ]
+  },
+  {
+    "position": 163,
+    "root": "ר-ק-ע",
+    "score": 0.00242,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "רקע",
+        "translit": "reka",
+        "en": "background",
+        "rank": 413
+      }
+    ]
+  },
+  {
+    "position": 164,
+    "root": "ס-פ-ן",
+    "score": 0.0024,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "הספינה",
+        "translit": "hasfina",
+        "en": "the ship",
+        "rank": 417
+      }
+    ]
+  },
+  {
+    "position": 165,
+    "root": "ס-ו-ף",
+    "score": 0.00238,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "לבסוף",
+        "translit": "levasof",
+        "en": "finally / eventually",
+        "rank": 420
+      }
+    ]
+  },
+  {
+    "position": 166,
+    "root": "ע-ז-ר",
+    "score": 0.00231,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "בעזרת",
+        "translit": "be'ezrat",
+        "en": "with the help of",
+        "rank": 433
+      }
+    ]
+  },
+  {
+    "position": 167,
+    "root": "נ-ש-ק",
+    "score": 0.0023,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "נשק",
+        "translit": "neshek",
+        "en": "weapon",
+        "rank": 435
+      }
+    ]
+  },
+  {
+    "position": 168,
+    "root": "פ-ח-ת",
+    "score": 0.00226,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "פחות",
+        "translit": "pakhot",
+        "en": "less / minus",
+        "rank": 442
+      }
+    ]
+  },
+  {
+    "position": 169,
+    "root": "ד-מ-ם",
+    "score": 0.00225,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "דם",
+        "translit": "dam",
+        "en": "blood",
+        "rank": 444
+      }
+    ]
+  },
+  {
+    "position": 170,
+    "root": "ש-מ-ה",
+    "score": 0.00224,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "השם",
+        "translit": "hashem",
+        "en": "the name / God",
+        "rank": 447
+      }
+    ]
+  },
+  {
+    "position": 171,
+    "root": "ח-מ-ר",
+    "score": 0.00222,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "חומרים",
+        "translit": "khomarim",
+        "en": "materials",
+        "rank": 450
+      }
+    ]
+  },
+  {
+    "position": 172,
+    "root": "י-ט-ב",
+    "score": 0.00222,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "היטב",
+        "translit": "heytev",
+        "en": "well / properly",
+        "rank": 451
+      }
+    ]
+  },
+  {
+    "position": 173,
+    "root": "ק-י-ס-ר",
+    "score": 0.0022,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "הקיסר",
+        "translit": "hakeysar",
+        "en": "the Caesar",
+        "rank": 455
+      }
+    ]
+  },
+  {
+    "position": 174,
+    "root": "ר-צ-ה",
+    "score": 0.00218,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "רוצה",
+        "translit": "rotse",
+        "en": "wants (m.s.)",
+        "rank": 458
+      }
+    ]
+  },
+  {
+    "position": 175,
+    "root": "י-צ-ב",
+    "score": 0.00214,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "מצב",
+        "translit": "matsav",
+        "en": "state / situation",
+        "rank": 468
+      }
+    ]
+  },
+  {
+    "position": 176,
+    "root": "כ-נ-ס",
+    "score": 0.00213,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "הכנסת",
+        "translit": "hakneset",
+        "en": "the Knesset",
+        "rank": 469
+      }
+    ]
+  },
+  {
+    "position": 177,
+    "root": "ע-מ-ת",
+    "score": 0.00213,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "לעומת",
+        "translit": "le'umat",
+        "en": "compared with / against",
+        "rank": 470
+      }
+    ]
+  },
+  {
+    "position": 178,
+    "root": "ת-מ-ד",
+    "score": 0.00211,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "תמיד",
+        "translit": "tamid",
+        "en": "always",
+        "rank": 474
+      }
+    ]
+  },
+  {
+    "position": 179,
+    "root": "ש-י-ם",
+    "score": 0.0021,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "שמו",
+        "translit": "samu",
+        "en": "placed / put (pl.)",
+        "rank": 476
+      }
+    ]
+  },
+  {
+    "position": 180,
+    "root": "ש-ל-ב",
+    "score": 0.00209,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "בשלב",
+        "translit": "beshalav",
+        "en": "at a stage / at a phase",
+        "rank": 478
+      }
+    ]
+  },
+  {
+    "position": 181,
+    "root": "ר-ו-ח",
+    "score": 0.00208,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "רוח",
+        "translit": "ru'akh",
+        "en": "wind / spirit / ghost",
+        "rank": 480
+      }
+    ]
+  },
+  {
+    "position": 182,
+    "root": "א-ר-ג-ן",
+    "score": 0.00207,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "ארגון",
+        "translit": "irgun",
+        "en": "organization",
+        "rank": 484
+      }
+    ]
+  },
+  {
+    "position": 183,
+    "root": "ק-צ-ר",
+    "score": 0.00205,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "קצר",
+        "translit": "katsar",
+        "en": "short (m.s.)",
+        "rank": 487
+      }
+    ]
+  },
+  {
+    "position": 184,
+    "root": "ב-ס-ס",
+    "score": 0.00202,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "בסיס",
+        "translit": "basis",
+        "en": "basis / base",
+        "rank": 496
+      }
+    ]
+  },
+  {
+    "position": 185,
+    "root": "י-ש-ב",
+    "score": 0.00197,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "היישוב",
+        "translit": "hayeshuv",
+        "en": "the settlement",
+        "rank": 508
+      }
+    ]
+  },
+  {
+    "position": 186,
+    "root": "ז-ק-ן",
+    "score": 0.00196,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "הזקנה",
+        "translit": "hazkena",
+        "en": "the old (f.s.)",
+        "rank": 509
+      }
+    ]
+  },
+  {
+    "position": 187,
+    "root": "נ-מ-ל",
+    "score": 0.00196,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "הנמלה",
+        "translit": "hanemala",
+        "en": "the ant",
+        "rank": 510
+      }
+    ]
+  },
+  {
+    "position": 188,
+    "root": "ס-מ-ם",
+    "score": 0.00195,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "סמים",
+        "translit": "samim",
+        "en": "drugs",
+        "rank": 514
+      }
+    ]
+  },
+  {
+    "position": 189,
+    "root": "ס-ד-ר",
+    "score": 0.00192,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "הסדרה",
+        "translit": "hasidra",
+        "en": "the series",
+        "rank": 521
+      }
+    ]
+  },
+  {
+    "position": 190,
+    "root": "א-ו-ר",
+    "score": 0.0019,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "אור",
+        "translit": "or",
+        "en": "light",
+        "rank": 527
+      }
+    ]
+  },
+  {
+    "position": 191,
+    "root": "י-ד-ה",
+    "score": 0.00189,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "ליידי",
+        "translit": "liydei",
+        "en": "to / to the hands of",
+        "rank": 528
+      }
+    ]
+  },
+  {
+    "position": 192,
+    "root": "מ-ל-ל",
+    "score": 0.00189,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "מילים",
+        "translit": "milim",
+        "en": "words",
+        "rank": 530
+      }
+    ]
+  },
+  {
+    "position": 193,
+    "root": "י-צ-ר",
+    "score": 0.00188,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "ליצור",
+        "translit": "litsor",
+        "en": "to form / to create",
+        "rank": 531
+      }
+    ]
+  },
+  {
+    "position": 194,
+    "root": "א-ש-כ-ל",
+    "score": 0.00187,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "אשכול",
+        "translit": "eshkol",
+        "en": "cluster",
+        "rank": 534
+      }
+    ]
+  },
+  {
+    "position": 195,
+    "root": "ג-ל-ל",
+    "score": 0.00187,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "בגלל",
+        "translit": "biglal",
+        "en": "because",
+        "rank": 536
+      }
+    ]
+  },
+  {
+    "position": 196,
+    "root": "ב-ר-ר",
+    "score": 0.00186,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "ברור",
+        "translit": "barur",
+        "en": "clear / obvious (m.s.)",
+        "rank": 537
+      }
+    ]
+  },
+  {
+    "position": 197,
+    "root": "כ-פ-ר",
+    "score": 0.00185,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "הכפר",
+        "translit": "hakfar",
+        "en": "the village",
+        "rank": 540
+      }
+    ]
+  },
+  {
+    "position": 198,
+    "root": "מ-ש-ש",
+    "score": 0.00183,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "ממש",
+        "translit": "mamash",
+        "en": "really",
+        "rank": 546
+      }
+    ]
+  },
+  {
+    "position": 199,
+    "root": "ר-מ-ן",
+    "score": 0.00182,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "הרימון",
+        "translit": "harimon",
+        "en": "the pomegranate / the grenade",
+        "rank": 549
+      }
+    ]
+  },
+  {
+    "position": 200,
+    "root": "ע-ב-ד",
+    "score": 0.00179,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "העבודה",
+        "translit": "ha'avoda",
+        "en": "the work",
+        "rank": 560
+      }
+    ]
+  },
+  {
+    "position": 201,
+    "root": "מ-ד-ד",
+    "score": 0.00178,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "במידה",
+        "translit": "bemida",
+        "en": "of a measure / of size",
+        "rank": 561
+      }
+    ]
+  },
+  {
+    "position": 202,
+    "root": "ש-ו-ל",
+    "score": 0.00178,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "שוליים",
+        "translit": "shulayim",
+        "en": "margins / edges",
+        "rank": 562
+      }
+    ]
+  },
+  {
+    "position": 203,
+    "root": "ש-א-ל",
+    "score": 0.00176,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "שאל",
+        "translit": "sha'al",
+        "en": "asked / borrowed (m.s.)",
+        "rank": 567
+      }
+    ]
+  },
+  {
+    "position": 204,
+    "root": "ק-ו-ר",
+    "score": 0.00176,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "מקור",
+        "translit": "makor",
+        "en": "source / beak",
+        "rank": 569
+      }
+    ]
+  },
+  {
+    "position": 205,
+    "root": "פ-ק-ד",
+    "score": 0.00173,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "מפקד",
+        "translit": "mefaked",
+        "en": "commander",
+        "rank": 579
+      }
+    ]
+  },
+  {
+    "position": 206,
+    "root": "כ-מ-ה",
+    "score": 0.00169,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "כמות",
+        "translit": "kamut",
+        "en": "quantity / amount",
+        "rank": 590
+      }
+    ]
+  },
+  {
+    "position": 207,
+    "root": "א-מ-ן",
+    "score": 0.00167,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "אומנם",
+        "translit": "omnam",
+        "en": "indeed",
+        "rank": 599
+      }
+    ]
+  },
+  {
+    "position": 208,
+    "root": "ה-ר-ג",
+    "score": 0.00166,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "להורג",
+        "translit": "lahoreg",
+        "en": "execution / putting to death",
+        "rank": 601
+      }
+    ]
+  },
+  {
+    "position": 209,
+    "root": "ב-ו-ר",
+    "score": 0.00164,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "הבורים",
+        "translit": "haburim",
+        "en": "the ignorant (m.pl.)",
+        "rank": 609
+      }
+    ]
+  },
+  {
+    "position": 210,
+    "root": "מ-נ-ע",
+    "score": 0.00162,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "למנוע",
+        "translit": "limno'a",
+        "en": "to prevent",
+        "rank": 619
+      }
+    ]
+  },
+  {
+    "position": 211,
+    "root": "מ-ס-ס",
+    "score": 0.00161,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "מס",
+        "translit": "mas",
+        "en": "tax",
+        "rank": 620
+      }
+    ]
+  },
+  {
+    "position": 212,
+    "root": "ט-ע-ן",
+    "score": 0.00161,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "טען",
+        "translit": "ta'an",
+        "en": "claimed / argued (m.s.)",
+        "rank": 622
+      }
+    ]
+  },
+  {
+    "position": 213,
+    "root": "ש-א-ר",
+    "score": 0.0016,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "השאר",
+        "translit": "hash'ar",
+        "en": "the rest",
+        "rank": 626
+      }
+    ]
+  },
+  {
+    "position": 214,
+    "root": "ת-ח-ם",
+    "score": 0.00159,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "בתחום",
+        "translit": "bitkhum",
+        "en": "in a field / in a range",
+        "rank": 628
+      }
+    ]
+  },
+  {
+    "position": 215,
+    "root": "ק-ר-ק-ע",
+    "score": 0.00158,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "הקרקע",
+        "translit": "hakarka",
+        "en": "the soil / the ground",
+        "rank": 632
+      }
+    ]
+  },
+  {
+    "position": 216,
+    "root": "ע-י-ר",
+    "score": 0.00158,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "העירייה",
+        "translit": "ha'iriya",
+        "en": "the municipality",
+        "rank": 633
+      }
+    ]
+  },
+  {
+    "position": 217,
+    "root": "ט-פ-ל",
+    "score": 0.00158,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "טיפול",
+        "translit": "tipul",
+        "en": "treatment",
+        "rank": 634
+      }
+    ]
+  },
+  {
+    "position": 218,
+    "root": "נ-ח-ל",
+    "score": 0.00157,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "נחל",
+        "translit": "nakhal",
+        "en": "stream",
+        "rank": 635
+      }
+    ]
+  },
+  {
+    "position": 219,
+    "root": "ש-ל-ם",
+    "score": 0.00157,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "שלום",
+        "translit": "shalom",
+        "en": "peace",
+        "rank": 637
+      }
+    ]
+  },
+  {
+    "position": 220,
+    "root": "ג-ר-ם",
+    "score": 0.00157,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "גורמים",
+        "translit": "gormim",
+        "en": "factors / cause (m.pl.)",
+        "rank": 638
+      }
+    ]
+  },
+  {
+    "position": 221,
+    "root": "י-פ-ע",
+    "score": 0.00156,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "מופיע",
+        "translit": "mofi'a",
+        "en": "appear / perform (m.s.)",
+        "rank": 640
+      }
+    ]
+  },
+  {
+    "position": 222,
+    "root": "ח-ק-ק",
+    "score": 0.00156,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "חוקי",
+        "translit": "khuki",
+        "en": "legal (m.s.)",
+        "rank": 642
+      }
+    ]
+  },
+  {
+    "position": 223,
+    "root": "ג-ד-ד",
+    "score": 0.00156,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "הגדוד",
+        "translit": "hagdud",
+        "en": "the regiment",
+        "rank": 643
+      }
+    ]
+  },
+  {
+    "position": 224,
+    "root": "ב-ש-ר",
+    "score": 0.00155,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "בשר",
+        "translit": "basar",
+        "en": "meat",
+        "rank": 646
+      }
+    ]
+  },
+  {
+    "position": 225,
+    "root": "ק-י-ם",
+    "score": 0.00155,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "קיימת",
+        "translit": "kayemet",
+        "en": "exist (f.s.)",
+        "rank": 647
+      }
+    ]
+  },
+  {
+    "position": 226,
+    "root": "פ-ר-ס-ם",
+    "score": 0.00154,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "פרסם",
+        "translit": "pirsem",
+        "en": "published / advertised (m.s.)",
+        "rank": 648
+      }
+    ]
+  },
+  {
+    "position": 227,
+    "root": "ע-כ-ב-ר",
+    "score": 0.00154,
+    "member_count": 1,
+    "members": [
+      {
+        "he": "העכברה",
+        "translit": "ha'akhbara",
+        "en": "the mouse (female)",
+        "rank": 649
+      }
+    ]
+  }
+]
