@@ -120,7 +120,11 @@ def main():
     ap.add_argument("words_path", help="JSON-файл вида hebrew_word_frequency_1_650.json")
     ap.add_argument("--out", default="root_frequency_raw.json", help="куда писать промежуточный результат (слово->корень)")
     ap.add_argument("--final-out", default="root_frequency.json", help="куда писать итоговый агрегированный список корней")
-    ap.add_argument("--batch-size", type=int, default=40)
+    ap.add_argument("--batch-size", type=int, default=150,
+                     help="крупнее батч = меньше запросов в день — на free tier "
+                          "gemini-3.6-flash лимит 20 запросов/сутки (см. живой опыт "
+                          "в ROOTS_CURRICULUM.md); 40 было слишком мелко, упёрлись в "
+                          "лимит на 320/650 слов")
     ap.add_argument("--model", default="gemini-3.6-flash")
     ap.add_argument("--api-key", default=None, help="или задай переменную окружения GEMINI_API_KEY")
     ap.add_argument("--resume", action="store_true")

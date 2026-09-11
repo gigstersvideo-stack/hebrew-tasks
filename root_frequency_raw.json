@@ -1,0 +1,2245 @@
+{
+  "results": [
+    {
+      "rank": 1,
+      "he": "של",
+      "translit": "shel",
+      "en": "of / belongs to",
+      "root": ""
+    },
+    {
+      "rank": 2,
+      "he": "את",
+      "translit": "at",
+      "en": "you (f.s.) / the (direct object)",
+      "root": ""
+    },
+    {
+      "rank": 3,
+      "he": "על",
+      "translit": "al",
+      "en": "on / about / top",
+      "root": ""
+    },
+    {
+      "rank": 4,
+      "he": "לא",
+      "translit": "lo",
+      "en": "no",
+      "root": ""
+    },
+    {
+      "rank": 5,
+      "he": "הוא",
+      "translit": "hu",
+      "en": "he",
+      "root": ""
+    },
+    {
+      "rank": 6,
+      "he": "עם",
+      "translit": "im",
+      "en": "with",
+      "root": ""
+    },
+    {
+      "rank": 7,
+      "he": "כי",
+      "translit": "ki",
+      "en": "because",
+      "root": ""
+    },
+    {
+      "rank": 8,
+      "he": "היה",
+      "translit": "haya",
+      "en": "was (m.s.)",
+      "root": "ה-י-ה"
+    },
+    {
+      "rank": 9,
+      "he": "זה",
+      "translit": "ze",
+      "en": "this / that",
+      "root": ""
+    },
+    {
+      "rank": 10,
+      "he": "גם",
+      "translit": "gam",
+      "en": "also / too",
+      "root": ""
+    },
+    {
+      "rank": 11,
+      "he": "ב",
+      "translit": "be",
+      "en": "in",
+      "root": ""
+    },
+    {
+      "rank": 12,
+      "he": "כל",
+      "translit": "kol",
+      "en": "all",
+      "root": ""
+    },
+    {
+      "rank": 13,
+      "he": "ה",
+      "translit": "ha",
+      "en": "the",
+      "root": ""
+    },
+    {
+      "rank": 14,
+      "he": "בין",
+      "translit": "bein",
+      "en": "between / among",
+      "root": ""
+    },
+    {
+      "rank": 15,
+      "he": "או",
+      "translit": "o",
+      "en": "or",
+      "root": ""
+    },
+    {
+      "rank": 16,
+      "he": "אל",
+      "translit": "el",
+      "en": "to / God",
+      "root": ""
+    },
+    {
+      "rank": 17,
+      "he": "אך",
+      "translit": "akh",
+      "en": "but / hardly",
+      "root": ""
+    },
+    {
+      "rank": 18,
+      "he": "יותר",
+      "translit": "yoter",
+      "en": "more",
+      "root": "י-ת-ר"
+    },
+    {
+      "rank": 19,
+      "he": "היא",
+      "translit": "hi",
+      "en": "she",
+      "root": ""
+    },
+    {
+      "rank": 20,
+      "he": "לאחר",
+      "translit": "le'akhar",
+      "en": "after",
+      "root": "א-ח-ר"
+    },
+    {
+      "rank": 21,
+      "he": "אבל",
+      "translit": "aval",
+      "en": "but",
+      "root": ""
+    },
+    {
+      "rank": 22,
+      "he": "ל",
+      "translit": "le",
+      "en": "to",
+      "root": ""
+    },
+    {
+      "rank": 23,
+      "he": "היו",
+      "translit": "hayu",
+      "en": "were (m.)",
+      "root": "ה-י-ה"
+    },
+    {
+      "rank": 24,
+      "he": "עד",
+      "translit": "ad",
+      "en": "until / eternity",
+      "root": ""
+    },
+    {
+      "rank": 25,
+      "he": "זו",
+      "translit": "zo",
+      "en": "this (f.)",
+      "root": ""
+    },
+    {
+      "rank": 26,
+      "he": "הם",
+      "translit": "hem",
+      "en": "they (m.)",
+      "root": ""
+    },
+    {
+      "rank": 27,
+      "he": "אשר",
+      "translit": "asher",
+      "en": "that / which",
+      "root": ""
+    },
+    {
+      "rank": 28,
+      "he": "הייתה",
+      "translit": "haita",
+      "en": "she was",
+      "root": "ה-י-ה"
+    },
+    {
+      "rank": 29,
+      "he": "בשנת",
+      "translit": "bishnat",
+      "en": "in the year [X]",
+      "root": "ש-נ-ה"
+    },
+    {
+      "rank": 30,
+      "he": "כך",
+      "translit": "kakh",
+      "en": "so / like this / thus",
+      "root": ""
+    },
+    {
+      "rank": 31,
+      "he": "רק",
+      "translit": "rak",
+      "en": "only",
+      "root": ""
+    },
+    {
+      "rank": 32,
+      "he": "אף",
+      "translit": "af",
+      "en": "also / even / nose",
+      "root": ""
+    },
+    {
+      "rank": 33,
+      "he": "ביותר",
+      "translit": "beyoter",
+      "en": "most, very much",
+      "root": "י-ת-ר"
+    },
+    {
+      "rank": 34,
+      "he": "אני",
+      "translit": "ani",
+      "en": "I / me",
+      "root": ""
+    },
+    {
+      "rank": 35,
+      "he": "עוד",
+      "translit": "od",
+      "en": "more",
+      "root": ""
+    },
+    {
+      "rank": 36,
+      "he": "רבים",
+      "translit": "rabim",
+      "en": "many",
+      "root": "ר-ב-ב"
+    },
+    {
+      "rank": 37,
+      "he": "כמו",
+      "translit": "kmo",
+      "en": "like / as",
+      "root": ""
+    },
+    {
+      "rank": 38,
+      "he": "בית",
+      "translit": "bayit",
+      "en": "home / house",
+      "root": "ב-י-ת"
+    },
+    {
+      "rank": 39,
+      "he": "אם",
+      "translit": "im",
+      "en": "if",
+      "root": ""
+    },
+    {
+      "rank": 40,
+      "he": "זאת",
+      "translit": "zot",
+      "en": "this (f.)",
+      "root": ""
+    },
+    {
+      "rank": 41,
+      "he": "שם",
+      "translit": "sham",
+      "en": "there",
+      "root": ""
+    },
+    {
+      "rank": 42,
+      "he": "יש",
+      "translit": "yesh",
+      "en": "there is / one must",
+      "root": ""
+    },
+    {
+      "rank": 43,
+      "he": "מה",
+      "translit": "ma",
+      "en": "what",
+      "root": ""
+    },
+    {
+      "rank": 44,
+      "he": "לי",
+      "translit": "li",
+      "en": "to me / for me",
+      "root": ""
+    },
+    {
+      "rank": 45,
+      "he": "כן",
+      "translit": "ken",
+      "en": "yes / sincere",
+      "root": ""
+    },
+    {
+      "rank": 46,
+      "he": "כ",
+      "translit": "ke",
+      "en": "like / as / approximately",
+      "root": ""
+    },
+    {
+      "rank": 47,
+      "he": "לו",
+      "translit": "lo",
+      "en": "to him",
+      "root": ""
+    },
+    {
+      "rank": 48,
+      "he": "מספר",
+      "translit": "mispar",
+      "en": "number",
+      "root": "ס-פ-ר"
+    },
+    {
+      "rank": 49,
+      "he": "בו",
+      "translit": "bo",
+      "en": "in him / in it",
+      "root": ""
+    },
+    {
+      "rank": 50,
+      "he": "העיר",
+      "translit": "ha'ir",
+      "en": "the city",
+      "root": "ע-ו-ר"
+    },
+    {
+      "rank": 51,
+      "he": "מ",
+      "translit": "me",
+      "en": "from",
+      "root": ""
+    },
+    {
+      "rank": 52,
+      "he": "כדי",
+      "translit": "kedei",
+      "en": "in order to",
+      "root": ""
+    },
+    {
+      "rank": 53,
+      "he": "אותו",
+      "translit": "oto",
+      "en": "him / it",
+      "root": ""
+    },
+    {
+      "rank": 54,
+      "he": "דבר",
+      "translit": "davar",
+      "en": "thing / matter / something",
+      "root": "ד-ב-ר"
+    },
+    {
+      "rank": 55,
+      "he": "ו",
+      "translit": "ve",
+      "en": "and",
+      "root": ""
+    },
+    {
+      "rank": 56,
+      "he": "בכל",
+      "translit": "bekhol",
+      "en": "in all / at all",
+      "root": ""
+    },
+    {
+      "rank": 57,
+      "he": "אלו",
+      "translit": "elu",
+      "en": "these",
+      "root": ""
+    },
+    {
+      "rank": 58,
+      "he": "שני",
+      "translit": "sheni",
+      "en": "second",
+      "root": "ש-נ-ה"
+    },
+    {
+      "rank": 59,
+      "he": "אלה",
+      "translit": "ele",
+      "en": "these",
+      "root": ""
+    },
+    {
+      "rank": 60,
+      "he": "כאשר",
+      "translit": "ka'asher",
+      "en": "when / while",
+      "root": ""
+    },
+    {
+      "rank": 61,
+      "he": "אין",
+      "translit": "ein",
+      "en": "there is no",
+      "root": ""
+    },
+    {
+      "rank": 62,
+      "he": "אמר",
+      "translit": "amar",
+      "en": "said (m.s.)",
+      "root": "א-מ-ר"
+    },
+    {
+      "rank": 63,
+      "he": "באופן",
+      "translit": "beofen",
+      "en": "in a way",
+      "root": "א-ו-פ-ן"
+    },
+    {
+      "rank": 64,
+      "he": "הברית",
+      "translit": "habrit",
+      "en": "the pact / the alliance / the covenant",
+      "root": "ב-ר-ת"
+    },
+    {
+      "rank": 65,
+      "he": "מן",
+      "translit": "min",
+      "en": "from",
+      "root": ""
+    },
+    {
+      "rank": 66,
+      "he": "שלא",
+      "translit": "shelo",
+      "en": "that [is] not",
+      "root": ""
+    },
+    {
+      "rank": 67,
+      "he": "ידי",
+      "translit": "yadai",
+      "en": "my hands",
+      "root": "י-ד-ד"
+    },
+    {
+      "rank": 68,
+      "he": "לפני",
+      "translit": "lifnei",
+      "en": "before / in front of / ago",
+      "root": "פ-נ-ה"
+    },
+    {
+      "rank": 69,
+      "he": "הן",
+      "translit": "hen",
+      "en": "they (f.)",
+      "root": ""
+    },
+    {
+      "rank": 70,
+      "he": "העולם",
+      "translit": "ha'olam",
+      "en": "the world",
+      "root": "ע-ל-ם"
+    },
+    {
+      "rank": 71,
+      "he": "פי",
+      "translit": "pi",
+      "en": "my mouth / multiplied by",
+      "root": "פ-ו-ה"
+    },
+    {
+      "rank": 72,
+      "he": "במהלך",
+      "translit": "bemahalakh",
+      "en": "during",
+      "root": "ה-ל-ך"
+    },
+    {
+      "rank": 73,
+      "he": "שלו",
+      "translit": "shelo",
+      "en": "his / belongs to him",
+      "root": ""
+    },
+    {
+      "rank": 74,
+      "he": "בה",
+      "translit": "ba",
+      "en": "in her / in it",
+      "root": ""
+    },
+    {
+      "rank": 75,
+      "he": "מאד",
+      "translit": "me'od",
+      "en": "very",
+      "root": ""
+    },
+    {
+      "rank": 76,
+      "he": "ניתן",
+      "translit": "nitan",
+      "en": "possible",
+      "root": "נ-ת-ן"
+    },
+    {
+      "rank": 77,
+      "he": "אז",
+      "translit": "az",
+      "en": "then",
+      "root": ""
+    },
+    {
+      "rank": 78,
+      "he": "בעל",
+      "translit": "ba'al",
+      "en": "owner / husband",
+      "root": "ב-ע-ל"
+    },
+    {
+      "rank": 79,
+      "he": "אחרים",
+      "translit": "akherim",
+      "en": "other (m.pl.) / others (m.)",
+      "root": "א-ח-ר"
+    },
+    {
+      "rank": 80,
+      "he": "דרך",
+      "translit": "derekh",
+      "en": "way / road",
+      "root": "ד-ר-ך"
+    },
+    {
+      "rank": 81,
+      "he": "ולא",
+      "translit": "velo",
+      "en": "and not",
+      "root": ""
+    },
+    {
+      "rank": 82,
+      "he": "חלק",
+      "translit": "khelek",
+      "en": "part",
+      "root": "ח-ל-ק"
+    },
+    {
+      "rank": 83,
+      "he": "אותה",
+      "translit": "ota",
+      "en": "her / it",
+      "root": ""
+    },
+    {
+      "rank": 84,
+      "he": "בן",
+      "translit": "ben",
+      "en": "son",
+      "root": "ב-נ-ה"
+    },
+    {
+      "rank": 85,
+      "he": "בני",
+      "translit": "bni",
+      "en": "my son",
+      "root": "ב-נ-ה"
+    },
+    {
+      "rank": 86,
+      "he": "אולם",
+      "translit": "ulam",
+      "en": "but / hall",
+      "root": "א-ל-ם"
+    },
+    {
+      "rank": 87,
+      "he": "אחר",
+      "translit": "akher",
+      "en": "other",
+      "root": "א-ח-ר"
+    },
+    {
+      "rank": 88,
+      "he": "כמה",
+      "translit": "kama",
+      "en": "how many / how much / some",
+      "root": ""
+    },
+    {
+      "rank": 89,
+      "he": "המאה",
+      "translit": "hame'a",
+      "en": "the century / the hundred",
+      "root": "מ-א-ה"
+    },
+    {
+      "rank": 90,
+      "he": "החל",
+      "translit": "hekhel",
+      "en": "started (m.s.)",
+      "root": "ח-ל-ל"
+    },
+    {
+      "rank": 91,
+      "he": "נגד",
+      "translit": "neged",
+      "en": "against",
+      "root": "נ-ג-ד"
+    },
+    {
+      "rank": 92,
+      "he": "אנשי",
+      "translit": "anshei",
+      "en": "the people of",
+      "root": "א-נ-ש"
+    },
+    {
+      "rank": 93,
+      "he": "אותם",
+      "translit": "otam",
+      "en": "them (m.)",
+      "root": ""
+    },
+    {
+      "rank": 94,
+      "he": "כלל",
+      "translit": "klal",
+      "en": "rule / all",
+      "root": "כ-ל-ל"
+    },
+    {
+      "rank": 95,
+      "he": "מנת",
+      "translit": "menat",
+      "en": "a portion of",
+      "root": "מ-נ-ה"
+    },
+    {
+      "rank": 96,
+      "he": "כיום",
+      "translit": "kayom",
+      "en": "today / nowadays",
+      "root": "י-ו-ם"
+    },
+    {
+      "rank": 97,
+      "he": "שונים",
+      "translit": "shonim",
+      "en": "different / various (m.pl.)",
+      "root": "ש-נ-ה"
+    },
+    {
+      "rank": 98,
+      "he": "המלחמה",
+      "translit": "hamilkhama",
+      "en": "the war",
+      "root": "ל-ח-ם"
+    },
+    {
+      "rank": 99,
+      "he": "שנים",
+      "translit": "shanim",
+      "en": "years",
+      "root": "ש-נ-ה"
+    },
+    {
+      "rank": 100,
+      "he": "כבר",
+      "translit": "kvar",
+      "en": "already",
+      "root": ""
+    },
+    {
+      "rank": 101,
+      "he": "רב",
+      "translit": "rav",
+      "en": "Rabbi / fought (m.s.) / many / much",
+      "root": "ר-ב-ב"
+    },
+    {
+      "rank": 102,
+      "he": "בשל",
+      "translit": "beshel",
+      "en": "because of",
+      "root": ""
+    },
+    {
+      "rank": 103,
+      "he": "בהם",
+      "translit": "bahem",
+      "en": "in them (m.)",
+      "root": ""
+    },
+    {
+      "rank": 104,
+      "he": "גדול",
+      "translit": "gadol",
+      "en": "big / large (m.s.)",
+      "root": "ג-ד-ל"
+    },
+    {
+      "rank": 105,
+      "he": "להם",
+      "translit": "lahem",
+      "en": "to them (m.)",
+      "root": ""
+    },
+    {
+      "rank": 106,
+      "he": "בעיקר",
+      "translit": "be'ikar",
+      "en": "mainly / principally / especially",
+      "root": "ע-ק-ר"
+    },
+    {
+      "rank": 107,
+      "he": "אלא",
+      "translit": "ela",
+      "en": "but / only",
+      "root": ""
+    },
+    {
+      "rank": 108,
+      "he": "היום",
+      "translit": "hayom",
+      "en": "today",
+      "root": "י-ו-ם"
+    },
+    {
+      "rank": 109,
+      "he": "במקום",
+      "translit": "bimkom",
+      "en": "instead of / in place",
+      "root": "ק-ו-ם"
+    },
+    {
+      "rank": 110,
+      "he": "שהיה",
+      "translit": "shehaya",
+      "en": "that was (m.s.)",
+      "root": "ה-י-ה"
+    },
+    {
+      "rank": 111,
+      "he": "וכן",
+      "translit": "vekhen",
+      "en": "and also",
+      "root": ""
+    },
+    {
+      "rank": 112,
+      "he": "הרב",
+      "translit": "harav",
+      "en": "the many / the rabbi",
+      "root": "ר-ב-ב"
+    },
+    {
+      "rank": 113,
+      "he": "שבו",
+      "translit": "shebo",
+      "en": "that in him / that in it",
+      "root": ""
+    },
+    {
+      "rank": 114,
+      "he": "זמן",
+      "translit": "zman",
+      "en": "time",
+      "root": "ז-מ-ן"
+    },
+    {
+      "rank": 115,
+      "he": "יכול",
+      "translit": "yakhol",
+      "en": "can (m.s.)",
+      "root": "י-כ-ל"
+    },
+    {
+      "rank": 116,
+      "he": "להיות",
+      "translit": "lihiyot",
+      "en": "to be",
+      "root": "ה-י-ה"
+    },
+    {
+      "rank": 117,
+      "he": "לה",
+      "translit": "la",
+      "en": "to her",
+      "root": ""
+    },
+    {
+      "rank": 118,
+      "he": "יהודים",
+      "translit": "yehudim",
+      "en": "Jews",
+      "root": "י-ה-ד"
+    },
+    {
+      "rank": 119,
+      "he": "היהודים",
+      "translit": "hayehudim",
+      "en": "the Jews",
+      "root": "י-ה-ד"
+    },
+    {
+      "rank": 120,
+      "he": "נוספים",
+      "translit": "nosafim",
+      "en": "additional (m.pl.)",
+      "root": "י-ס-ף"
+    },
+    {
+      "rank": 121,
+      "he": "הים",
+      "translit": "hayam",
+      "en": "the sea",
+      "root": "י-מ-ם"
+    },
+    {
+      "rank": 122,
+      "he": "ללא",
+      "translit": "lelo",
+      "en": "without",
+      "root": ""
+    },
+    {
+      "rank": 123,
+      "he": "מקום",
+      "translit": "makom",
+      "en": "place",
+      "root": "ק-ו-ם"
+    },
+    {
+      "rank": 124,
+      "he": "חיים",
+      "translit": "khaim",
+      "en": "life",
+      "root": "ח-י-י"
+    },
+    {
+      "rank": 125,
+      "he": "המדינה",
+      "translit": "hamedina",
+      "en": "the state",
+      "root": "ד-י-ן"
+    },
+    {
+      "rank": 126,
+      "he": "הארגון",
+      "translit": "ha'irgun",
+      "en": "the organization",
+      "root": "ר-ג-ן"
+    },
+    {
+      "rank": 127,
+      "he": "אחרי",
+      "translit": "akharei",
+      "en": "after",
+      "root": ""
+    },
+    {
+      "rank": 128,
+      "he": "רבות",
+      "translit": "rabot",
+      "en": "many (f.) / a lot",
+      "root": "ר-ב-ב"
+    },
+    {
+      "rank": 129,
+      "he": "שהוא",
+      "translit": "shehu",
+      "en": "that he / that is (m)",
+      "root": ""
+    },
+    {
+      "rank": 130,
+      "he": "שנה",
+      "translit": "shana",
+      "en": "year / studied (m.s.)",
+      "root": "ש-נ-ה"
+    },
+    {
+      "rank": 131,
+      "he": "בעלי",
+      "translit": "ba'ali",
+      "en": "my husband",
+      "root": "ב-ע-ל"
+    },
+    {
+      "rank": 132,
+      "he": "מתוך",
+      "translit": "mitokh",
+      "en": "out of / from",
+      "root": ""
+    },
+    {
+      "rank": 133,
+      "he": "תוך",
+      "translit": "tokh",
+      "en": "inside / interior / content",
+      "root": "ת-ו-ך"
+    },
+    {
+      "rank": 134,
+      "he": "ראש",
+      "translit": "rosh",
+      "en": "head",
+      "root": "ר-א-ש"
+    },
+    {
+      "rank": 135,
+      "he": "מלחמת",
+      "translit": "milkhemet",
+      "en": "the war of",
+      "root": "ל-ח-ם"
+    },
+    {
+      "rank": 136,
+      "he": "אדם",
+      "translit": "adam",
+      "en": "person / man / human being",
+      "root": "א-ד-ם"
+    },
+    {
+      "rank": 137,
+      "he": "מול",
+      "translit": "mul",
+      "en": "against / in front of",
+      "root": ""
+    },
+    {
+      "rank": 138,
+      "he": "איש",
+      "translit": "ish",
+      "en": "person / man / husband",
+      "root": "א-י-ש"
+    },
+    {
+      "rank": 139,
+      "he": "בדרך",
+      "translit": "baderekh",
+      "en": "on the way",
+      "root": "ד-ר-ך"
+    },
+    {
+      "rank": 140,
+      "he": "נוספת",
+      "translit": "nosefet",
+      "en": "additional (f.s.)",
+      "root": "י-ס-ף"
+    },
+    {
+      "rank": 141,
+      "he": "שימוש",
+      "translit": "shimush",
+      "en": "use",
+      "root": "ש-מ-ש"
+    },
+    {
+      "rank": 142,
+      "he": "כגון",
+      "translit": "kegon",
+      "en": "such as",
+      "root": ""
+    },
+    {
+      "rank": 143,
+      "he": "יום",
+      "translit": "yom",
+      "en": "day / daylight",
+      "root": "י-ו-ם"
+    },
+    {
+      "rank": 144,
+      "he": "באמצעות",
+      "translit": "be'emtsa'ut",
+      "en": "through / by way of / by",
+      "root": "מ-צ-ע"
+    },
+    {
+      "rank": 145,
+      "he": "מכן",
+      "translit": "miken",
+      "en": "of that / from then",
+      "root": ""
+    },
+    {
+      "rank": 146,
+      "he": "במשך",
+      "translit": "bemeshekh",
+      "en": "during / in the course of",
+      "root": "מ-ש-ך"
+    },
+    {
+      "rank": 147,
+      "he": "ואף",
+      "translit": "ve'af",
+      "en": "and also / and even",
+      "root": ""
+    },
+    {
+      "rank": 148,
+      "he": "לך",
+      "translit": "lekha",
+      "en": "to you / for you (m.s.)",
+      "root": ""
+    },
+    {
+      "rank": 149,
+      "he": "האדם",
+      "translit": "ha'adam",
+      "en": "the man / the person",
+      "root": "א-ד-ם"
+    },
+    {
+      "rank": 150,
+      "he": "אתה",
+      "translit": "ata",
+      "en": "you (m.s.)",
+      "root": ""
+    },
+    {
+      "rank": 151,
+      "he": "בשם",
+      "translit": "beshem",
+      "en": "in the name of / called",
+      "root": "ש-ו-ם"
+    },
+    {
+      "rank": 152,
+      "he": "ועל",
+      "translit": "ve'al",
+      "en": "and on / and about",
+      "root": ""
+    },
+    {
+      "rank": 153,
+      "he": "הממשלה",
+      "translit": "hamemshala",
+      "en": "the government",
+      "root": "מ-ש-ל"
+    },
+    {
+      "rank": 154,
+      "he": "לכל",
+      "translit": "lekhol",
+      "en": "to all",
+      "root": ""
+    },
+    {
+      "rank": 155,
+      "he": "תחת",
+      "translit": "takhat",
+      "en": "under / beneath / instead of",
+      "root": ""
+    },
+    {
+      "rank": 156,
+      "he": "לעתים",
+      "translit": "le'itim",
+      "en": "sometimes",
+      "root": "ע-ת-ת"
+    },
+    {
+      "rank": 157,
+      "he": "הזה",
+      "translit": "haze",
+      "en": "this (m.)",
+      "root": ""
+    },
+    {
+      "rank": 158,
+      "he": "מהם",
+      "translit": "mehem",
+      "en": "from them",
+      "root": ""
+    },
+    {
+      "rank": 159,
+      "he": "למרות",
+      "translit": "lamrot",
+      "en": "despite",
+      "root": ""
+    },
+    {
+      "rank": 160,
+      "he": "אמרה",
+      "translit": "amra",
+      "en": "said (f.s.)",
+      "root": "א-מ-ר"
+    },
+    {
+      "rank": 161,
+      "he": "עצמו",
+      "translit": "atsmo",
+      "en": "himself",
+      "root": "ע-צ-ם"
+    },
+    {
+      "rank": 162,
+      "he": "שנות",
+      "translit": "shnot",
+      "en": "the years of",
+      "root": "ש-נ-ה"
+    },
+    {
+      "rank": 163,
+      "he": "כמעט",
+      "translit": "kim'at",
+      "en": "almost",
+      "root": ""
+    },
+    {
+      "rank": 164,
+      "he": "אינו",
+      "translit": "eino",
+      "en": "is not (m.s.)",
+      "root": ""
+    },
+    {
+      "rank": 165,
+      "he": "בנוסף",
+      "translit": "benosaf",
+      "en": "in addition",
+      "root": "נ-ס-ף"
+    },
+    {
+      "rank": 166,
+      "he": "בידי",
+      "translit": "bidei",
+      "en": "in the hands of",
+      "root": "י-ד-ד"
+    },
+    {
+      "rank": 167,
+      "he": "בעקבות",
+      "translit": "be'ikvot",
+      "en": "in the footsteps of / following",
+      "root": "ע-ק-ב"
+    },
+    {
+      "rank": 168,
+      "he": "בעיר",
+      "translit": "be'ir",
+      "en": "in a city",
+      "root": "ע-ו-ר"
+    },
+    {
+      "rank": 169,
+      "he": "לפי",
+      "translit": "lefi",
+      "en": "according to / to my mouth",
+      "root": ""
+    },
+    {
+      "rank": 170,
+      "he": "בקרב",
+      "translit": "bekerev",
+      "en": "among",
+      "root": "ק-ר-ב"
+    },
+    {
+      "rank": 171,
+      "he": "כפי",
+      "translit": "kefi",
+      "en": "as",
+      "root": ""
+    },
+    {
+      "rank": 172,
+      "he": "המשחק",
+      "translit": "hamis'khak",
+      "en": "the game",
+      "root": "ש-ח-ק"
+    },
+    {
+      "rank": 173,
+      "he": "מי",
+      "translit": "mi",
+      "en": "who",
+      "root": ""
+    },
+    {
+      "rank": 174,
+      "he": "רוב",
+      "translit": "rov",
+      "en": "most",
+      "root": "ר-ב-ב"
+    },
+    {
+      "rank": 175,
+      "he": "עבור",
+      "translit": "avur",
+      "en": "for",
+      "root": "ע-ב-ר"
+    },
+    {
+      "rank": 176,
+      "he": "ואת",
+      "translit": "ve'et",
+      "en": "and the",
+      "root": ""
+    },
+    {
+      "rank": 177,
+      "he": "בעת",
+      "translit": "be'et",
+      "en": "at a time (of)",
+      "root": "ע-ת-ת"
+    },
+    {
+      "rank": 178,
+      "he": "ארצות",
+      "translit": "aratsot",
+      "en": "countries",
+      "root": "א-ר-ץ"
+    },
+    {
+      "rank": 179,
+      "he": "למשל",
+      "translit": "lemashal",
+      "en": "for example",
+      "root": "מ-ש-ל"
+    },
+    {
+      "rank": 180,
+      "he": "הצבא",
+      "translit": "hatsava",
+      "en": "the army",
+      "root": "צ-ב-א"
+    },
+    {
+      "rank": 181,
+      "he": "ההגנה",
+      "translit": "hahagana",
+      "en": "the defense",
+      "root": "ג-נ-ן"
+    },
+    {
+      "rank": 182,
+      "he": "כלי",
+      "translit": "kli",
+      "en": "article / dish / vessel / ware",
+      "root": "כ-ל-ה"
+    },
+    {
+      "rank": 183,
+      "he": "נוסף",
+      "translit": "nosaf",
+      "en": "additional (m.s.)",
+      "root": "נ-ס-ף"
+    },
+    {
+      "rank": 184,
+      "he": "באזור",
+      "translit": "be'ezor",
+      "en": "in an area",
+      "root": "א-ז-ר"
+    },
+    {
+      "rank": 185,
+      "he": "טוב",
+      "translit": "tov",
+      "en": "good (m.s.)",
+      "root": "ט-ו-ב"
+    },
+    {
+      "rank": 186,
+      "he": "בעולם",
+      "translit": "ba'olam",
+      "en": "in the world",
+      "root": "ע-ל-ם"
+    },
+    {
+      "rank": 187,
+      "he": "כוחות",
+      "translit": "kokhot",
+      "en": "powers / forces / strength",
+      "root": "כ-ו-ח"
+    },
+    {
+      "rank": 188,
+      "he": "בתוך",
+      "translit": "betokh",
+      "en": "inside",
+      "root": "ת-ו-ך"
+    },
+    {
+      "rank": 189,
+      "he": "הארץ",
+      "translit": "ha'arets",
+      "en": "the country / the earth",
+      "root": "א-ר-ץ"
+    },
+    {
+      "rank": 190,
+      "he": "פני",
+      "translit": "pnei",
+      "en": "the face of",
+      "root": "פ-נ-ה"
+    },
+    {
+      "rank": 191,
+      "he": "בארץ",
+      "translit": "be'arets",
+      "en": "in a country",
+      "root": "א-ר-ץ"
+    },
+    {
+      "rank": 192,
+      "he": "והוא",
+      "translit": "vehu",
+      "en": "and he",
+      "root": ""
+    },
+    {
+      "rank": 193,
+      "he": "הדבר",
+      "translit": "hadavar",
+      "en": "the thing / the object",
+      "root": "ד-ב-ר"
+    },
+    {
+      "rank": 194,
+      "he": "בלבד",
+      "translit": "bilvad",
+      "en": "only",
+      "root": "ל-ב-ד"
+    },
+    {
+      "rank": 195,
+      "he": "כוח",
+      "translit": "ko'akh",
+      "en": "power / force / strength",
+      "root": "כ-ו-ח"
+    },
+    {
+      "rank": 196,
+      "he": "בבית",
+      "translit": "babayit",
+      "en": "at home / in the house",
+      "root": "ב-י-ת"
+    },
+    {
+      "rank": 197,
+      "he": "מאז",
+      "translit": "me'az",
+      "en": "since then",
+      "root": ""
+    },
+    {
+      "rank": 198,
+      "he": "החיים",
+      "translit": "hakhaim",
+      "en": "the life",
+      "root": "ח-י-ה"
+    },
+    {
+      "rank": 199,
+      "he": "ימים",
+      "translit": "yamim",
+      "en": "days",
+      "root": "י-ו-ם"
+    },
+    {
+      "rank": 200,
+      "he": "לאורך",
+      "translit": "le'orekh",
+      "en": "through / along",
+      "root": "א-ר-ך"
+    },
+    {
+      "rank": 201,
+      "he": "מים",
+      "translit": "mayim",
+      "en": "water",
+      "root": "מ-י-ם"
+    },
+    {
+      "rank": 202,
+      "he": "הרבה",
+      "translit": "harbe",
+      "en": "many / a lot",
+      "root": "ר-ב-ה"
+    },
+    {
+      "rank": 203,
+      "he": "בלתי",
+      "translit": "bilti",
+      "en": "not / un- / dis-",
+      "root": ""
+    },
+    {
+      "rank": 204,
+      "he": "עליו",
+      "translit": "alav",
+      "en": "on him / about him",
+      "root": ""
+    },
+    {
+      "rank": 205,
+      "he": "אביב",
+      "translit": "aviv",
+      "en": "spring",
+      "root": "א-ב-ב"
+    },
+    {
+      "rank": 206,
+      "he": "מעל",
+      "translit": "me'al",
+      "en": "above / over / on top",
+      "root": ""
+    },
+    {
+      "rank": 207,
+      "he": "הגדול",
+      "translit": "hagadol",
+      "en": "the big / the large (m.s.)",
+      "root": "ג-ד-ל"
+    },
+    {
+      "rank": 208,
+      "he": "אי",
+      "translit": "i",
+      "en": "island / not / un-",
+      "root": ""
+    },
+    {
+      "rank": 209,
+      "he": "הספר",
+      "translit": "hasefer",
+      "en": "the book",
+      "root": "ס-פ-ר"
+    },
+    {
+      "rank": 210,
+      "he": "פעם",
+      "translit": "pa'am",
+      "en": "once / once upon a time",
+      "root": "פ-ע-ם"
+    },
+    {
+      "rank": 211,
+      "he": "ראו",
+      "translit": "ra'u",
+      "en": "saw (m.pl.)",
+      "root": "ר-א-ה"
+    },
+    {
+      "rank": 212,
+      "he": "בכך",
+      "translit": "bekhakh",
+      "en": "by this",
+      "root": ""
+    },
+    {
+      "rank": 213,
+      "he": "נראה",
+      "translit": "nir'e",
+      "en": "looks",
+      "root": "ר-א-ה"
+    },
+    {
+      "rank": 214,
+      "he": "לבין",
+      "translit": "levein",
+      "en": "and between",
+      "root": ""
+    },
+    {
+      "rank": 215,
+      "he": "ועד",
+      "translit": "ve'ad",
+      "en": "and until",
+      "root": ""
+    },
+    {
+      "rank": 216,
+      "he": "כנגד",
+      "translit": "keneged",
+      "en": "against",
+      "root": ""
+    },
+    {
+      "rank": 217,
+      "he": "רבה",
+      "translit": "rava",
+      "en": "fought (f.s.)",
+      "root": "ר-י-ב"
+    },
+    {
+      "rank": 218,
+      "he": "שבה",
+      "translit": "shava",
+      "en": "returned (f.s.)",
+      "root": "ש-ו-ב"
+    },
+    {
+      "rank": 219,
+      "he": "מדי",
+      "translit": "midai",
+      "en": "too",
+      "root": ""
+    },
+    {
+      "rank": 220,
+      "he": "בסוף",
+      "translit": "basof",
+      "en": "at the end",
+      "root": "ס-ו-פ"
+    },
+    {
+      "rank": 221,
+      "he": "המפלגה",
+      "translit": "hamiflaga",
+      "en": "the party (political)",
+      "root": "פ-ל-ג"
+    },
+    {
+      "rank": 222,
+      "he": "במיוחד",
+      "translit": "bimyukhad",
+      "en": "especially",
+      "root": "י-ח-ד"
+    },
+    {
+      "rank": 223,
+      "he": "שונות",
+      "translit": "shonut",
+      "en": "difference / variation",
+      "root": "ש-נ-ה"
+    },
+    {
+      "rank": 224,
+      "he": "המים",
+      "translit": "hamayim",
+      "en": "the water",
+      "root": "מ-י-ם"
+    },
+    {
+      "rank": 225,
+      "he": "וגם",
+      "translit": "vegam",
+      "en": "and also",
+      "root": ""
+    },
+    {
+      "rank": 226,
+      "he": "ככל",
+      "translit": "kekhol",
+      "en": "the more / as far as",
+      "root": ""
+    },
+    {
+      "rank": 227,
+      "he": "שהיו",
+      "translit": "shehayu",
+      "en": "that were",
+      "root": "ה-י-ה"
+    },
+    {
+      "rank": 228,
+      "he": "בתקופה",
+      "translit": "bitkufa",
+      "en": "in a period / in an era",
+      "root": "נ-ק-פ"
+    },
+    {
+      "rank": 229,
+      "he": "אצל",
+      "translit": "etsel",
+      "en": "in the possession of / at / near",
+      "root": ""
+    },
+    {
+      "rank": 230,
+      "he": "עדיין",
+      "translit": "adayin",
+      "en": "still / yet",
+      "root": ""
+    },
+    {
+      "rank": 231,
+      "he": "השנים",
+      "translit": "hashanim",
+      "en": "the years",
+      "root": "ש-נ-ה"
+    },
+    {
+      "rank": 232,
+      "he": "לכך",
+      "translit": "lekhakh",
+      "en": "to it",
+      "root": ""
+    },
+    {
+      "rank": 233,
+      "he": "יהודי",
+      "translit": "yehudi",
+      "en": "Jew / Jewish (m.s.)",
+      "root": "י-ה-ד"
+    },
+    {
+      "rank": 234,
+      "he": "ערך",
+      "translit": "erekh",
+      "en": "value",
+      "root": "ע-ר-ך"
+    },
+    {
+      "rank": 235,
+      "he": "עכשיו",
+      "translit": "akhshav",
+      "en": "now",
+      "root": ""
+    },
+    {
+      "rank": 236,
+      "he": "החלו",
+      "translit": "hekhelu",
+      "en": "started (pl.)",
+      "root": "ח-ל-ל"
+    },
+    {
+      "rank": 237,
+      "he": "בזמן",
+      "translit": "bizman",
+      "en": "at the time [of]",
+      "root": "ז-מ-ן"
+    },
+    {
+      "rank": 238,
+      "he": "הכוחות",
+      "translit": "hakokhot",
+      "en": "the powers / the forces",
+      "root": "כ-ו-ח"
+    },
+    {
+      "rank": 239,
+      "he": "עץ",
+      "translit": "ets",
+      "en": "tree / wood",
+      "root": "ע-צ-ה"
+    },
+    {
+      "rank": 240,
+      "he": "חיל",
+      "translit": "khayal",
+      "en": "soldier (m)",
+      "root": "ח-י-ל"
+    },
+    {
+      "rank": 241,
+      "he": "אפשר",
+      "translit": "efshar",
+      "en": "possible (adv.)",
+      "root": "פ-ש-ר"
+    },
+    {
+      "rank": 242,
+      "he": "בעוד",
+      "translit": "be'od",
+      "en": "while",
+      "root": ""
+    },
+    {
+      "rank": 243,
+      "he": "בתי",
+      "translit": "batei",
+      "en": "the houses of",
+      "root": "ב-י-ת"
+    },
+    {
+      "rank": 244,
+      "he": "שלה",
+      "translit": "shela",
+      "en": "hers",
+      "root": ""
+    },
+    {
+      "rank": 245,
+      "he": "האי",
+      "translit": "ha'i",
+      "en": "the island",
+      "root": "א-ו-י"
+    },
+    {
+      "rank": 246,
+      "he": "באותה",
+      "translit": "be'ota",
+      "en": "in the same (f.s.)",
+      "root": ""
+    },
+    {
+      "rank": 247,
+      "he": "גדולה",
+      "translit": "gdola",
+      "en": "big / large (f.s.)",
+      "root": "ג-ד-ל"
+    },
+    {
+      "rank": 248,
+      "he": "הגיע",
+      "translit": "hegi'a",
+      "en": "arrived (m.s.)",
+      "root": "נ-ג-ע"
+    },
+    {
+      "rank": 249,
+      "he": "יחד",
+      "translit": "yakhad",
+      "en": "together",
+      "root": "י-ח-ד"
+    },
+    {
+      "rank": 250,
+      "he": "למעשה",
+      "translit": "lema'ase",
+      "en": "actually / in fact",
+      "root": "ע-ש-ה"
+    },
+    {
+      "rank": 251,
+      "he": "צבא",
+      "translit": "tsava",
+      "en": "army",
+      "root": "צ-ב-א"
+    },
+    {
+      "rank": 252,
+      "he": "מעט",
+      "translit": "me'at",
+      "en": "a little / a few",
+      "root": "מ-ע-ט"
+    },
+    {
+      "rank": 253,
+      "he": "ועוד",
+      "translit": "ve'od",
+      "en": "and more / and still",
+      "root": ""
+    },
+    {
+      "rank": 254,
+      "he": "שלהם",
+      "translit": "shelahem",
+      "en": "theirs",
+      "root": ""
+    },
+    {
+      "rank": 255,
+      "he": "עלי",
+      "translit": "alai",
+      "en": "on me / about me",
+      "root": ""
+    },
+    {
+      "rank": 256,
+      "he": "ביניהם",
+      "translit": "beinehem",
+      "en": "between them (m.)",
+      "root": ""
+    },
+    {
+      "rank": 257,
+      "he": "והן",
+      "translit": "vehen",
+      "en": "and they (f.)",
+      "root": ""
+    },
+    {
+      "rank": 258,
+      "he": "ים",
+      "translit": "yam",
+      "en": "sea",
+      "root": "י-מ-ם"
+    },
+    {
+      "rank": 259,
+      "he": "ובין",
+      "translit": "uvein",
+      "en": "and between",
+      "root": ""
+    },
+    {
+      "rank": 260,
+      "he": "הכל",
+      "translit": "hakol",
+      "en": "everything",
+      "root": ""
+    },
+    {
+      "rank": 261,
+      "he": "הרי",
+      "translit": "harei",
+      "en": "here is / you see",
+      "root": ""
+    },
+    {
+      "rank": 262,
+      "he": "אינם",
+      "translit": "einam",
+      "en": "are not (m.pl.)",
+      "root": ""
+    },
+    {
+      "rank": 263,
+      "he": "בתחילת",
+      "translit": "bitkhilat",
+      "en": "at the beginning of",
+      "root": "ת-ח-ל"
+    },
+    {
+      "rank": 264,
+      "he": "האדמה",
+      "translit": "ha'adama",
+      "en": "the land / the earth",
+      "root": "א-ד-ם"
+    },
+    {
+      "rank": 265,
+      "he": "המשפט",
+      "translit": "hamishpat",
+      "en": "the sentence / the trial",
+      "root": "ש-פ-ט"
+    },
+    {
+      "rank": 266,
+      "he": "בצורה",
+      "translit": "betsura",
+      "en": "in a way / in a shape",
+      "root": "צ-ו-ר"
+    },
+    {
+      "rank": 267,
+      "he": "סוף",
+      "translit": "sof",
+      "en": "end",
+      "root": "ס-ו-פ"
+    },
+    {
+      "rank": 268,
+      "he": "זכה",
+      "translit": "zakha",
+      "en": "won (m.s.)",
+      "root": "ז-כ-ה"
+    },
+    {
+      "rank": 269,
+      "he": "מחוץ",
+      "translit": "mikhuts",
+      "en": "outside of",
+      "root": "ח-ו-ץ"
+    },
+    {
+      "rank": 270,
+      "he": "בתקופת",
+      "translit": "bitkufat",
+      "en": "in the time of",
+      "root": "ק-ו-פ"
+    },
+    {
+      "rank": 271,
+      "he": "פה",
+      "translit": "po",
+      "en": "here",
+      "root": ""
+    },
+    {
+      "rank": 272,
+      "he": "דומה",
+      "translit": "dome",
+      "en": "similar",
+      "root": "ד-מ-ה"
+    },
+    {
+      "rank": 273,
+      "he": "במסגרת",
+      "translit": "bemisgeret",
+      "en": "in a frame / in a framework",
+      "root": "ס-ג-ר"
+    },
+    {
+      "rank": 274,
+      "he": "האימפריה",
+      "translit": "ha'imperia",
+      "en": "the empire",
+      "root": ""
+    },
+    {
+      "rank": 275,
+      "he": "אנשים",
+      "translit": "anashim",
+      "en": "people",
+      "root": "א-נ-ש"
+    },
+    {
+      "rank": 276,
+      "he": "מערכת",
+      "translit": "ma'arekhet",
+      "en": "system / editorial board",
+      "root": "ע-ר-כ"
+    },
+    {
+      "rank": 277,
+      "he": "אולי",
+      "translit": "ulai",
+      "en": "Maybe / perhaps",
+      "root": ""
+    },
+    {
+      "rank": 278,
+      "he": "השמש",
+      "translit": "hashemesh",
+      "en": "the sun",
+      "root": "ש-מ-ש"
+    },
+    {
+      "rank": 279,
+      "he": "ספר",
+      "translit": "sefer",
+      "en": "book",
+      "root": "ס-פ-ר"
+    },
+    {
+      "rank": 280,
+      "he": "עניינים",
+      "translit": "inyanim",
+      "en": "matters",
+      "root": "ע-נ-י-ן"
+    },
+    {
+      "rank": 281,
+      "he": "שהיא",
+      "translit": "shehi",
+      "en": "that she / that is (f.s.)",
+      "root": ""
+    },
+    {
+      "rank": 282,
+      "he": "אינה",
+      "translit": "eina",
+      "en": "is not (f.s.)",
+      "root": ""
+    },
+    {
+      "rank": 283,
+      "he": "שנת",
+      "translit": "shnat",
+      "en": "year [X] / year of",
+      "root": "ש-נ-ה"
+    },
+    {
+      "rank": 284,
+      "he": "שלי",
+      "translit": "sheli",
+      "en": "mine",
+      "root": ""
+    },
+    {
+      "rank": 285,
+      "he": "לראות",
+      "translit": "lir'ot",
+      "en": "to see",
+      "root": "ר-א-ה"
+    },
+    {
+      "rank": 286,
+      "he": "ולכן",
+      "translit": "velakhen",
+      "en": "and therefore",
+      "root": ""
+    },
+    {
+      "rank": 287,
+      "he": "בשנים",
+      "translit": "bashanim",
+      "en": "in the years",
+      "root": "ש-נ-ה"
+    },
+    {
+      "rank": 288,
+      "he": "כתב",
+      "translit": "ktav",
+      "en": "writing",
+      "root": "כ-ת-ב"
+    },
+    {
+      "rank": 289,
+      "he": "הקרב",
+      "translit": "hakrav",
+      "en": "the battle",
+      "root": "ק-ר-ב"
+    },
+    {
+      "rank": 290,
+      "he": "קטן",
+      "translit": "katan",
+      "en": "small / little (m.s.)",
+      "root": "ק-ט-ן"
+    },
+    {
+      "rank": 291,
+      "he": "ביום",
+      "translit": "beyom",
+      "en": "on [day / date] / per day",
+      "root": "י-ו-ם"
+    },
+    {
+      "rank": 292,
+      "he": "מפני",
+      "translit": "mipnei",
+      "en": "because",
+      "root": ""
+    },
+    {
+      "rank": 293,
+      "he": "לשם",
+      "translit": "lesham",
+      "en": "[to] there",
+      "root": ""
+    },
+    {
+      "rank": 294,
+      "he": "תוכן",
+      "translit": "tokhen",
+      "en": "content",
+      "root": "ת-כ-ן"
+    },
+    {
+      "rank": 295,
+      "he": "הכוח",
+      "translit": "hako'akh",
+      "en": "the power / the force",
+      "root": "כ-ו-ח"
+    },
+    {
+      "rank": 296,
+      "he": "הגיעו",
+      "translit": "hegi'u",
+      "en": "arrived (pl.)",
+      "root": "נ-ג-ע"
+    },
+    {
+      "rank": 297,
+      "he": "בשנות",
+      "translit": "bishnot",
+      "en": "in the years of",
+      "root": "ש-נ-ה"
+    },
+    {
+      "rank": 298,
+      "he": "בארצות",
+      "translit": "be'aratsot",
+      "en": "in countries",
+      "root": "א-ר-ץ"
+    },
+    {
+      "rank": 299,
+      "he": "הדרך",
+      "translit": "haderekh",
+      "en": "the way / the road",
+      "root": "ד-ר-ך"
+    },
+    {
+      "rank": 300,
+      "he": "חיילים",
+      "translit": "khayalim",
+      "en": "soldiers",
+      "root": "ח-י-ל"
+    },
+    {
+      "rank": 301,
+      "he": "תוכנית",
+      "translit": "tokhnit",
+      "en": "program / plan",
+      "root": "ת-כ-ן"
+    },
+    {
+      "rank": 302,
+      "he": "הסרט",
+      "translit": "haseret",
+      "en": "the movie / the ribbon/strip",
+      "root": "ס-ר-ט"
+    },
+    {
+      "rank": 303,
+      "he": "שוב",
+      "translit": "shuv",
+      "en": "again / return (m.s. imperative)",
+      "root": "ש-ו-ב"
+    },
+    {
+      "rank": 304,
+      "he": "עקב",
+      "translit": "ekev",
+      "en": "due to / because of",
+      "root": "ע-ק-ב"
+    },
+    {
+      "rank": 305,
+      "he": "שהם",
+      "translit": "shehem",
+      "en": "that they (m.)",
+      "root": ""
+    },
+    {
+      "rank": 306,
+      "he": "נעשה",
+      "translit": "na'asa",
+      "en": "done",
+      "root": "ע-ש-ה"
+    },
+    {
+      "rank": 307,
+      "he": "לקראת",
+      "translit": "lilkrat",
+      "en": "towards",
+      "root": ""
+    },
+    {
+      "rank": 308,
+      "he": "בהן",
+      "translit": "bahen",
+      "en": "in them (f.)",
+      "root": ""
+    },
+    {
+      "rank": 309,
+      "he": "הזמן",
+      "translit": "hazman",
+      "en": "the time",
+      "root": "ז-מ-ן"
+    },
+    {
+      "rank": 310,
+      "he": "מיליון",
+      "translit": "milyon",
+      "en": "million",
+      "root": ""
+    },
+    {
+      "rank": 311,
+      "he": "המלך",
+      "translit": "hamelekh",
+      "en": "the king",
+      "root": "מ-ל-ך"
+    },
+    {
+      "rank": 312,
+      "he": "שכן",
+      "translit": "shakhen",
+      "en": "neighbor (m.s.)",
+      "root": "ש-כ-ן"
+    },
+    {
+      "rank": 313,
+      "he": "יהיה",
+      "translit": "yihiye",
+      "en": "will be (m.s.)",
+      "root": "ה-י-ה"
+    },
+    {
+      "rank": 314,
+      "he": "המועצות",
+      "translit": "mo'etset",
+      "en": "council of",
+      "root": "י-ע-ץ"
+    },
+    {
+      "rank": 315,
+      "he": "ממנו",
+      "translit": "mimenu",
+      "en": "from him",
+      "root": ""
+    },
+    {
+      "rank": 316,
+      "he": "קשה",
+      "translit": "kashe",
+      "en": "difficult / hard (m.s.)",
+      "root": "ק-ש-ה"
+    },
+    {
+      "rank": 317,
+      "he": "עבר",
+      "translit": "avar",
+      "en": "passed / crossed (m.s.)",
+      "root": "ע-ב-ר"
+    },
+    {
+      "rank": 318,
+      "he": "אחרות",
+      "translit": "akherot",
+      "en": "other (f.pl.)",
+      "root": "א-ח-ר"
+    },
+    {
+      "rank": 319,
+      "he": "השלטון",
+      "translit": "hashilton",
+      "en": "the authority / the government",
+      "root": "ש-ל-ט"
+    },
+    {
+      "rank": 320,
+      "he": "צריך",
+      "translit": "tsarikh",
+      "en": "need / necessary / should",
+      "root": "צ-ר-ך"
+    }
+  ],
+  "next_index": 320
+}
