@@ -176,6 +176,10 @@ def process_one(client, model, theory_entry, corpus_stripped, retries=3):
                 ),
             )
             result = json.loads(response.text)
+            # См. тот же фикс в generate_root_theory.process_one: модель
+            # может эхом вернуть корень с другим тире, ломая resume по
+            # каноническому написанию из root_frequency.json.
+            result["root"] = theory_entry["root"]
         except Exception as e:
             if _is_quota_error(e):
                 raise QuotaExhausted(str(e)) from e

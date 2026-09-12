@@ -493,6 +493,15 @@ def process_one(client, model, root_entry, retries=3):
                 ),
             )
             result = json.loads(response.text)
+            # Модель иногда эхом возвращает корень с другим символом
+            # тире (напр. маqaf ־ вместо обычного -) — если доверять
+            # этому эху как ключу при повторном запуске, run_roots_batch.py
+            # не находит уже готовую запись по каноническому написанию из
+            # root_frequency.json и генерирует ещё одну, с виду другую
+            # запись для того же корня (реальный случай — см.
+            # ROOTS_CURRICULUM.md, шаг 4, дубль ס-ו-ף/ס־ו־ף). Всегда
+            # перезаписываем на каноническое написание.
+            result["root"] = root_entry["root"]
         except Exception as e:
             if _is_quota_error(e):
                 raise QuotaExhausted(str(e)) from e
