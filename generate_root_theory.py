@@ -397,6 +397,24 @@ def _matches_allowlist(word):
     return any(bare.endswith(_bare_consonants(allowed)) for allowed in KTIV_CHASER_ALLOWLIST)
 
 
+def _split_clusters(word):
+    """Разбивает слово на кластеры (базовая буква + все её комбинирующие
+    знаки, категория Unicode Mn). Нужно, потому что некоторые буквы несут
+    СРАЗУ два огласовочных знака (напр. каф с дагешем И холамом в הַכֹּל
+    — "всё") — проверка/фикс по одному символу назад ошибочно принимает
+    дагеш за "не вав перед холамом" и вставляет вав между дагешем и
+    холамом вместо того, чтобы понять, что холам вообще сидит не на той
+    букве. Кластеры решают это: смотрим на БАЗОВУЮ букву кластера, не на
+    непосредственно предыдущий символ."""
+    clusters = []
+    for ch in word:
+        if clusters and unicodedata.category(ch) == "Mn":
+            clusters[-1] += ch
+        else:
+            clusters.append(ch)
+    return clusters
+
+
 def find_ktiv_chaser_violations(obj, path=""):
     """Рекурсивно ищет в распарсенном JSON-ответе огласованные ивритские
     слова с явными признаками неполного написания (כתיב חסר):
@@ -421,10 +439,11 @@ def find_ktiv_chaser_violations(obj, path=""):
             clean = word.strip(_STRIP_PUNCT)
             if _matches_allowlist(clean):
                 continue
-            for i, ch in enumerate(clean):
-                if ch == CHOLAM and (i == 0 or clean[i - 1] != VAV):
+            clusters = _split_clusters(clean)
+            for i, cl in enumerate(clusters):
+                if CHOLAM in cl and cl[0] != VAV:
                     violations.append((path, clean, "холам без вав — похоже на כתיב חסר, нужно וֹ"))
-                elif ch == KUBUTZ:
+                elif KUBUTZ in cl:
                     violations.append((path, clean, "кубуц вместо шурук — в современном написании обычно וּ"))
     return violations
 
@@ -441,18 +460,26 @@ def _fix_ktiv_chaser_word(word):
     биньян פֻּעַל с кубуцем: מְיֻחָד) модель воспроизводит традиционное
     написание раз за разом НЕЗАВИСИМО ОТ МОДЕЛИ (см. run_roots_batch.py,
     прогон 2026-09-12 на ב-נ-ה — несколько разных моделей подряд не
-    справились ретраями), так что повтор просто тратит квоту впустую."""
+    справились ретраями), так что повтор просто тратит квоту впустую.
+
+    Работает по кластерам (буква + все её огласовки), не по одиночным
+    символам — см. _split_clusters: буква может нести дагеш И холам
+    ОДНОВРЕМЕННО (напр. каф в הַכֹּל — "всё"), и посимвольная проверка
+    "предыдущий символ — вав?" в этом случае ошибочно видит дагеш вместо
+    вав и вставляет новый вав ВНУТРИ кластера — портит слово (реальный
+    баг, пойманный вживую на первом же растущем тексте, см.
+    ROOTS_CURRICULUM.md)."""
     out = []
-    for ch in word:
-        if ch == CHOLAM:
-            if not out or out[-1] != VAV:
-                out.append(VAV)
-            out.append(ch)
-        elif ch == KUBUTZ:
-            out.append(VAV)
-            out.append(DAGESH)
+    for cl in _split_clusters(word):
+        base, marks = cl[0], cl[1:]
+        if CHOLAM in marks and base != VAV:
+            out.append(base + marks.replace(CHOLAM, ""))
+            out.append(VAV + CHOLAM)
+        elif KUBUTZ in marks:
+            out.append(base + marks.replace(KUBUTZ, ""))
+            out.append(VAV + DAGESH)
         else:
-            out.append(ch)
+            out.append(cl)
     return "".join(out)
 
 
