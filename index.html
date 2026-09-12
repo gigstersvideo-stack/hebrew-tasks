@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.20.0
+  Ивритский тренажёр — v1.21.0
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -386,6 +386,14 @@
   .ai-result .ai-err { color: var(--bad); }
 
   .kbd-hint { font-size: 0.7rem; color: var(--text-faint); }
+  .daily-goal-toast {
+    position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(20px);
+    background: var(--good-soft); color: var(--good-deep); border: 1px solid var(--good);
+    border-radius: 10px; padding: 12px 18px; font-size: 0.86rem; font-weight: 600; text-align: center;
+    box-shadow: var(--shadow); opacity: 0; pointer-events: none; transition: opacity .3s ease, transform .3s ease;
+    z-index: 50; max-width: min(90vw, 420px);
+  }
+  .daily-goal-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   .tts-notice {
     font-size: 0.78rem; color: var(--amber); background: var(--amber-soft);
     border-radius: 6px; padding: 8px 10px; line-height: 1.4;
@@ -426,6 +434,142 @@
   .fb-review-badge.suggestion { background: var(--accent-soft); color: var(--accent-strong); }
   .fb-review-text { font-size: 0.9rem; white-space: pre-wrap; margin-bottom: 8px; }
   .fb-review-actions { display: flex; gap: 8px; }
+
+  /* ---- Курс «Корни» — экран теории корня ---- */
+  .rt-page { display: flex; flex-direction: column; gap: 22px; }
+  .rt-context { display: flex; align-items: center; gap: 14px; }
+  .rt-badge {
+    flex-shrink: 0; width: 42px; height: 42px; border-radius: 999px;
+    border: 1.5px solid var(--accent-strong); color: var(--accent-strong); background: var(--surface);
+    font-family: 'David Libre', 'Noto Sans Hebrew', serif; font-weight: 700; font-size: 1.2rem;
+    font-variant-numeric: tabular-nums; display: flex; align-items: center; justify-content: center;
+  }
+  .rt-context-info { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; }
+  .rt-context-label { font-size: 0.78rem; color: var(--text-muted); }
+  .rt-context-label b { color: var(--text); font-weight: 600; }
+  .rt-progress-bar { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .rt-progress-bar > div { height: 100%; background: var(--accent); border-radius: 2px; }
+
+  .rt-hero { display: flex; flex-direction: column; gap: 10px; padding: 6px 0 2px; }
+  .rt-letters {
+    direction: rtl; font-family: 'David Libre', 'Noto Sans Hebrew', serif; font-weight: 700;
+    font-size: 3.2rem; line-height: 1; letter-spacing: 0.06em; color: var(--text);
+  }
+  .rt-letters .sep { color: var(--accent); font-weight: 400; padding: 0 0.14em; font-size: 0.55em; vertical-align: middle; }
+  .rt-thesis {
+    font-family: 'Source Serif 4', Georgia, serif; font-size: 1.08rem; line-height: 1.6; color: var(--text);
+    text-wrap: balance; max-width: 62ch;
+  }
+  .rt-thesis em { font-style: normal; color: var(--accent-strong); font-weight: 600; }
+  .rt-origin { font-size: 0.83rem; color: var(--text-muted); line-height: 1.5; max-width: 62ch; }
+  .rt-origin b { color: var(--text); font-weight: 600; }
+
+  .rt-section-head { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; }
+  .rt-section-head h3 { margin: 0; font-size: 1rem; font-weight: 700; letter-spacing: -0.01em; }
+  .rt-section-head .hint { font-size: 0.78rem; color: var(--text-faint); }
+
+  .rt-derived-list { display: flex; flex-direction: column; gap: 10px; }
+  .rt-derived-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; box-shadow: var(--shadow);
+  }
+  .rt-derived-top { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .rt-derived-word {
+    direction: rtl; font-family: 'David Libre', 'Noto Sans Hebrew', serif; font-weight: 700; font-size: 1.5rem; color: var(--text);
+  }
+  .rt-derived-translation { font-size: 0.88rem; color: var(--text-muted); }
+  .rt-tag-row { display: flex; gap: 6px; flex-wrap: wrap; margin-left: auto; }
+  .rt-tag {
+    font-size: 0.68rem; font-weight: 600; letter-spacing: 0.03em; border-radius: 999px; padding: 2px 9px;
+    background: var(--surface-2); color: var(--text-muted); border: 1px solid var(--border); white-space: nowrap;
+  }
+  .rt-tag.binyan { color: var(--accent-strong); border-color: var(--accent-soft); background: var(--accent-soft); }
+  .rt-usage-note { font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; }
+  .rt-example { display: flex; align-items: flex-start; gap: 8px; padding-top: 6px; border-top: 1px dashed var(--border); }
+  .rt-example-text { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+  .rt-example .he { direction: rtl; text-align: right; font-family: 'Noto Sans Hebrew', serif; font-size: 1rem; color: var(--text); }
+  .rt-example .ru { font-size: 0.8rem; color: var(--text-faint); }
+  .rt-listen-btn {
+    flex-shrink: 0; width: 26px; height: 26px; margin-top: 1px; border-radius: 50%;
+    border: 1px solid var(--border); background: var(--surface-2); color: var(--accent-strong);
+    font-size: 0.72rem; line-height: 1; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; padding: 0;
+  }
+  .rt-listen-btn:hover { background: var(--accent-soft); border-color: var(--accent-strong); }
+  .rt-listen-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .rt-girzah-card {
+    background: var(--amber-soft); border: 1px solid var(--amber); border-radius: 12px;
+    padding: 16px 18px; display: flex; flex-direction: column; gap: 12px;
+  }
+  .rt-girzah-card .eyebrow { color: var(--amber); }
+  .rt-girzah-card p { margin: 0; font-size: 0.88rem; line-height: 1.6; color: var(--text); }
+  .rt-conj-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .rt-conj-cell {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 9px; padding: 10px 12px;
+    display: flex; flex-direction: column; gap: 3px;
+  }
+  .rt-conj-cell .binyan { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.04em; color: var(--text-faint); text-transform: uppercase; }
+  .rt-conj-cell .form {
+    direction: rtl; font-family: 'David Libre', 'Noto Sans Hebrew', serif; font-weight: 700; font-size: 1.5rem; color: var(--accent-strong);
+  }
+  .rt-conj-cell .note { font-size: 0.76rem; color: var(--text-muted); line-height: 1.4; }
+
+  .rt-phrase-row { display: flex; flex-direction: column; gap: 8px; }
+  .rt-phrase-chip {
+    display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 9px; padding: 9px 13px;
+  }
+  .rt-phrase-chip .he { direction: rtl; font-family: 'David Libre', 'Noto Sans Hebrew', serif; font-weight: 600; font-size: 1.15rem; color: var(--accent-strong); }
+  .rt-phrase-chip .ru { font-size: 0.84rem; color: var(--text); font-weight: 500; }
+  .rt-phrase-chip .note { font-size: 0.76rem; color: var(--text-faint); flex-basis: 100%; }
+  .rt-phrase-chip .rt-example { flex-basis: 100%; margin-top: 2px; }
+
+  .rt-culture-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .rt-culture-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px;
+    display: flex; flex-direction: column; gap: 5px;
+  }
+  .rt-culture-card .eyebrow { font-size: 0.66rem; }
+  .rt-culture-card p { margin: 0; font-size: 0.81rem; line-height: 1.5; color: var(--text); }
+  .rt-culture-card .cite { direction: rtl; font-family: 'Noto Sans Hebrew', serif; font-size: 0.92rem; color: var(--accent-strong); }
+  .rt-culture-card .caveat { font-size: 0.7rem; color: var(--text-faint); font-style: italic; margin-top: 2px; }
+
+  .rt-mistake-callout {
+    background: var(--bad-soft); border: 1px solid var(--bad-pale); border-radius: 12px; padding: 14px 16px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .rt-mistake-callout .eyebrow { color: var(--bad); }
+  .rt-mistake-callout p { margin: 0; font-size: 0.85rem; line-height: 1.6; color: var(--text); }
+
+  .rt-divergence { font-size: 0.8rem; color: var(--text-muted); line-height: 1.55; padding-left: 12px; border-left: 2px solid var(--border); }
+
+  .rt-quiz-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px;
+    display: flex; flex-direction: column; gap: 12px; box-shadow: var(--shadow);
+  }
+  .rt-quiz-question { font-size: 0.95rem; font-weight: 600; line-height: 1.45; color: var(--text); }
+  .rt-quiz-options { display: flex; flex-direction: column; gap: 8px; }
+  .rt-quiz-option {
+    font-family: inherit; text-align: left; font-size: 0.85rem; line-height: 1.5; color: var(--text);
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 9px; padding: 10px 13px;
+    cursor: pointer; transition: border-color .15s ease, background .15s ease;
+  }
+  .rt-quiz-option:hover:not(:disabled) { border-color: var(--accent-strong); }
+  .rt-quiz-option:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .rt-quiz-option.correct { background: var(--good-soft); border-color: var(--good); color: var(--good-deep); font-weight: 600; }
+  .rt-quiz-option.wrong { background: var(--bad-soft); border-color: var(--bad); color: var(--bad); }
+  .rt-quiz-option:disabled { cursor: default; }
+  .rt-quiz-feedback { font-size: 0.8rem; color: var(--text-muted); min-height: 1.2em; }
+
+  .rt-transition { font-family: 'Source Serif 4', Georgia, serif; font-size: 0.98rem; color: var(--text-muted); line-height: 1.55; text-align: center; margin-top: 4px; }
+  .rt-cta-row { display: flex; flex-direction: column; align-items: center; gap: 8px; padding-top: 2px; }
+  .rt-cta-note { font-size: 0.76rem; color: var(--text-faint); }
+
+  @media (max-width: 520px) {
+    .rt-conj-compare, .rt-culture-grid { grid-template-columns: 1fr; }
+    .rt-letters { font-size: 2.6rem; }
+  }
 </style>
 </head>
 <body>
@@ -496,6 +640,7 @@
     <div class="dash-actions">
       <button class="action primary dash-start" id="btn-dash-start">Начать →</button>
       <button class="link-btn" id="btn-open-deckbases">🗂 Мои базы</button>
+      <button class="link-btn" id="btn-open-roots">📖 Курс «Корни»</button>
     </div>
   </div>
 
@@ -505,6 +650,14 @@
       <button class="link-btn" id="btn-deckbases-back">🏠 Обзор</button>
     </div>
     <div class="deck-grid" id="deck-grid"></div>
+  </div>
+
+  <div class="hidden" id="root-theory-view">
+    <div class="deckbases-hdr">
+      <h2>📖 Курс «Корни»</h2>
+      <button class="link-btn" id="btn-roots-back">🏠 Обзор</button>
+    </div>
+    <div class="rt-page" id="rt-page"></div>
   </div>
 
   <div class="hidden" id="review-area">
@@ -618,7 +771,7 @@
         <button class="rating-btn" id="rate-easy" data-q="5">Легко</button>
       </div>
     </div>
-    <div class="kbd-hint"><kbd>Enter</kbd> проверить/дальше · <kbd>1</kbd>–<kbd>4</kbd> оценка после проверки</div>
+    <div class="kbd-hint" id="kbd-hint"><kbd>Enter</kbd> проверить/дальше · <kbd>1</kbd>–<kbd>4</kbd> оценка после проверки</div>
     <div class="tts-notice hidden" id="tts-notice"></div>
     <button class="reset-link" id="btn-exclude-card" style="align-self:flex-start;">Убрать эту фразу из пула</button>
   </div>
@@ -645,7 +798,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.20.0</div>
+  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.21.0</div>
 </div>
 
 <script>
@@ -677,6 +830,14 @@ const LEVELS = [
   { sym: "ב+", label: "средний+" },
   { sym: "ג", label: "продвинутый" },
 ];
+// Курс "Корни", база 1 — обычный уровень в той же системе пулов (см.
+// ROOTS_CURRICULUM.md): включается/выключается тем же переключателем в
+// "Мои базы", что и уровни выше. Код нужен ДО CUSTOM_LEVEL_CODE (который
+// вычисляется как LEVELS.length ниже по файлу), иначе уровень не попадёт
+// ни в выпадающий список фильтра, ни в список переключателей "Мои базы" —
+// оба строятся по LEVELS ДО того, как туда добавляется "🏷 Личное".
+const ROOTS_BASE1_LEVEL_CODE = LEVELS.length;
+LEVELS.push({ sym: "🌳", label: "Корни · база 1" });
 
 const ttsSupported = "speechSynthesis" in window;
 const MODES = {
@@ -707,6 +868,7 @@ if (!progress.mistakesHe) progress.mistakesHe = {};
 if (!progress.mistakesRu) progress.mistakesRu = {};
 if (!progress.streak) progress.streak = { lastDate: null, count: 0 };
 if (!progress.pool) progress.pool = { levels: [0, 1, 2, 3, 4], include: [], exclude: [] };
+if (!progress.rootsCourse) progress.rootsCourse = { completedTheory: [] };
 // Migrating from SM-2 (had an `ease` field) to FSRS (difficulty/stability):
 // the two models aren't convertible, so the review schedule resets — but the
 // mistake journal, streak and settings carry over.
@@ -1068,6 +1230,54 @@ function appendCustomCards(cards) {
 }
 window.appendCustomCards = appendCustomCards;
 
+// ---- Курс «Корни»: гейтинг + sync (см. ROOTS_CURRICULUM.md) ----
+// Тот же append-only принцип, что и у appendCustomCards выше: предложения
+// корня физически появляются в DATA только когда пройдена его теория, и
+// только в конец массива — их индексы (progress.rootsCourse.sentenceIndexByRoot)
+// НИКОГДА не синхронизируются в облако (два устройства могли разблокировать
+// корни в разном порядке, значит и индексы будут разные) — вместо этого
+// синхронизируется только completedTheory (список id корней, устройство-
+// независимый), а сами предложения на каждом устройстве при загрузке
+// заново раскладываются в DATA локально, см. replay-цикл ниже.
+// Гвард "уже разложено" — ПРО ЭТУ ЗАГРУЗКУ СТРАНИЦЫ, не про то, что
+// написано в localStorage: DATA пересобирается с нуля при каждой
+// загрузке, а progress.rootsCourse.sentenceIndexByRoot переживает
+// перезагрузку (в localStorage) — если гвардить по нему, после
+// перезагрузки функция решит "уже есть" и не положит предложения в
+// СВЕЖИЙ DATA, хотя там их ещё нет (реальный баг, пойманный вживую при
+// тестировании перезагрузки — indices в progress были, а DATA[8239]
+// не существовал).
+const rootSentencesInjectedThisLoad = new Set();
+function appendRootSentences(rootId, sentences) {
+  if (!sentences || !sentences.length) return;
+  if (rootSentencesInjectedThisLoad.has(rootId)) return;
+  rootSentencesInjectedThisLoad.add(rootId);
+  if (!progress.rootsCourse.sentenceIndexByRoot) progress.rootsCourse.sentenceIndexByRoot = {};
+  const indices = sentences.map(s => {
+    const index = DATA.length;
+    DATA.push({ r: s.ru || "", h: s.he || "", l: ROOTS_BASE1_LEVEL_CODE, c: s.cloze_token || "" });
+    return index;
+  });
+  progress.rootsCourse.sentenceIndexByRoot[rootId] = indices; // всегда свежие индексы для ЭТОЙ загрузки
+}
+
+// Вызывается ОДИН раз — реальный момент разблокировки — в отличие от
+// replay-цикла ниже, который просто восстанавливает уже пройденное при
+// каждой загрузке страницы (DATA пересоздаётся с нуля при каждой загрузке,
+// поэтому без replay пройденные корни "терялись" бы после перезагрузки).
+function markRootTheoryDone(rootId) {
+  if (!progress.rootsCourse) progress.rootsCourse = { completedTheory: [] };
+  if (progress.rootsCourse.completedTheory.includes(rootId)) return false;
+  progress.rootsCourse.completedTheory.push(rootId);
+  appendRootSentences(rootId, ROOT_SENTENCES_DATA[rootId]);
+  if (!progress.pool.levels.includes(ROOTS_BASE1_LEVEL_CODE)) progress.pool.levels.push(ROOTS_BASE1_LEVEL_CODE);
+  saveProgress();
+  cloudSyncMeta();
+  updateStatsBar();
+  return true;
+}
+window.markRootTheoryDone = markRootTheoryDone;
+
 // User-initiated removal from the "Личные карточки" panel — soft-deletes on
 // the server (via the same customCards doc) and, locally, excludes the card
 // from the pool without touching its DATA slot (never reused/reshuffled,
@@ -1217,9 +1427,30 @@ if (ttsSupported && window.speechSynthesis && window.speechSynthesis.addEventLis
 }
 function speak(text, rate) {
   if (!ttsSupported) return;
+  // Отзывы с сайта (2026-09-08, 2026-09-10): "догз" вместо иврита всё ещё
+  // проскакивал даже после первого фикса. Причина — гонка: hebrewVoice
+  // остаётся null (ещё не определено), пока voiceschanged не долетит, а
+  // старый код в этом случае НЕ блокировал воспроизведение — движок сам
+  // выбирал голос по .lang и иногда молча подставлял английский. Живая
+  // повторная проверка прямо здесь (getVoices() — синхронный, дешёвый
+  // вызов) ловит случай "список голосов уже готов, но событие ещё не
+  // обработано"; если голоса иврита всё равно нет — теперь блокируем
+  // воспроизведение (как при явном false), а не рискуем сыграть не то.
+  if (hebrewVoice === null) checkHebrewVoice();
   if (hebrewVoice === false) {
     if (els.ttsNotice) {
       els.ttsNotice.textContent = "На этом устройстве не установлен голос для иврита, поэтому озвучка звучит неправильно (например, вместо иврита слышно английское слово). На iPhone: Настройки → Специальные возможности → Контент, зачитываемый вслух → Голоса → добавить иврит.";
+      els.ttsNotice.classList.remove("hidden");
+    }
+    return;
+  }
+  if (hebrewVoice === null) {
+    // Голос иврита, возможно, есть — браузер ещё не отдал список (частая
+    // на iOS задержка), а не "точно нет". Другое сообщение, чтобы не
+    // отправлять человека в Настройки зря — через секунду обычно само
+    // проходит.
+    if (els.ttsNotice) {
+      els.ttsNotice.textContent = "Голос для озвучки ещё загружается — попробуйте нажать проигрывание ещё раз через секунду.";
       els.ttsNotice.classList.remove("hidden");
     }
     return;
@@ -1245,6 +1476,46 @@ function speakRateFor(index) {
 let lastKey = null, currentIndex = -1, currentMode = "ru2he", checked = false, hintsUsed = 0, pendingQuality = 0;
 function sample(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 function currentKey() { return currentIndex + ":" + currentMode; }
+
+// Отзыв с сайта (2026-09-11): дневная норма новых карточек кончается тихой
+// строчкой текста (#queue-note), легко пропустить — а после этого "учить
+// больше нечего" воспринималось как баг, а не как "теперь просто
+// повторение". Разовый (за загрузку страницы) заметный тост вместо этого.
+let dailyGoalToastShown = false;
+function showDailyGoalToast() {
+  if (dailyGoalToastShown) return;
+  dailyGoalToastShown = true;
+  const el = document.createElement("div");
+  el.className = "daily-goal-toast";
+  el.textContent = "🎉 Дневная норма новых карточек выполнена! Дальше — повторение уже пройденного.";
+  document.body.appendChild(el);
+  requestAnimationFrame(() => el.classList.add("show"));
+  setTimeout(() => {
+    el.classList.remove("show");
+    setTimeout(() => el.remove(), 350);
+  }, 4500);
+}
+
+// Тот же отзыв + два других: после дневной нормы одни и те же фразы
+// "выскакивали очень часто" — старый код брал чисто случайную карточку из
+// ВСЕХ уже изученных, без учёта того, когда её видели последний раз, так
+// что при небольшом изученном пуле повторы били в глаза. Теперь: жёстко
+// не повторяем последние RECENT_WINDOW карточек (пока хватает вариантов),
+// а среди оставшихся предпочитаем те, что давнее всего повторялись —
+// тот же принцип "топ-30% по приоритету, потом случайно", что уже
+// используется чуть выше для due-карточек.
+let recentlyShownKeys = [];
+const RECENT_WINDOW = 5;
+function pickLeastRecentlyShown(keys) {
+  const notRecent = keys.filter(k => !recentlyShownKeys.includes(k));
+  const candidates = notRecent.length ? notRecent : keys;
+  candidates.sort((a, b) => (progress.items[a].lastReview || 0) - (progress.items[b].lastReview || 0));
+  const stalePool = candidates.slice(0, Math.max(3, Math.ceil(candidates.length * 0.3)));
+  const picked = sample(stalePool);
+  recentlyShownKeys.push(picked);
+  if (recentlyShownKeys.length > RECENT_WINDOW) recentlyShownKeys.shift();
+  return picked;
+}
 
 // i+1 (comprehensible input): words from sentences the learner has already
 // succeeded on at least once count as "known"; among several brand-new
@@ -1298,6 +1569,7 @@ function pickNext() {
   const canNew = capLeft > 0 && freshF.length > 0;
   document.getElementById("queue-note").textContent =
     (!canNew && freshF.length > 0) ? "Дневная норма новых карточек пройдена — повторяем изученное." : "";
+  if (capLeft <= 0 && fresh.length > 0) showDailyGoalToast();
 
   let pickedKey;
   if (dueF.length) {
@@ -1315,7 +1587,7 @@ function pickNext() {
     const allKeys = [];
     for (const i of pool) for (const m of modes) allKeys.push(i + ":" + m);
     const learned = allKeys.filter(k => progress.items[k]);
-    if (learned.length) { const f = learned.filter(k => k !== lastKey); pickedKey = sample(f.length ? f : learned); }
+    if (learned.length) { pickedKey = pickLeastRecentlyShown(learned); }
     else if (freshF.length) pickedKey = sample(freshF);
     else { const f2 = allKeys.filter(k => k !== lastKey); pickedKey = sample(f2.length ? f2 : allKeys); }
   }
@@ -1608,6 +1880,297 @@ function renderDeckBases() {
       removeCustomCard(btn.closest(".custom-card-row").dataset.source);
       renderDeckBases();
     });
+  });
+}
+
+// ---- Курс «Корни» ----
+// Реальный вывод пайплайна (2026-09-12): generate_root_theory.py ->
+// theory_v6_kum.json, generate_root_sentences.py -> sentences_v1_kum.json
+// (оба — E:\ivrit, не в scratchpad). Пока один корень; по мере прогона
+// пайплайна на остальные ~199 корней базы 1 — просто добавлять новые
+// записи в оба массива, структуру не менять.
+const ROOT_THEORY_DATA = [
+  {
+    position: 10, baseTotal: 200, base: "База 1",
+    root: "ק-ו-ם",
+    semantic_field: "Этот корень уходит своими смыслами в идею вертикального положения, устойчивости и существования. Вокруг идеи «вставать», «подниматься» или «ставить на ноги» вращается большинство его глагольных форм. В более абстрактном смысле корень связан с созданием чего-то прочного, основанием (как бы «возведением» структуры), а также с самим фактом бытия и физическим пространством, которое человек или предмет занимает. Это один из самых продуктивных корней в иврите, пронизывающий и базовую бытовую лексику, и высокие философские понятия.",
+    origin_note: "корень восходит к прасемитскому источнику *ḳwm со значением «стоять, вставать», родственен арабскому глаголу «кама» (قام) с тем же значением.",
+    girzah_note: {
+      type_label: 'ע"ו (полый корень)',
+      compare: [
+        { binyan: "פָּעַל · прошедшее время", form: "קָם", note: "средний слабый корневой звук ו (вав) полностью выпадает на письме и в произношении (сравните с обычным כָּתַב, где все три согласные на месте)" },
+        { binyan: "הִפְעִיל · прошедшее время", form: "הֵקִים", note: "вместо стандартной приставки הִ- (как в הִכְתִּיב) появляется приставка הֵ-, а средний корневой звук заменяется на י (йод)" },
+      ],
+      text: "Этот корень относится к категории «полых» (ע\"ו), у которых средняя корневая буква — вав. В большинстве форм прошедшего и настоящего времени эта буква либо исчезает, сокращая основу слова, либо трансформируется в гласный звук, что требует особого внимания при спряжении.",
+    },
+    derived_words: [
+      {
+        word: "לָקוּם", binyan: "פָּעַל", pos: "глагол", translation: "вставать, подниматься", register: "очень частотное",
+        usage_note: "Используется как для физического подъёма (встать со стула), так и для утреннего пробуждения.",
+        example_he: "אֲנִי מְנַסֶּה לָקוּם כָּל יוֹם בְּשֵׁשׁ בַּבּוֹקֶר.", example_ru: "Я пытаюсь вставать каждый день в шесть утра.",
+      },
+      {
+        word: "מָקוֹם", binyan: "", pos: "существительное", translation: "место, пространство, сиденье", register: "очень частотное",
+        usage_note: "Не забывайте, что множественное число пишется как מְקוֹמוֹת. Несмотря на женское окончание, слово сохраняет мужской род.",
+        example_he: "אֵין לִי מָקוֹם בַּלּוּחַ הַזְּמַנִּים הַשָּׁבוּעִי.", example_ru: "У меня нет свободного места в недельном расписании.",
+      },
+      {
+        word: "לְהָקִים", binyan: "הִפְעִיל", pos: "глагол", translation: "основывать, учреждать, воздвигать", register: "обычное",
+        usage_note: "Применяется при создании организаций, компаний, стартапов, семей или строительстве памятников.",
+        example_he: "הֵם הֶחְלִיטוּ לְהָקִים חֶבְרָה חֲדָשָׁה בְּיַחַד.", example_ru: "Они решили основать новую компанию вместе.",
+      },
+      {
+        word: "קַיָּם", binyan: "", pos: "прилагательное", translation: "существующий, имеющийся в наличии", register: "обычное",
+        usage_note: "Означает реальное физическое или юридическое существование. Женский род: קַיֶּמֶת.",
+        example_he: "הַחוֹק הַזֶּה עֲדַיִן קַיָּם בִּמְדִינַת יִשְׂרָאֵל.", example_ru: "Этот закон всё ещё существует в Государстве Израиль.",
+      },
+    ],
+    set_phrases: [
+      {
+        phrase_he: "בִּמְקוֹם", phrase_ru: "вместо, взамен",
+        note: "популярный предлог, требующий после себя существительное или инфинитив глагола",
+        example_he: "שָׁתִיתִי תֵּה בִּמְקוֹם קָפֶה בַּבּוֹקֶר.", example_ru: "Утром я выпил чай вместо кофе.",
+      },
+      {
+        phrase_he: "לָקוּם לִתְחִיָּה", phrase_ru: "воскреснуть, возродиться к жизни",
+        note: "используется как буквально в религиозных текстах, так и метафорически (про проекты, идеи или районы города)",
+        example_he: "הַשְּׁכוּנָה הַיְּשָׁנָה הַזֹּאת קָמָה לִתְחִיָּה.", example_ru: "Этот старый район буквально возродился к жизни.",
+      },
+    ],
+    modern_usage_note: {
+      text: "В современном разговорном языке глагол לָקוּם часто используется в значении «проснуться и подняться с постели», а также в переносном смысле — преодолеть жизненные трудности («встать на ноги» после кризиса).",
+      example_he: "הוּא קָם עַל הָרַגְלַיִם מֵחָדָשׁ אַחֲרֵי כָּל הַצָּרוֹת.", example_ru: "Он снова встал на ноги после всех неприятностей.",
+    },
+    place_or_name_note: {
+      text: "קִבּוּץ יָקוּם (Кибуц Якум) в центральной части Израиля назван библейским словом יָקוּם (букв. «он восстанет / поднимется»), выражая идею национального и сельскохозяйственного возрождения.",
+      example_he: "קִבּוּץ יָקוּם נִמְצָא בְּאֵזוֹר הַשָּׁרוֹן.", example_ru: "Кибуц Якум находится в регионе Шарон.",
+    },
+    common_collocation: "בִּמְקוֹם זֶה (вместо этого) — чрезвычайно частое сочетание в повседневной речи для противопоставления действий.",
+    song_or_quote_note: "«קוּם וְהִתְהַלֵּךְ בָּאָרֶץ» (Встань и пройдись по этой земле) — знаменитая патриотическая песня Йорама Гаона на стихи Яакова Орланда, призывающая исследовать просторы страны.",
+    common_mistakes: "Основная ловушка — согласование слова מְקוֹמוֹת (места) с прилагательными. Из-за окончания -וֹת учащиеся часто ошибочно говорят מְקוֹמוֹת יָפוֹת вместо правильного מְקוֹמוֹת יָפִים. Также часто путают глагол לָקוּם (встать с постели, начать бодрствовать) и לְהִתְעוֹרֵר (физически проснуться, открыть глаза, но, возможно, остаться лежать).",
+    divergence_note: "слово בִּמְקוֹם (вместо) развилось из буквального «на месте кого-то». На первый взгляд связь с «вставать» неочевидна, но логика проста: один объект встаёт и физически занимает устойчивое место другого.",
+    comprehension_question: {
+      question: "В чём заключается главная грамматическая ловушка существительного מָקוֹם (место) во множественном числе?",
+      options: [
+        { text: "Оно меняет свой род во множественном числе на женский.", correct: false },
+        { text: "Оно принимает окончание женского рода -וֹת, но грамматически согласуется по мужскому роду (например, מְקוֹמוֹת יָפִים).", correct: true },
+        { text: "При добавлении окончания буква ק (куф) переходит в כ (каф) из-за чередования звуков.", correct: false },
+      ],
+    },
+    transition: "Теперь давай посмотрим, как этот важнейший корень работает в реальных словах и предложениях.",
+  },
+];
+
+// generate_root_sentences.py -> sentences_v1_kum.json (20/20, чисто:
+// 0 нарушений כתיב מלא, 0 дублей с корпусом тренажёра при прогоне
+// 2026-09-12). cloze_token — точная форма фокус-слова в этом
+// предложении, для упражнения на пропуск слова.
+const ROOT_SENTENCES_DATA = {
+  "ק-ו-ם": [
+    { he: "הַיְּלָדִים קָמוּ מוּקְדָּם בַּבּוֹקֶר כְּדֵי לָלֶכֶת לַטִּיּוּל.", ru: "Дети встали рано утром, чтобы пойти в поход.", cloze_token: "קָמוּ" },
+    { he: "אֲנִי אָקוּם מָחָר בְּשֵׁשׁ כְּדֵי לְהַסְפִּיק לָרַכֶּבֶת.", ru: "Я встану завтра в шесть, чтобы успеть на поезд.", cloze_token: "אָקוּם" },
+    { he: "קָשֶׁה לִי לָקוּם מֵהַמִּטָּה כְּשֶׁקַּר בַּחוּץ.", ru: "Мне трудно вставать с постели, когда на улице холодно.", cloze_token: "לָקוּם" },
+    { he: "הִיא תָּמִיד קָמָה עִם חִיּוּךְ עַל הַפָּנִים.", ru: "Она всегда встает с улыбкой на лице.", cloze_token: "קָמָה" },
+    { he: "הַחַיָּלִים קָמִים מִיָּד כְּשֶׁהַמְּפַקֵּד נִכְנָס לַחֶדֶר.", ru: "Солдаты сразу встают, когда командир входит в комнату.", cloze_token: "קָמִים" },
+    { he: "אֵין לִי מָקוֹם בַּתִּיק לְעוֹד סֵפֶר.", ru: "У меня нет места в сумке для еще одной книги.", cloze_token: "מָקוֹם" },
+    { he: "בַּכַּרְטִיסִים הָאֵלֶּה אֵין מְקוֹמוֹת מְסוּמָּנִים.", ru: "В этих билетах нет отмеченных мест.", cloze_token: "מְקוֹמוֹת" },
+    { he: "הַמָּקוֹם הַזֶּה מַזְכִּיר לִי אֶת הַיַּלְדוּת שֶׁלִּי.", ru: "Это место напоминает мне мое детство.", cloze_token: "הַמָּקוֹם" },
+    { he: "מָצָאנוּ מִסְעָדָה נֶהֱדֶרֶת בְּמָקוֹם שָׁקֵט בַּגָּלִיל.", ru: "Мы нашли отличный ресторан в тихом месте в Галилее.", cloze_token: "בְּמָקוֹם" },
+    { he: "טִיַּלְנוּ בְּהַרְבֵּה מְקוֹמוֹת יָפִים בְּאִיטַלְיָה.", ru: "Мы путешествовали по многим красивым местам в Италии.", cloze_token: "מְקוֹמוֹת" },
+    { he: "הַחֶבְרָה הַזֹּאת רוֹצָה לְהָקִים מִשְׂרָד חָדָשׁ בְּתֵל אָבִיב.", ru: "Эта компания хочет основать новый офис в Тель-Авиве.", cloze_token: "לְהָקִים" },
+    { he: "הֵם הֵקִימוּ אֶת הַקִּיבּוּץ לִפְנֵי שִׁשִּׁים שָׁנָה.", ru: "Они основали этот кибуц шестьдесят лет назад.", cloze_token: "הֵקִימוּ" },
+    { he: "הוּא מֵקִים אֲתַר אִינְטֶרְנֶט חָדָשׁ לָעֵסֶק שֶׁלּוֹ.", ru: "Он создает новый веб-сайт для своего бизнеса.", cloze_token: "מֵקִים" },
+    { he: "הַנָּשִׁים הָאֵלֶּה מְקִימוֹת עֲמוּתָה לְעֶזְרָה לַנִּזְקָקִים.", ru: "Эти женщины основывают благотворительную организацию для помощи нуждающимся.", cloze_token: "מְקִימוֹת" },
+    { he: "אֲנַחְנוּ נָקִים גִּנָּה קְהִלָּתִית בַּשְּׁכוּנָה שֶׁלָּנוּ.", ru: "Мы разобьем (создадим) общинный сад в нашем районе.", cloze_token: "נָקִים" },
+    { he: "הַסִּיכּוּי לִזְכּוֹת בַּפְּרָס הָרִאשׁוֹן קַיָּם, אַךְ נָמוּךְ מְאוֹד.", ru: "Шанс выиграть первый приз существует, но он очень мал.", cloze_token: "קַיָּם" },
+    { he: "הָאַפְשָׁרוּת הַזֹּאת קַיֶּמֶת, אֲבָל הִיא לֹא סְבִירָה.", ru: "Эта возможность существует, но она маловероятна.", cloze_token: "קַיֶּמֶת" },
+    { he: "הַחוּקִּים הַקַּיָּמִים כְּבָר לֹא מַתְאִימִים לַמְּצִיאוּת שֶׁל הַיּוֹם.", ru: "Существующие законы уже не соответствуют сегодняшней реальности.", cloze_token: "הַקַּיָּמִים" },
+    { he: "יֵשׁ הַרְבֵּה תֵּאוֹרְיוֹת קַיָּמוֹת לְהִתְפַּתְּחוּת הַיְּקוּם.", ru: "Существует много теорий развития Вселенной.", cloze_token: "קַיָּמוֹת" },
+    { he: "הַסִּכְסוּךְ הַזֶּה קַיָּם כְּבָר עַשְׂרוֹת שָׁנִים בָּאֵזוֹר.", ru: "Этот конфликт существует в регионе уже десятки лет.", cloze_token: "קַיָּם" },
+  ],
+};
+
+// Replay при каждой загрузке страницы: DATA собирается заново из корпуса
+// каждый раз, appendRootSentences() в рантайме — не персистентно само по
+// себе, поэтому уже пройденные корни нужно заново разложить в конец DATA
+// (тем же способом и в том же порядке, что и раньше на этом устройстве —
+// completedTheory меняется только через push в конец, см.
+// markRootTheoryDone и pullAndMerge ниже).
+progress.rootsCourse.completedTheory.forEach(rootId => {
+  if (ROOT_SENTENCES_DATA[rootId]) appendRootSentences(rootId, ROOT_SENTENCES_DATA[rootId]);
+});
+
+function rtExampleHtml(he, ru) {
+  return `<div class="rt-example">
+    <button class="rt-listen-btn" type="button" aria-label="Прослушать" data-he="${escapeHtml(he)}">🔊</button>
+    <span class="rt-example-text"><span class="he">${escapeHtml(he)}</span><span class="ru">${escapeHtml(ru)}</span></span>
+  </div>`;
+}
+
+function renderRootTheory(entry) {
+  const page = document.getElementById("rt-page");
+  const [l1, l2, l3] = entry.root.split("-");
+
+  const derivedHtml = entry.derived_words.map(w => `
+    <div class="rt-derived-card">
+      <div class="rt-derived-top">
+        <span class="rt-derived-word">${escapeHtml(w.word)}</span>
+        <span class="rt-derived-translation">${escapeHtml(w.translation)}</span>
+        <span class="rt-tag-row">${w.binyan ? `<span class="rt-tag binyan">${escapeHtml(w.binyan)}</span>` : ""}<span class="rt-tag">${escapeHtml(w.pos)}</span><span class="rt-tag">${escapeHtml(w.register)}</span></span>
+      </div>
+      ${w.usage_note ? `<p class="rt-usage-note">${escapeHtml(w.usage_note)}</p>` : ""}
+      ${rtExampleHtml(w.example_he, w.example_ru)}
+    </div>`).join("");
+
+  const phrasesHtml = entry.set_phrases.map(p => `
+    <div class="rt-phrase-chip">
+      <span class="he">${escapeHtml(p.phrase_he)}</span><span class="ru">${escapeHtml(p.phrase_ru)}</span>
+      ${p.note ? `<span class="note">${escapeHtml(p.note)}</span>` : ""}
+      ${rtExampleHtml(p.example_he, p.example_ru)}
+    </div>`).join("");
+
+  // common_collocation/song_or_quote_note приходят из пайплайна как
+  // обычные строки (не объекты), в отличие от modern_usage_note/
+  // place_or_name_note, у которых есть свои example_he/example_ru —
+  // приводим все четыре к одной форме {text, example_he?, example_ru?},
+  // чтобы рендерить единообразно.
+  const asNote = v => (typeof v === "string" ? { text: v } : v);
+  const cultureCards = [
+    ["В живой речи", asNote(entry.modern_usage_note)],
+    ["На карте", asNote(entry.place_or_name_note)],
+    ["Частое сочетание", asNote(entry.common_collocation)],
+  ].filter(([, note]) => note && note.text);
+  const songNote = asNote(entry.song_or_quote_note);
+  const cultureHtml = cultureCards.map(([label, note]) => `
+    <div class="rt-culture-card">
+      <span class="eyebrow">${escapeHtml(label)}</span>
+      <p>${escapeHtml(note.text)}</p>
+      ${note.example_he ? rtExampleHtml(note.example_he, note.example_ru) : ""}
+    </div>`).join("")
+    + (songNote && songNote.text ? `
+    <div class="rt-culture-card">
+      <span class="eyebrow">Песня / цитата</span>
+      <p>${escapeHtml(songNote.text)}</p>
+      <span class="caveat">атрибуция не сверена вручную</span>
+    </div>` : "");
+
+  const quizOptionsHtml = entry.comprehension_question.options.map((o, i) => `
+    <button class="rt-quiz-option" type="button" data-correct="${o.correct}">${escapeHtml(o.text)}</button>`).join("");
+
+  page.innerHTML = `
+    <div class="rt-context">
+      <span class="rt-badge">${entry.position}</span>
+      <div class="rt-context-info">
+        <span class="rt-context-label">Курс «Корни» · <b>${escapeHtml(entry.base)}</b> — ${entry.baseTotal} корней по частоте</span>
+        <div class="rt-progress-bar"><div style="width:${Math.round(entry.position / entry.baseTotal * 100)}%"></div></div>
+      </div>
+    </div>
+
+    <div class="rt-hero">
+      <div class="rt-letters">${escapeHtml(l1)}<span class="sep">–</span>${escapeHtml(l2)}<span class="sep">–</span>${escapeHtml(l3)}</div>
+      <p class="rt-thesis">${escapeHtml(entry.semantic_field)}</p>
+      ${entry.origin_note ? `<p class="rt-origin"><b>Происхождение:</b> ${escapeHtml(entry.origin_note)}</p>` : ""}
+    </div>
+
+    <div class="rt-section-head">
+      <h3>Слова этого корня</h3>
+      <span class="hint">только реально употребимые производные — не гипотетическая таблица по всем биньянам</span>
+    </div>
+    <div class="rt-derived-list">${derivedHtml}</div>
+
+    ${entry.girzah_note ? `
+    <div class="rt-girzah-card">
+      <span class="eyebrow">Особенность спряжения — ${escapeHtml(entry.girzah_note.type_label)}</span>
+      ${entry.girzah_note.compare && entry.girzah_note.compare.length ? `
+      <div class="rt-conj-compare">${entry.girzah_note.compare.map(c => `
+        <div class="rt-conj-cell">
+          <span class="binyan">${escapeHtml(c.binyan)}</span>
+          <span class="form">${escapeHtml(c.form)}</span>
+          <span class="note">${escapeHtml(c.note)}</span>
+        </div>`).join("")}
+      </div>` : ""}
+      <p>${escapeHtml(entry.girzah_note.text)}</p>
+    </div>` : ""}
+
+    ${entry.set_phrases.length ? `
+    <div class="rt-section-head"><h3>Устойчивые выражения</h3></div>
+    <div class="rt-phrase-row">${phrasesHtml}</div>` : ""}
+
+    ${cultureCards.length || (songNote && songNote.text) ? `
+    <div class="rt-section-head"><h3>Корень вокруг нас</h3></div>
+    <div class="rt-culture-grid">${cultureHtml}</div>` : ""}
+
+    ${entry.common_mistakes ? `
+    <div class="rt-mistake-callout">
+      <span class="eyebrow">Типичная ошибка</span>
+      <p>${escapeHtml(entry.common_mistakes)}</p>
+    </div>` : ""}
+
+    ${entry.divergence_note ? `<p class="rt-divergence">${escapeHtml(entry.divergence_note)}</p>` : ""}
+
+    <div class="rt-section-head"><h3>Проверьте себя</h3></div>
+    <div class="rt-quiz-card" id="rt-quiz">
+      <p class="rt-quiz-question">${escapeHtml(entry.comprehension_question.question)}</p>
+      <div class="rt-quiz-options">${quizOptionsHtml}</div>
+      <p class="rt-quiz-feedback" id="rt-quiz-feedback"></p>
+    </div>
+
+    <p class="rt-transition">${escapeHtml(entry.transition)}</p>
+    <div class="rt-cta-row">
+      <button class="action primary" id="rt-cta" disabled>Начать: ${ROOT_SENTENCES_DATA[entry.root] ? ROOT_SENTENCES_DATA[entry.root].length : 20} предложений с ${escapeHtml(entry.root)} →</button>
+      <span class="rt-cta-note" id="rt-cta-note">ответьте на вопрос выше, чтобы открыть практику</span>
+    </div>
+  `;
+
+  page.querySelectorAll(".rt-listen-btn").forEach(btn => {
+    btn.addEventListener("click", () => speak(btn.dataset.he, 0.9));
+  });
+
+  const cta = document.getElementById("rt-cta");
+  const ctaNote = document.getElementById("rt-cta-note");
+  const alreadyDone = progress.rootsCourse.completedTheory.includes(entry.root);
+
+  function unlockCta(noteText) {
+    cta.disabled = false;
+    ctaNote.textContent = noteText;
+  }
+
+  const quiz = document.getElementById("rt-quiz");
+  const quizFeedback = document.getElementById("rt-quiz-feedback");
+  const quizOptions = quiz.querySelectorAll(".rt-quiz-option");
+  if (alreadyDone) {
+    quizOptions.forEach(b => { b.disabled = true; if (b.dataset.correct === "true") b.classList.add("correct"); });
+    quizFeedback.textContent = "Теория этого корня уже пройдена.";
+  }
+  quizOptions.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const correct = btn.dataset.correct === "true";
+      quizOptions.forEach(b => { b.disabled = true; });
+      if (correct) {
+        btn.classList.add("correct");
+        quizFeedback.textContent = "Верно — это и есть частая ловушка новичков.";
+      } else {
+        btn.classList.add("wrong");
+        quizOptions.forEach(b => { if (b.dataset.correct === "true") b.classList.add("correct"); });
+        quizFeedback.textContent = "Не совсем — правильный вариант подсвечен зелёным.";
+      }
+      if (!alreadyDone) unlockCta("отлично — теперь можно перейти к предложениям");
+    });
+  });
+
+  if (alreadyDone) {
+    unlockCta("теория уже пройдена — предложения в пуле повторения");
+    cta.textContent = "✓ Пройдено — к дашборду";
+  }
+
+  cta.addEventListener("click", () => {
+    if (!alreadyDone) {
+      markRootTheoryDone(entry.root);
+      cta.textContent = "✓ Пройдено — к дашборду";
+      ctaNote.textContent = `Готово! ${(ROOT_SENTENCES_DATA[entry.root] || []).length} новых предложений добавлены в пул повторения.`;
+    }
+    showView(dashboardView);
+    renderDashboard();
   });
 }
 
@@ -1949,6 +2512,10 @@ const RUSSIAN_KEYMAP = {
 // virtual keys still happened to report the same event.code a physical
 // US keyboard would at that slot).
 const IS_TOUCH_DEVICE = navigator.maxTouchPoints > 0 || "ontouchstart" in window;
+// Подсказка про Enter/1-4 предполагает физическую клавиатуру — на тач-
+// устройстве этих клавиш нет (виртуальная клавиатура их не даёт напрямую),
+// подсказка там просто мусорная строка (отзыв с сайта, 2026-09-11).
+if (IS_TOUCH_DEVICE) document.getElementById("kbd-hint").style.display = "none";
 els.answer.addEventListener("keydown", (e) => {
   if (IS_TOUCH_DEVICE) return;
   const lang = els.answer.getAttribute("lang");
@@ -2568,8 +3135,9 @@ const dashboardView = document.getElementById("dashboard-view");
 const reviewArea = document.getElementById("review-area");
 const deckbasesView = document.getElementById("deckbases-view");
 const feedbackReviewView = document.getElementById("feedback-review-view");
+const rootTheoryView = document.getElementById("root-theory-view");
 function showView(view) {
-  [dashboardView, reviewArea, deckbasesView, feedbackReviewView].forEach(v => v.classList.add("hidden"));
+  [dashboardView, reviewArea, deckbasesView, feedbackReviewView, rootTheoryView].forEach(v => v.classList.add("hidden"));
   view.classList.remove("hidden");
 }
 document.getElementById("btn-dash-start").addEventListener("click", () => {
@@ -2585,6 +3153,14 @@ document.getElementById("btn-open-deckbases").addEventListener("click", () => {
   renderDeckBases();
 });
 document.getElementById("btn-deckbases-back").addEventListener("click", () => {
+  showView(dashboardView);
+  renderDashboard();
+});
+document.getElementById("btn-open-roots").addEventListener("click", () => {
+  showView(rootTheoryView);
+  renderRootTheory(ROOT_THEORY_DATA[0]);
+});
+document.getElementById("btn-roots-back").addEventListener("click", () => {
   showView(dashboardView);
   renderDashboard();
 });
@@ -2788,7 +3364,16 @@ async function pullCustomCards(uid) {
   if (cards.length) window.appendCustomCards(cards);
 }
 function metaPayload() {
-  return { meta: progress.meta, mistakesHe: progress.mistakesHe, mistakesRu: progress.mistakesRu, streak: progress.streak, pool: progress.pool };
+  return {
+    meta: progress.meta, mistakesHe: progress.mistakesHe, mistakesRu: progress.mistakesRu,
+    streak: progress.streak, pool: progress.pool,
+    // Только completedTheory — устройство-независимый список id корней.
+    // sentenceIndexByRoot НЕ синхронизируется намеренно: это чистые DATA-
+    // индексы этого конкретного устройства, на другом устройстве те же
+    // корни могли разблокироваться в другом порядке и получить другие
+    // индексы (см. комментарий у appendRootSentences).
+    rootsCourse: { completedTheory: progress.rootsCourse.completedTheory },
+  };
 }
 
 // These three override the no-op stubs defined in the main script (assigning
@@ -2928,6 +3513,18 @@ async function pullAndMerge(uid) {
     }
     if (remoteMeta.pool) progress.pool = remoteMeta.pool;
     if (remoteMeta.meta && remoteMeta.meta.dailyNewCap) progress.meta.dailyNewCap = remoteMeta.meta.dailyNewCap;
+    // Курс «Корни»: объединяем список пройденных корней (не перезаписываем,
+    // как pool выше, — а сливаем, чтобы не потерять то, что уже сделано на
+    // ЭТОМ устройстве, но ещё не долетело до сервера) и сразу же
+    // раскладываем в DATA всё, что подтянулось только что с сервера.
+    if (remoteMeta.rootsCourse && remoteMeta.rootsCourse.completedTheory) {
+      remoteMeta.rootsCourse.completedTheory.forEach(rootId => {
+        if (!progress.rootsCourse.completedTheory.includes(rootId)) {
+          progress.rootsCourse.completedTheory.push(rootId);
+          if (ROOT_SENTENCES_DATA[rootId]) appendRootSentences(rootId, ROOT_SENTENCES_DATA[rootId]);
+        }
+      });
+    }
   }
   saveProgress();
 

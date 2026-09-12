@@ -10,3 +10,6 @@ chunks.json
 anki_import.txt
 morasha_*.txt
 hebrew_trainer.html
+
+# Local tooling config — paths are session-specific, meaningless elsewhere
+.claude/
