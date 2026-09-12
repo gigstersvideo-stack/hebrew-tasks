@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.21.0
+  Ивритский тренажёр — v1.22.0
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -565,6 +565,35 @@
   .rt-transition { font-family: 'Source Serif 4', Georgia, serif; font-size: 0.98rem; color: var(--text-muted); line-height: 1.55; text-align: center; margin-top: 4px; }
   .rt-cta-row { display: flex; flex-direction: column; align-items: center; gap: 8px; padding-top: 2px; }
   .rt-cta-note { font-size: 0.76rem; color: var(--text-faint); }
+  .rt-loading { font-size: 0.85rem; color: var(--text-faint); padding: 24px 0; text-align: center; }
+
+  /* ---- растущий текст (между корнями, каждые 3) ---- */
+  .rt-gt-body { display: flex; flex-direction: column; gap: 2px; }
+  .rt-gt-sentence { display: flex; align-items: flex-start; gap: 8px; padding: 7px 0; border-bottom: 1px dashed var(--border); }
+  .rt-gt-sentence:last-child { border-bottom: none; }
+  .rt-gt-listen-btn {
+    flex-shrink: 0; margin-top: 1px; width: 26px; height: 26px; border-radius: 50%;
+    border: 1px solid var(--border); background: var(--surface-2); color: var(--accent-strong);
+    font-size: 0.72rem; line-height: 1; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; padding: 0;
+  }
+  .rt-gt-listen-btn:hover { background: var(--accent-soft); border-color: var(--accent-strong); }
+  .rt-gt-listen-btn.playing { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+  .rt-gt-text { flex: 1; min-width: 0; }
+  /* Атомарные инлайн-боксы (inline-flex/inline-block) в RTL-тексте браузер
+     иногда отрывает от строки при переносе (см. project memory про баг
+     значка "א" в читалке) — значок перевода здесь намеренно display:inline,
+     размер через padding/line-height, а не width/height. */
+  .rt-gt-he { font-family: 'Noto Sans Hebrew', serif; font-size: 1.05rem; color: var(--text); line-height: 1.85; direction: rtl; unicode-bidi: isolate; }
+  .rt-gt-toggle {
+    display: inline; direction: ltr; border-radius: 50%; margin: 0 0.3em;
+    border: 1px solid var(--border); background: var(--surface-2); color: var(--text-faint);
+    font-family: 'David Libre', 'Noto Sans Hebrew', serif; font-weight: 700; font-size: 0.7rem;
+    line-height: 1; padding: 0.38em 0.42em; cursor: pointer;
+  }
+  .rt-gt-toggle:hover { border-color: var(--accent-strong); color: var(--accent-strong); }
+  .rt-gt-ru { display: none; font-size: 0.82rem; color: var(--text-faint); margin-top: 3px; }
+  .rt-gt-sentence.show-ru .rt-gt-ru { display: block; }
 
   @media (max-width: 520px) {
     .rt-conj-compare, .rt-culture-grid { grid-template-columns: 1fr; }
@@ -798,7 +827,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.21.0</div>
+  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.22.0</div>
 </div>
 
 <script>
@@ -869,6 +898,7 @@ if (!progress.mistakesRu) progress.mistakesRu = {};
 if (!progress.streak) progress.streak = { lastDate: null, count: 0 };
 if (!progress.pool) progress.pool = { levels: [0, 1, 2, 3, 4], include: [], exclude: [] };
 if (!progress.rootsCourse) progress.rootsCourse = { completedTheory: [] };
+if (!progress.rootsCourse.completedGrowingTexts) progress.rootsCourse.completedGrowingTexts = [];
 // Migrating from SM-2 (had an `ease` field) to FSRS (difficulty/stability):
 // the two models aren't convertible, so the review schedule resets — but the
 // mistake journal, streak and settings carry over.
@@ -1265,11 +1295,11 @@ function appendRootSentences(rootId, sentences) {
 // replay-цикла ниже, который просто восстанавливает уже пройденное при
 // каждой загрузке страницы (DATA пересоздаётся с нуля при каждой загрузке,
 // поэтому без replay пройденные корни "терялись" бы после перезагрузки).
-function markRootTheoryDone(rootId) {
-  if (!progress.rootsCourse) progress.rootsCourse = { completedTheory: [] };
+function markRootTheoryDone(rootId, sentences) {
+  if (!progress.rootsCourse) progress.rootsCourse = { completedTheory: [], completedGrowingTexts: [] };
   if (progress.rootsCourse.completedTheory.includes(rootId)) return false;
   progress.rootsCourse.completedTheory.push(rootId);
-  appendRootSentences(rootId, ROOT_SENTENCES_DATA[rootId]);
+  appendRootSentences(rootId, sentences);
   if (!progress.pool.levels.includes(ROOTS_BASE1_LEVEL_CODE)) progress.pool.levels.push(ROOTS_BASE1_LEVEL_CODE);
   saveProgress();
   cloudSyncMeta();
@@ -1884,121 +1914,50 @@ function renderDeckBases() {
 }
 
 // ---- Курс «Корни» ----
-// Реальный вывод пайплайна (2026-09-12): generate_root_theory.py ->
-// theory_v6_kum.json, generate_root_sentences.py -> sentences_v1_kum.json
-// (оба — E:\ivrit, не в scratchpad). Пока один корень; по мере прогона
-// пайплайна на остальные ~199 корней базы 1 — просто добавлять новые
-// записи в оба массива, структуру не менять.
-const ROOT_THEORY_DATA = [
-  {
-    position: 10, baseTotal: 200, base: "База 1",
-    root: "ק-ו-ם",
-    semantic_field: "Этот корень уходит своими смыслами в идею вертикального положения, устойчивости и существования. Вокруг идеи «вставать», «подниматься» или «ставить на ноги» вращается большинство его глагольных форм. В более абстрактном смысле корень связан с созданием чего-то прочного, основанием (как бы «возведением» структуры), а также с самим фактом бытия и физическим пространством, которое человек или предмет занимает. Это один из самых продуктивных корней в иврите, пронизывающий и базовую бытовую лексику, и высокие философские понятия.",
-    origin_note: "корень восходит к прасемитскому источнику *ḳwm со значением «стоять, вставать», родственен арабскому глаголу «кама» (قام) с тем же значением.",
-    girzah_note: {
-      type_label: 'ע"ו (полый корень)',
-      compare: [
-        { binyan: "פָּעַל · прошедшее время", form: "קָם", note: "средний слабый корневой звук ו (вав) полностью выпадает на письме и в произношении (сравните с обычным כָּתַב, где все три согласные на месте)" },
-        { binyan: "הִפְעִיל · прошедшее время", form: "הֵקִים", note: "вместо стандартной приставки הִ- (как в הִכְתִּיב) появляется приставка הֵ-, а средний корневой звук заменяется на י (йод)" },
-      ],
-      text: "Этот корень относится к категории «полых» (ע\"ו), у которых средняя корневая буква — вав. В большинстве форм прошедшего и настоящего времени эта буква либо исчезает, сокращая основу слова, либо трансформируется в гласный звук, что требует особого внимания при спряжении.",
-    },
-    derived_words: [
-      {
-        word: "לָקוּם", binyan: "פָּעַל", pos: "глагол", translation: "вставать, подниматься", register: "очень частотное",
-        usage_note: "Используется как для физического подъёма (встать со стула), так и для утреннего пробуждения.",
-        example_he: "אֲנִי מְנַסֶּה לָקוּם כָּל יוֹם בְּשֵׁשׁ בַּבּוֹקֶר.", example_ru: "Я пытаюсь вставать каждый день в шесть утра.",
-      },
-      {
-        word: "מָקוֹם", binyan: "", pos: "существительное", translation: "место, пространство, сиденье", register: "очень частотное",
-        usage_note: "Не забывайте, что множественное число пишется как מְקוֹמוֹת. Несмотря на женское окончание, слово сохраняет мужской род.",
-        example_he: "אֵין לִי מָקוֹם בַּלּוּחַ הַזְּמַנִּים הַשָּׁבוּעִי.", example_ru: "У меня нет свободного места в недельном расписании.",
-      },
-      {
-        word: "לְהָקִים", binyan: "הִפְעִיל", pos: "глагол", translation: "основывать, учреждать, воздвигать", register: "обычное",
-        usage_note: "Применяется при создании организаций, компаний, стартапов, семей или строительстве памятников.",
-        example_he: "הֵם הֶחְלִיטוּ לְהָקִים חֶבְרָה חֲדָשָׁה בְּיַחַד.", example_ru: "Они решили основать новую компанию вместе.",
-      },
-      {
-        word: "קַיָּם", binyan: "", pos: "прилагательное", translation: "существующий, имеющийся в наличии", register: "обычное",
-        usage_note: "Означает реальное физическое или юридическое существование. Женский род: קַיֶּמֶת.",
-        example_he: "הַחוֹק הַזֶּה עֲדַיִן קַיָּם בִּמְדִינַת יִשְׂרָאֵל.", example_ru: "Этот закон всё ещё существует в Государстве Израиль.",
-      },
-    ],
-    set_phrases: [
-      {
-        phrase_he: "בִּמְקוֹם", phrase_ru: "вместо, взамен",
-        note: "популярный предлог, требующий после себя существительное или инфинитив глагола",
-        example_he: "שָׁתִיתִי תֵּה בִּמְקוֹם קָפֶה בַּבּוֹקֶר.", example_ru: "Утром я выпил чай вместо кофе.",
-      },
-      {
-        phrase_he: "לָקוּם לִתְחִיָּה", phrase_ru: "воскреснуть, возродиться к жизни",
-        note: "используется как буквально в религиозных текстах, так и метафорически (про проекты, идеи или районы города)",
-        example_he: "הַשְּׁכוּנָה הַיְּשָׁנָה הַזֹּאת קָמָה לִתְחִיָּה.", example_ru: "Этот старый район буквально возродился к жизни.",
-      },
-    ],
-    modern_usage_note: {
-      text: "В современном разговорном языке глагол לָקוּם часто используется в значении «проснуться и подняться с постели», а также в переносном смысле — преодолеть жизненные трудности («встать на ноги» после кризиса).",
-      example_he: "הוּא קָם עַל הָרַגְלַיִם מֵחָדָשׁ אַחֲרֵי כָּל הַצָּרוֹת.", example_ru: "Он снова встал на ноги после всех неприятностей.",
-    },
-    place_or_name_note: {
-      text: "קִבּוּץ יָקוּם (Кибуц Якум) в центральной части Израиля назван библейским словом יָקוּם (букв. «он восстанет / поднимется»), выражая идею национального и сельскохозяйственного возрождения.",
-      example_he: "קִבּוּץ יָקוּם נִמְצָא בְּאֵזוֹר הַשָּׁרוֹן.", example_ru: "Кибуц Якум находится в регионе Шарон.",
-    },
-    common_collocation: "בִּמְקוֹם זֶה (вместо этого) — чрезвычайно частое сочетание в повседневной речи для противопоставления действий.",
-    song_or_quote_note: "«קוּם וְהִתְהַלֵּךְ בָּאָרֶץ» (Встань и пройдись по этой земле) — знаменитая патриотическая песня Йорама Гаона на стихи Яакова Орланда, призывающая исследовать просторы страны.",
-    common_mistakes: "Основная ловушка — согласование слова מְקוֹמוֹת (места) с прилагательными. Из-за окончания -וֹת учащиеся часто ошибочно говорят מְקוֹמוֹת יָפוֹת вместо правильного מְקוֹמוֹת יָפִים. Также часто путают глагол לָקוּם (встать с постели, начать бодрствовать) и לְהִתְעוֹרֵר (физически проснуться, открыть глаза, но, возможно, остаться лежать).",
-    divergence_note: "слово בִּמְקוֹם (вместо) развилось из буквального «на месте кого-то». На первый взгляд связь с «вставать» неочевидна, но логика проста: один объект встаёт и физически занимает устойчивое место другого.",
-    comprehension_question: {
-      question: "В чём заключается главная грамматическая ловушка существительного מָקוֹם (место) во множественном числе?",
-      options: [
-        { text: "Оно меняет свой род во множественном числе на женский.", correct: false },
-        { text: "Оно принимает окончание женского рода -וֹת, но грамматически согласуется по мужскому роду (например, מְקוֹמוֹת יָפִים).", correct: true },
-        { text: "При добавлении окончания буква ק (куф) переходит в כ (каф) из-за чередования звуков.", correct: false },
-      ],
-    },
-    transition: "Теперь давай посмотрим, как этот важнейший корень работает в реальных словах и предложениях.",
-  },
-];
+// Порядок корней по частоте (root_frequency.json, позиции 1-200) —
+// определяет "текущий корень" (= позиция completedTheory.length+1) для
+// строго последовательного прохождения, как задумано в
+// ROOTS_CURRICULUM.md. Сами данные (теория+предложения на 200 корней,
+// ~2.9 МБ вместе — см. generate_root_theory.py/generate_root_sentences.py)
+// НЕ инлайнятся в скрипт, чтобы не раздувать template3.html — грузятся
+// один раз через fetch при первом открытии курса, см. loadRootsCourseData().
+// Должно совпадать с ROOTS_PER_CHECKPOINT в generate_root_growing_text.py.
+const ROOTS_PER_CHECKPOINT_HINT = 3;
+const ROOTS_ORDER = ["ה-י-ה", "ש-נ-ה", "י-ת-ר", "א-ח-ר", "ר-ב-ב", "ב-י-ת", "י-ו-ם", "ב-נ-ה", "ס-פ-ר", "ק-ו-ם", "ע-ו-ר", "י-ה-ד", "א-ר-ץ", "ג-ד-ל", "ד-ב-ר", "ע-ל-ם", "ד-ר-ך", "ב-ע-ל", "א-מ-ר", "ל-ח-ם", "י-ד-ד", "פ-נ-ה", "ח-ל-ל", "כ-ו-ח", "א-ד-ם", "י-ס-ף", "ש-מ-ש", "ז-מ-ן", "א-ו-פ-ן", "מ-א-ה", "ב-ר-ת", "ע-ב-ר", "ח-ד-ש", "כ-ל-ל", "י-מ-ם", "ר-א-ש", "י-ח-ד", "א-נ-ש", "פ-ו-ה", "י-כ-ל", "ה-ל-ך", "ע-ת-ת", "נ-ת-ן", "נ-ג-ד", "ר-א-ה", "ת-ו-ך", "ח-ל-ק", "מ-ש-ל", "א-ל-ם", "ק-ר-ב", "נ-ס-ף", "מ-ש-ך", "ד-י-ן", "מ-נ-ה", "ע-צ-ה", "נ-ג-ע", "צ-ב-א", "ש-ח-ק", "מ-י-ם", "ע-ק-ר", "פ-ע-ם", "ע-ש-ה", "ע-ק-ב", "ע-ל-ה", "כ-ו-ן", "מ-י-ן", "ס-ו-פ", "ח-י-י", "ע-צ-ם", "ר-ג-ן", "ש-ו-ב", "ב-ו-א", "א-ז-ר", "ח-י-ל", "א-י-ש", "מ-צ-ע", "ק-ו-ף", "ח-ב-ר", "פ-ע-ל", "ת-כ-ן", "ח-ו-ץ", "ח-י-ה", "ק-ב-ץ", "ש-ו-ם", "ר-ח-ב", "י-צ-א", "ק-ב-ל", "י-ד-ע", "מ-צ-א", "צ-ל-ח", "ג-נ-ן", "ז-כ-ה", "כ-ל-ה", "ט-ו-ב", "ד-ו-ן", "ל-ב-ד", "ג-ו-ף", "נ-ו-ע", "א-ר-ך", "י-ד-י", "ר-ב-ה", "א-ב-ב", "צ-ד-ד", "מ-ו-ת", "ר-י-ב", "פ-ל-ג", "ק-ש-ר", "ת-ל-ל", "נ-ק-פ", "ע-ר-ך", "פ-ש-ר", "א-ו-י", "מ-ע-ט", "ר-כ-ז", "ת-ח-ל", "י-ע-ר", "ש-פ-ט", "צ-ו-ר", "ד-ג-ל", "ח-ש-ב", "ק-ו-פ", "ד-מ-ה", "ס-ג-ר", "ע-ר-כ", "ס-י-ם", "ע-נ-י-ן", "כ-ת-ב", "ג-ב-ה", "ק-ט-ן", "ש-ט-ח", "ק-ר-א", "ס-ר-ט", "מ-ל-ך", "ש-כ-ן", "י-ע-ץ", "ק-ש-ה", "ש-ל-ט", "צ-ר-ך", "ח-י-ד-ק", "ה-ר-ר", "ב-י-ן", "י-ח-ס", "א-ל-ה", "ע-מ-ם", "מ-ר-ד", "ס-ב-ב", "ל-ב-ב", "ד-ג-ם", "ע-נ-ה", "ב-ר-ה", "ע-מ-ד", "צ-פ-ן", "ה-נ-ד-ס", "ק-ד-ם", "ק-ה-ל", "ב-ח-ן", "א-ב-ן", "ז-ו-ן", "ה-פ-ך", "ק-ו-ה", "ב-ח-ר", "ש-ל-ש-ל", "ר-ק-ע", "ס-פ-ן", "ס-ו-ף", "ע-ז-ר", "נ-ש-ק", "פ-ח-ת", "ד-מ-ם", "ש-מ-ה", "ח-מ-ר", "י-ט-ב", "ק-י-ס-ר", "ר-צ-ה", "י-צ-ב", "כ-נ-ס", "ע-מ-ת", "ת-מ-ד", "ש-י-ם", "ש-ל-ב", "ר-ו-ח", "א-ר-ג-ן", "ק-צ-ר", "ב-ס-ס", "י-ש-ב", "ז-ק-ן", "נ-מ-ל", "ס-מ-ם", "ס-ד-ר", "א-ו-ר", "י-ד-ה", "מ-ל-ל", "י-צ-ר", "א-ש-כ-ל", "ג-ל-ל", "ב-ר-ר", "כ-פ-ר", "מ-ש-ש", "ר-מ-ן", "ע-ב-ד"];
 
-// generate_root_sentences.py -> sentences_v1_kum.json (20/20, чисто:
-// 0 нарушений כתיב מלא, 0 дублей с корпусом тренажёра при прогоне
-// 2026-09-12). cloze_token — точная форма фокус-слова в этом
-// предложении, для упражнения на пропуск слова.
-const ROOT_SENTENCES_DATA = {
-  "ק-ו-ם": [
-    { he: "הַיְּלָדִים קָמוּ מוּקְדָּם בַּבּוֹקֶר כְּדֵי לָלֶכֶת לַטִּיּוּל.", ru: "Дети встали рано утром, чтобы пойти в поход.", cloze_token: "קָמוּ" },
-    { he: "אֲנִי אָקוּם מָחָר בְּשֵׁשׁ כְּדֵי לְהַסְפִּיק לָרַכֶּבֶת.", ru: "Я встану завтра в шесть, чтобы успеть на поезд.", cloze_token: "אָקוּם" },
-    { he: "קָשֶׁה לִי לָקוּם מֵהַמִּטָּה כְּשֶׁקַּר בַּחוּץ.", ru: "Мне трудно вставать с постели, когда на улице холодно.", cloze_token: "לָקוּם" },
-    { he: "הִיא תָּמִיד קָמָה עִם חִיּוּךְ עַל הַפָּנִים.", ru: "Она всегда встает с улыбкой на лице.", cloze_token: "קָמָה" },
-    { he: "הַחַיָּלִים קָמִים מִיָּד כְּשֶׁהַמְּפַקֵּד נִכְנָס לַחֶדֶר.", ru: "Солдаты сразу встают, когда командир входит в комнату.", cloze_token: "קָמִים" },
-    { he: "אֵין לִי מָקוֹם בַּתִּיק לְעוֹד סֵפֶר.", ru: "У меня нет места в сумке для еще одной книги.", cloze_token: "מָקוֹם" },
-    { he: "בַּכַּרְטִיסִים הָאֵלֶּה אֵין מְקוֹמוֹת מְסוּמָּנִים.", ru: "В этих билетах нет отмеченных мест.", cloze_token: "מְקוֹמוֹת" },
-    { he: "הַמָּקוֹם הַזֶּה מַזְכִּיר לִי אֶת הַיַּלְדוּת שֶׁלִּי.", ru: "Это место напоминает мне мое детство.", cloze_token: "הַמָּקוֹם" },
-    { he: "מָצָאנוּ מִסְעָדָה נֶהֱדֶרֶת בְּמָקוֹם שָׁקֵט בַּגָּלִיל.", ru: "Мы нашли отличный ресторан в тихом месте в Галилее.", cloze_token: "בְּמָקוֹם" },
-    { he: "טִיַּלְנוּ בְּהַרְבֵּה מְקוֹמוֹת יָפִים בְּאִיטַלְיָה.", ru: "Мы путешествовали по многим красивым местам в Италии.", cloze_token: "מְקוֹמוֹת" },
-    { he: "הַחֶבְרָה הַזֹּאת רוֹצָה לְהָקִים מִשְׂרָד חָדָשׁ בְּתֵל אָבִיב.", ru: "Эта компания хочет основать новый офис в Тель-Авиве.", cloze_token: "לְהָקִים" },
-    { he: "הֵם הֵקִימוּ אֶת הַקִּיבּוּץ לִפְנֵי שִׁשִּׁים שָׁנָה.", ru: "Они основали этот кибуц шестьдесят лет назад.", cloze_token: "הֵקִימוּ" },
-    { he: "הוּא מֵקִים אֲתַר אִינְטֶרְנֶט חָדָשׁ לָעֵסֶק שֶׁלּוֹ.", ru: "Он создает новый веб-сайт для своего бизнеса.", cloze_token: "מֵקִים" },
-    { he: "הַנָּשִׁים הָאֵלֶּה מְקִימוֹת עֲמוּתָה לְעֶזְרָה לַנִּזְקָקִים.", ru: "Эти женщины основывают благотворительную организацию для помощи нуждающимся.", cloze_token: "מְקִימוֹת" },
-    { he: "אֲנַחְנוּ נָקִים גִּנָּה קְהִלָּתִית בַּשְּׁכוּנָה שֶׁלָּנוּ.", ru: "Мы разобьем (создадим) общинный сад в нашем районе.", cloze_token: "נָקִים" },
-    { he: "הַסִּיכּוּי לִזְכּוֹת בַּפְּרָס הָרִאשׁוֹן קַיָּם, אַךְ נָמוּךְ מְאוֹד.", ru: "Шанс выиграть первый приз существует, но он очень мал.", cloze_token: "קַיָּם" },
-    { he: "הָאַפְשָׁרוּת הַזֹּאת קַיֶּמֶת, אֲבָל הִיא לֹא סְבִירָה.", ru: "Эта возможность существует, но она маловероятна.", cloze_token: "קַיֶּמֶת" },
-    { he: "הַחוּקִּים הַקַּיָּמִים כְּבָר לֹא מַתְאִימִים לַמְּצִיאוּת שֶׁל הַיּוֹם.", ru: "Существующие законы уже не соответствуют сегодняшней реальности.", cloze_token: "הַקַּיָּמִים" },
-    { he: "יֵשׁ הַרְבֵּה תֵּאוֹרְיוֹת קַיָּמוֹת לְהִתְפַּתְּחוּת הַיְּקוּם.", ru: "Существует много теорий развития Вселенной.", cloze_token: "קַיָּמוֹת" },
-    { he: "הַסִּכְסוּךְ הַזֶּה קַיָּם כְּבָר עַשְׂרוֹת שָׁנִים בָּאֵזוֹר.", ru: "Этот конфликт существует в регионе уже десятки лет.", cloze_token: "קַיָּם" },
-  ],
-};
+let rootsCourseDataPromise = null;
+function loadRootsCourseData() {
+  if (!rootsCourseDataPromise) {
+    rootsCourseDataPromise = Promise.all([
+      fetch("root_theory_all.json").then(r => r.json()),
+      fetch("root_sentences_all.json").then(r => r.json()),
+    ]).then(([theoryList, sentencesList]) => {
+      const theoryByRoot = {};
+      theoryList.forEach(t => { theoryByRoot[t.root] = t; });
+      const sentencesByRoot = {};
+      sentencesList.forEach(s => { sentencesByRoot[s.root] = s.sentences; });
+      return { theoryByRoot, sentencesByRoot };
+    });
+  }
+  return rootsCourseDataPromise;
+}
 
 // Replay при каждой загрузке страницы: DATA собирается заново из корпуса
 // каждый раз, appendRootSentences() в рантайме — не персистентно само по
 // себе, поэтому уже пройденные корни нужно заново разложить в конец DATA
 // (тем же способом и в том же порядке, что и раньше на этом устройстве —
 // completedTheory меняется только через push в конец, см.
-// markRootTheoryDone и pullAndMerge ниже).
-progress.rootsCourse.completedTheory.forEach(rootId => {
-  if (ROOT_SENTENCES_DATA[rootId]) appendRootSentences(rootId, ROOT_SENTENCES_DATA[rootId]);
-});
+// markRootTheoryDone и pullAndMerge ниже). Асинхронно и только если есть
+// что реплеить — пользователь, который ни разу не открывал курс, не
+// платит fetch'ем 2.9 МБ на ровном месте при каждой загрузке тренажёра.
+if (progress.rootsCourse.completedTheory.length) {
+  loadRootsCourseData().then(({ sentencesByRoot }) => {
+    progress.rootsCourse.completedTheory.forEach(rootId => {
+      if (sentencesByRoot[rootId]) appendRootSentences(rootId, sentencesByRoot[rootId]);
+    });
+    updateStatsBar();
+  });
+}
 
 function rtExampleHtml(he, ru) {
   return `<div class="rt-example">
@@ -2007,7 +1966,7 @@ function rtExampleHtml(he, ru) {
   </div>`;
 }
 
-function renderRootTheory(entry) {
+function renderRootTheory(entry, sentences) {
   const page = document.getElementById("rt-page");
   const [l1, l2, l3] = entry.root.split("-");
 
@@ -2019,7 +1978,7 @@ function renderRootTheory(entry) {
         <span class="rt-tag-row">${w.binyan ? `<span class="rt-tag binyan">${escapeHtml(w.binyan)}</span>` : ""}<span class="rt-tag">${escapeHtml(w.pos)}</span><span class="rt-tag">${escapeHtml(w.register)}</span></span>
       </div>
       ${w.usage_note ? `<p class="rt-usage-note">${escapeHtml(w.usage_note)}</p>` : ""}
-      ${rtExampleHtml(w.example_he, w.example_ru)}
+      ${(w.examples || []).map(ex => rtExampleHtml(ex.he, ex.ru)).join("")}
     </div>`).join("");
 
   const phrasesHtml = entry.set_phrases.map(p => `
@@ -2054,8 +2013,8 @@ function renderRootTheory(entry) {
       <span class="caveat">атрибуция не сверена вручную</span>
     </div>` : "");
 
-  const quizOptionsHtml = entry.comprehension_question.options.map((o, i) => `
-    <button class="rt-quiz-option" type="button" data-correct="${o.correct}">${escapeHtml(o.text)}</button>`).join("");
+  const quizOptionsHtml = entry.comprehension_question.options.map((optionText, i) => `
+    <button class="rt-quiz-option" type="button" data-correct="${i === entry.comprehension_question.correct_index}">${escapeHtml(optionText)}</button>`).join("");
 
   page.innerHTML = `
     <div class="rt-context">
@@ -2117,7 +2076,7 @@ function renderRootTheory(entry) {
 
     <p class="rt-transition">${escapeHtml(entry.transition)}</p>
     <div class="rt-cta-row">
-      <button class="action primary" id="rt-cta" disabled>Начать: ${ROOT_SENTENCES_DATA[entry.root] ? ROOT_SENTENCES_DATA[entry.root].length : 20} предложений с ${escapeHtml(entry.root)} →</button>
+      <button class="action primary" id="rt-cta" disabled>Начать: ${(sentences || []).length} предложений с ${escapeHtml(entry.root)} →</button>
       <span class="rt-cta-note" id="rt-cta-note">ответьте на вопрос выше, чтобы открыть практику</span>
     </div>
   `;
@@ -2160,18 +2119,107 @@ function renderRootTheory(entry) {
 
   if (alreadyDone) {
     unlockCta("теория уже пройдена — предложения в пуле повторения");
-    cta.textContent = "✓ Пройдено — к дашборду";
+    cta.textContent = "Дальше →";
   }
 
   cta.addEventListener("click", () => {
     if (!alreadyDone) {
-      markRootTheoryDone(entry.root);
-      cta.textContent = "✓ Пройдено — к дашборду";
-      ctaNote.textContent = `Готово! ${(ROOT_SENTENCES_DATA[entry.root] || []).length} новых предложений добавлены в пул повторения.`;
+      markRootTheoryDone(entry.root, sentences);
+      cta.textContent = "Дальше →";
+      ctaNote.textContent = `Готово! ${(sentences || []).length} новых предложений добавлены в пул повторения.`;
     }
-    showView(dashboardView);
-    renderDashboard();
+    openRootsCourseScreen();
   });
+}
+
+// Определяет, что показать при открытии/продолжении курса — растущий
+// текст (если только что пройден кратный 3 корень и текст ещё не
+// показан) или теорию следующего по частоте корня; строго
+// последовательно, без свободного выбора, как решили при обсуждении
+// дизайна (ROOTS_CURRICULUM.md).
+function openRootsCourseScreen() {
+  showView(rootTheoryView);
+  const page = document.getElementById("rt-page");
+  const position = progress.rootsCourse.completedTheory.length; // 0-based = сколько корней уже пройдено
+  if (position > 0 && position % ROOTS_PER_CHECKPOINT_HINT === 0) {
+    const checkpoint = position / ROOTS_PER_CHECKPOINT_HINT;
+    if (!progress.rootsCourse.completedGrowingTexts.includes(checkpoint)) {
+      renderGrowingTextScreen(checkpoint);
+      return;
+    }
+  }
+  if (position >= ROOTS_ORDER.length) {
+    page.innerHTML = `
+      <div class="rt-section-head"><h3>🎉 База 1 пройдена полностью</h3>
+        <span class="hint">Все ${ROOTS_ORDER.length} корней и растущие тексты — позади. Дальше — обычная практика в общем пуле.</span>
+      </div>`;
+    return;
+  }
+  page.innerHTML = '<p class="rt-loading">Загрузка теории корня…</p>';
+  loadRootsCourseData().then(({ theoryByRoot, sentencesByRoot }) => {
+    const root = ROOTS_ORDER[position];
+    const entry = Object.assign({ position: position + 1, baseTotal: ROOTS_ORDER.length, base: "База 1" }, theoryByRoot[root]);
+    renderRootTheory(entry, sentencesByRoot[root]);
+  });
+}
+
+// Растущий текст между корнями (каждые ROOTS_PER_CHECKPOINT_HINT корней)
+// — см. generate_root_growing_text.py/ROOTS_CURRICULUM.md. В отличие от
+// теории/предложений это НЕ инлайн и НЕ предзагружается со всем курсом
+// разом — аудио на все 66 чекпоинтов весит 127 МБ, качаем только тот
+// чекпоинт, до которого реально дошли.
+function renderGrowingTextScreen(checkpoint) {
+  const page = document.getElementById("rt-page");
+  page.innerHTML = '<p class="rt-loading">Загрузка растущего текста…</p>';
+  const cpStr = String(checkpoint).padStart(2, "0");
+  fetch(`growing_texts/checkpoint_${cpStr}_audio.json`)
+    .then(r => r.json())
+    .then(data => {
+      const sentencesHtml = data.sentences.map((s, i) => {
+        const heText = s.words.map(w => w.t).join(" ");
+        return `
+        <div class="rt-gt-sentence" data-idx="${i}">
+          <button class="rt-gt-listen-btn" type="button" aria-label="Прослушать" data-audio="growing_texts/${escapeHtml(s.audio)}">🔊</button>
+          <span class="rt-gt-text">
+            <bdi class="rt-gt-he">${escapeHtml(heText)}<button class="rt-gt-toggle" type="button" aria-label="Показать перевод">א</button></bdi>
+            <div class="rt-gt-ru">${escapeHtml(s.ru)}</div>
+          </span>
+        </div>`;
+      }).join("");
+      page.innerHTML = `
+        <div class="rt-section-head">
+          <h3>📖 ${escapeHtml(data.title)}</h3>
+          <span class="hint">Растущий текст ${checkpoint} — использует в основном слова уже пройденных корней (нажмите «א», чтобы увидеть перевод предложения).</span>
+        </div>
+        <div class="rt-gt-body">${sentencesHtml}</div>
+        <div class="rt-cta-row">
+          <button class="action primary" id="rt-gt-continue">Дальше →</button>
+        </div>
+      `;
+      page.querySelectorAll(".rt-gt-toggle").forEach(btn => {
+        btn.addEventListener("click", () => btn.closest(".rt-gt-sentence").classList.toggle("show-ru"));
+      });
+      page.querySelectorAll(".rt-gt-listen-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          page.querySelectorAll(".rt-gt-listen-btn.playing").forEach(b => b.classList.remove("playing"));
+          const audio = new Audio(btn.dataset.audio);
+          btn.classList.add("playing");
+          audio.addEventListener("ended", () => btn.classList.remove("playing"));
+          audio.play().catch(() => btn.classList.remove("playing"));
+        });
+      });
+      document.getElementById("rt-gt-continue").addEventListener("click", () => {
+        if (!progress.rootsCourse.completedGrowingTexts.includes(checkpoint)) {
+          progress.rootsCourse.completedGrowingTexts.push(checkpoint);
+          saveProgress();
+          cloudSyncMeta();
+        }
+        openRootsCourseScreen();
+      });
+    })
+    .catch(() => {
+      page.innerHTML = '<p class="rt-loading">Не получилось загрузить текст — попробуйте ещё раз чуть позже.</p>';
+    });
 }
 
 // ---- card rendering ----
@@ -3157,8 +3205,7 @@ document.getElementById("btn-deckbases-back").addEventListener("click", () => {
   renderDashboard();
 });
 document.getElementById("btn-open-roots").addEventListener("click", () => {
-  showView(rootTheoryView);
-  renderRootTheory(ROOT_THEORY_DATA[0]);
+  openRootsCourseScreen();
 });
 document.getElementById("btn-roots-back").addEventListener("click", () => {
   showView(dashboardView);
@@ -3372,7 +3419,7 @@ function metaPayload() {
     // индексы этого конкретного устройства, на другом устройстве те же
     // корни могли разблокироваться в другом порядке и получить другие
     // индексы (см. комментарий у appendRootSentences).
-    rootsCourse: { completedTheory: progress.rootsCourse.completedTheory },
+    rootsCourse: { completedTheory: progress.rootsCourse.completedTheory, completedGrowingTexts: progress.rootsCourse.completedGrowingTexts },
   };
 }
 
@@ -3518,11 +3565,18 @@ async function pullAndMerge(uid) {
     // ЭТОМ устройстве, но ещё не долетело до сервера) и сразу же
     // раскладываем в DATA всё, что подтянулось только что с сервера.
     if (remoteMeta.rootsCourse && remoteMeta.rootsCourse.completedTheory) {
-      remoteMeta.rootsCourse.completedTheory.forEach(rootId => {
-        if (!progress.rootsCourse.completedTheory.includes(rootId)) {
+      const newRootIds = remoteMeta.rootsCourse.completedTheory.filter(rootId => !progress.rootsCourse.completedTheory.includes(rootId));
+      if (newRootIds.length) {
+        const { sentencesByRoot } = await loadRootsCourseData();
+        newRootIds.forEach(rootId => {
           progress.rootsCourse.completedTheory.push(rootId);
-          if (ROOT_SENTENCES_DATA[rootId]) appendRootSentences(rootId, ROOT_SENTENCES_DATA[rootId]);
-        }
+          if (sentencesByRoot[rootId]) appendRootSentences(rootId, sentencesByRoot[rootId]);
+        });
+      }
+    }
+    if (remoteMeta.rootsCourse && remoteMeta.rootsCourse.completedGrowingTexts) {
+      remoteMeta.rootsCourse.completedGrowingTexts.forEach(cp => {
+        if (!progress.rootsCourse.completedGrowingTexts.includes(cp)) progress.rootsCourse.completedGrowingTexts.push(cp);
       });
     }
   }
