@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.22.2
+  Ивритский тренажёр — v1.22.3
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -827,7 +827,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.22.2</div>
+  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.22.3</div>
 </div>
 
 <script>
@@ -2344,9 +2344,13 @@ function loadCard() {
   const lv = LEVELS[d.l];
   els.eyebrow.textContent = wasNew ? "Новая фраза" : "Повторение";
   if (rootPracticeSession) {
+    // Не сбрасываем сессию здесь, даже когда очередь уже пуста (это
+    // последняя карточка) — commitAndAdvance() ниже использует опустевшую
+    // очередь как сигнал "сессия только что закончилась" и уводит на
+    // следующий корень курса; если обнулить тут, к моменту оценки этой
+    // самой карточки сигнал был бы уже потерян.
     const current = rootPracticeSession.total - rootPracticeSession.queue.length;
     els.eyebrow.textContent = `Корень «${rootPracticeSession.rootId}» · ${current}/${rootPracticeSession.total}`;
-    if (!rootPracticeSession.queue.length) rootPracticeSession = null;
   }
   els.modeBadge.textContent = MODES[currentMode].label;
   els.badge.textContent = `${lv.sym} · ${lv.label}`;
@@ -2558,6 +2562,16 @@ function commitAndAdvance(quality) {
   cloudSyncCard(key, progress.items[key]);
   cloudSyncMeta();
   updateStatsBar();
+  if (rootPracticeSession && !rootPracticeSession.queue.length) {
+    // Только что оценена ПОСЛЕДНЯЯ карточка выделенной сессии по корню —
+    // ведём дальше по курсу (следующий корень/растущий текст), а не в
+    // обычный пул, как раньше молчаливо получалось (отзыв с сайта,
+    // 2026-09-13: "после прохождения предложений должно вести на новый
+    // корень").
+    rootPracticeSession = null;
+    openRootsCourseScreen();
+    return;
+  }
   loadCard();
 }
 
