@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.22.0
+  Ивритский тренажёр — v1.22.1
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -827,7 +827,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.22.0</div>
+  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.22.1</div>
 </div>
 
 <script>
@@ -3692,6 +3692,12 @@ onAuthStateChanged(fbAuth, async (user) => {
     } else {
       feedbackBtn.classList.add("hidden");
     }
+    // Дашборд уже отрисован (renderDashboard() на загрузке страницы, до
+    // входа) по локальному progress.pool — если облако только что
+    // перезаписало его реальными активными базами (pullAndMerge выше),
+    // без этого повторного вызова плитки остались бы от старого набора
+    // до следующей ручной навигации на дашборд (отзыв с сайта, 2026-09-12).
+    renderDashboard();
     updateStatsBar();
     loadCard();
     updateCloudStatusIndicator();

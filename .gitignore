@@ -13,3 +13,7 @@ hebrew_trainer.html
 
 # Local tooling config — paths are session-specific, meaningless elsewhere
 .claude/
+
+# Firebase service account key — grants admin access, never commit
+firebase-service-account.json
+*firebase-adminsdk*.json
