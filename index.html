@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.22.3
+  Ивритский тренажёр — v1.22.4
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -121,6 +121,13 @@
     text-decoration: underline; text-underline-offset: 2px; cursor: pointer; padding: 4px 2px; font-family: inherit;
   }
   .link-btn:hover { color: var(--text); }
+  .link-btn:disabled { opacity: 0.35; cursor: default; text-decoration: none; }
+  .link-btn:disabled:hover { color: var(--text-muted); }
+
+  .rt-nav { display: flex; align-items: baseline; gap: 10px; }
+  .rt-progress-label { font-size: 0.76rem; color: var(--text-faint); white-space: nowrap; }
+  .rt-progress-bar { height: 4px; border-radius: 2px; background: var(--surface-2); overflow: hidden; margin-top: 8px; }
+  .rt-progress-bar > div { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.2s ease; }
 
   .panel {
     display: none; background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
@@ -684,8 +691,13 @@
   <div class="hidden" id="root-theory-view">
     <div class="deckbases-hdr">
       <h2>📖 Курс «Корни»</h2>
+      <div class="rt-nav">
+        <button class="link-btn" id="btn-roots-prev">← Назад</button>
+        <span class="rt-progress-label" id="rt-progress-label"></span>
+      </div>
       <button class="link-btn" id="btn-roots-back">🏠 Обзор</button>
     </div>
+    <div class="rt-progress-bar"><div id="rt-progress-fill" style="width:0%"></div></div>
     <div class="rt-page" id="rt-page"></div>
   </div>
 
@@ -827,7 +839,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.22.3</div>
+  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.22.4</div>
 </div>
 
 <script>
@@ -2159,25 +2171,48 @@ function renderRootTheory(entry, sentences) {
       loadCard();
       return;
     }
-    openRootsCourseScreen();
+    // entry.position (1-indexed) === следующая 0-indexed позиция — при
+    // пересмотре уже пройденного корня (position < фронта) ведёт на
+    // следующий ШАГ отсюда, а не прыгает на живой фронт курса (как было
+    // бы при вызове без аргумента).
+    openRootsCourseScreen(entry.position);
   });
 }
 
+// Текущая позиция, показанная на экране курса (0-based) — нужна кнопке
+// "← Назад", которая живёт в постоянной шапке (не перерисовывается вместе
+// с rt-page), чтобы знать, откуда шагнуть на 1 назад.
+let rootsCoursePosition = 0;
+
+function updateRootsCourseNav(position) {
+  rootsCoursePosition = position;
+  const total = ROOTS_ORDER.length;
+  const done = progress.rootsCourse.completedTheory.length;
+  document.getElementById("rt-progress-label").textContent = `Пройдено ${done} из ${total} корней`;
+  document.getElementById("rt-progress-fill").style.width = `${Math.round(100 * done / total)}%`;
+  document.getElementById("btn-roots-prev").disabled = position <= 0;
+}
+
 // Определяет, что показать при открытии/продолжении курса — растущий
-// текст (если только что пройден кратный 3 корень и текст ещё не
-// показан) или теорию следующего по частоте корня; строго
-// последовательно, без свободного выбора, как решили при обсуждении
-// дизайна (ROOTS_CURRICULUM.md).
-function openRootsCourseScreen() {
+// текст (если позиция кратна 3) или теорию корня по этой позиции;
+// строго последовательное прохождение вперёд (без свободного выбора,
+// как решили при обсуждении дизайна, ROOTS_CURRICULUM.md) — но НАЗАД
+// можно пересматривать что угодно из уже пройденного (отзыв с сайта,
+// 2026-09-13: "хочется навигации по курсу чтобы можно было бы вернуться
+// назад и видеть какой объём пройден а сколько осталось"). Позиция —
+// необязательный параметр: без него всегда открывает актуальный фронт
+// прогресса (как и раньше), с явным числом — конкретный шаг курса для
+// пересмотра (что уже пройдено — просто в режиме "только чтение", см.
+// alreadyDone в renderRootTheory/идемпотентный push в renderGrowingTextScreen).
+function openRootsCourseScreen(position) {
   showView(rootTheoryView);
   const page = document.getElementById("rt-page");
-  const position = progress.rootsCourse.completedTheory.length; // 0-based = сколько корней уже пройдено
-  if (position > 0 && position % ROOTS_PER_CHECKPOINT_HINT === 0) {
+  if (position === undefined) position = progress.rootsCourse.completedTheory.length;
+  updateRootsCourseNav(position);
+  if (position > 0 && position % ROOTS_PER_CHECKPOINT_HINT === 0 && position <= progress.rootsCourse.completedTheory.length) {
     const checkpoint = position / ROOTS_PER_CHECKPOINT_HINT;
-    if (!progress.rootsCourse.completedGrowingTexts.includes(checkpoint)) {
-      renderGrowingTextScreen(checkpoint);
-      return;
-    }
+    renderGrowingTextScreen(checkpoint, position);
+    return;
   }
   if (position >= ROOTS_ORDER.length) {
     page.innerHTML = `
@@ -2199,7 +2234,7 @@ function openRootsCourseScreen() {
 // теории/предложений это НЕ инлайн и НЕ предзагружается со всем курсом
 // разом — аудио на все 66 чекпоинтов весит 127 МБ, качаем только тот
 // чекпоинт, до которого реально дошли.
-function renderGrowingTextScreen(checkpoint) {
+function renderGrowingTextScreen(checkpoint, position) {
   const page = document.getElementById("rt-page");
   page.innerHTML = '<p class="rt-loading">Загрузка растущего текста…</p>';
   const cpStr = String(checkpoint).padStart(2, "0");
@@ -2245,7 +2280,11 @@ function renderGrowingTextScreen(checkpoint) {
           saveProgress();
           cloudSyncMeta();
         }
-        openRootsCourseScreen();
+        // position+1, не просто openRootsCourseScreen() без аргумента —
+        // при пересмотре УЖЕ пройденного текста (position < фронта
+        // прогресса) "Дальше" должен идти на следующий ШАГ именно отсюда,
+        // а не прыгать сразу на живой фронт курса.
+        openRootsCourseScreen(position + 1);
       });
     })
     .catch(() => {
@@ -3260,6 +3299,9 @@ document.getElementById("btn-open-roots").addEventListener("click", () => {
 document.getElementById("btn-roots-back").addEventListener("click", () => {
   showView(dashboardView);
   renderDashboard();
+});
+document.getElementById("btn-roots-prev").addEventListener("click", () => {
+  if (rootsCoursePosition > 0) openRootsCourseScreen(rootsCoursePosition - 1);
 });
 
 // ---- Feedback: in-app bug/suggestion form (no GitHub account needed) +
