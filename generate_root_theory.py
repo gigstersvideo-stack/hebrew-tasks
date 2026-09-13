@@ -19,10 +19,8 @@ ROOTS_CURRICULUM.md), опциональная мнемоника, перехо�
 import argparse
 import json
 import os
-import re
 import sys
 import time
-import unicodedata
 
 try:
     from google import genai
@@ -372,137 +370,13 @@ def _is_quota_error(exc):
     return "RESOURCE_EXHAUSTED" in str(exc) or " 429" in str(exc) or str(exc).startswith("429")
 
 
-CHOLAM = "ֹ"   # ֹ  — холам (гласная "о")
-KUBUTZ = "ֻ"   # ֻ  — кубуц (гласная "у", неполное написание)
-VAV = "ו"      # ו
-# короткие служебные слова, где холам без вав — стандартное написание,
-# не нарушение כתיב מלא (двух-трёхбуквенные слова этого типа в него не
-# разворачиваются ни в каком стиле письма)
-KTIV_CHASER_ALLOWLIST = {"לֹא", "כֹּה", "זֹאת", "פֹּה"}
-_STRIP_PUNCT = ".,!?;:\"'()«»־-־"
-
-
-def _bare_consonants(word):
-    return "".join(c for c in word if unicodedata.category(c) != "Mn")
-
-
-def _matches_allowlist(word):
-    """Проверяет и голое слово, и слово с приставками (ו/ה/ב/כ/ל/מ/ש +
-    дагеш удвоения) — וְזֹאת/הַזֹּאת и т.п. не должны считаться ошибкой
-    так же, как и голое זֹאת: сравниваем по буквам без огласовок, по
-    суффиксу, а не только точным совпадением всего слова."""
-    if word in KTIV_CHASER_ALLOWLIST:
-        return True
-    bare = _bare_consonants(word)
-    return any(bare.endswith(_bare_consonants(allowed)) for allowed in KTIV_CHASER_ALLOWLIST)
-
-
-def _split_clusters(word):
-    """Разбивает слово на кластеры (базовая буква + все её комбинирующие
-    знаки, категория Unicode Mn). Нужно, потому что некоторые буквы несут
-    СРАЗУ два огласовочных знака (напр. каф с дагешем И холамом в הַכֹּל
-    — "всё") — проверка/фикс по одному символу назад ошибочно принимает
-    дагеш за "не вав перед холамом" и вставляет вав между дагешем и
-    холамом вместо того, чтобы понять, что холам вообще сидит не на той
-    букве. Кластеры решают это: смотрим на БАЗОВУЮ букву кластера, не на
-    непосредственно предыдущий символ."""
-    clusters = []
-    for ch in word:
-        if clusters and unicodedata.category(ch) == "Mn":
-            clusters[-1] += ch
-        else:
-            clusters.append(ch)
-    return clusters
-
-
-def find_ktiv_chaser_violations(obj, path=""):
-    """Рекурсивно ищет в распарсенном JSON-ответе огласованные ивритские
-    слова с явными признаками неполного написания (כתיב חסר):
-    - холам не на вав (напр. חֹק вместо חוֹק — тот самый баг, который уже
-      один раз проскочил вручную в мокапе теории для ק-ו-ם);
-    - кубуц вместо шурук (напр. קֻם вместо קוּם).
-    Проверяет по словам (не по всей строке разом), чтобы не считать
-    ошибкой короткие служебные слова из KTIV_CHASER_ALLOWLIST (לֹא и т.п.),
-    для которых холам без вав — норма в любом стиле письма. Не ловит все
-    возможные случаи כתיב חסר (это лингвистически не всегда однозначно
-    формализуемо), но ловит два самых частых и однозначных — этого
-    достаточно, чтобы не пропускать баг молча, как уже случилось."""
-    violations = []
-    if isinstance(obj, dict):
-        for k, v in obj.items():
-            violations += find_ktiv_chaser_violations(v, f"{path}.{k}" if path else k)
-    elif isinstance(obj, list):
-        for i, v in enumerate(obj):
-            violations += find_ktiv_chaser_violations(v, f"{path}[{i}]")
-    elif isinstance(obj, str):
-        for word in obj.split():
-            clean = word.strip(_STRIP_PUNCT)
-            if _matches_allowlist(clean):
-                continue
-            clusters = _split_clusters(clean)
-            for i, cl in enumerate(clusters):
-                if CHOLAM in cl and cl[0] != VAV:
-                    violations.append((path, clean, "холам без вав — похоже на כתיב חסר, нужно וֹ"))
-                elif KUBUTZ in cl:
-                    violations.append((path, clean, "кубуц вместо шурук — в современном написании обычно וּ"))
-    return violations
-
-
-DAGESH = "ּ"  # ּ — дагеш (для шурук: вав + дагеш)
-
-
-def _fix_ktiv_chaser_word(word):
-    """Механически чинит ОДНО слово: холам не на вав -> вставить вав
-    перед холамом; кубуц -> заменить на вав+дагеш (шурук). Оба
-    преобразования однозначны по построению (не требуют понимания
-    смысла слова), поэтому чиним программно вместо того, чтобы просить
-    модель повторить — на практике для некоторых паттернов (напр.
-    биньян פֻּעַל с кубуцем: מְיֻחָד) модель воспроизводит традиционное
-    написание раз за разом НЕЗАВИСИМО ОТ МОДЕЛИ (см. run_roots_batch.py,
-    прогон 2026-09-12 на ב-נ-ה — несколько разных моделей подряд не
-    справились ретраями), так что повтор просто тратит квоту впустую.
-
-    Работает по кластерам (буква + все её огласовки), не по одиночным
-    символам — см. _split_clusters: буква может нести дагеш И холам
-    ОДНОВРЕМЕННО (напр. каф в הַכֹּל — "всё"), и посимвольная проверка
-    "предыдущий символ — вав?" в этом случае ошибочно видит дагеш вместо
-    вав и вставляет новый вав ВНУТРИ кластера — портит слово (реальный
-    баг, пойманный вживую на первом же растущем тексте, см.
-    ROOTS_CURRICULUM.md)."""
-    out = []
-    for cl in _split_clusters(word):
-        base, marks = cl[0], cl[1:]
-        if CHOLAM in marks and base != VAV:
-            out.append(base + marks.replace(CHOLAM, ""))
-            out.append(VAV + CHOLAM)
-        elif KUBUTZ in marks:
-            out.append(base + marks.replace(KUBUTZ, ""))
-            out.append(VAV + DAGESH)
-        else:
-            out.append(cl)
-    return "".join(out)
-
-
-def fix_ktiv_chaser(obj):
-    """Рекурсивно применяет _fix_ktiv_chaser_word по всему JSON-объекту,
-    сохраняя пробелы/пунктуацию на границах слов и не трогая слова из
-    KTIV_CHASER_ALLOWLIST (см. _matches_allowlist)."""
-    if isinstance(obj, dict):
-        return {k: fix_ktiv_chaser(v) for k, v in obj.items()}
-    elif isinstance(obj, list):
-        return [fix_ktiv_chaser(v) for v in obj]
-    elif isinstance(obj, str):
-        tokens = re.split(r"(\s+)", obj)
-        for idx, tok in enumerate(tokens):
-            if not tok or tok.isspace():
-                continue
-            core = tok.strip(_STRIP_PUNCT)
-            if not core or _matches_allowlist(core):
-                continue
-            start = tok.index(core)
-            tokens[idx] = tok[:start] + _fix_ktiv_chaser_word(core) + tok[start + len(core):]
-        return "".join(tokens)
-    return obj
+# Правила честности/כתיב מלא (ktiv_chaser-проверка и её мех. фикс) теперь
+# живут в одном месте для всего проекта, см. hebrew_spelling_rules.py —
+# импортируем отсюда, чтобы process_one() ниже и все скрипты, которые
+# исторически брали их отсюда (`from generate_root_theory import
+# fix_ktiv_chaser, find_ktiv_chaser_violations`), продолжали работать
+# без правок импортов.
+from hebrew_spelling_rules import find_ktiv_chaser_violations, fix_ktiv_chaser  # noqa: E402
 
 
 def process_one(client, model, root_entry, retries=3):

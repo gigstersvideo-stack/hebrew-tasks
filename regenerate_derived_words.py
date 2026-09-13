@@ -26,9 +26,8 @@ except ImportError:
     print("Нужно: pip install google-genai --break-system-packages", file=sys.stderr)
     sys.exit(1)
 
-from generate_root_theory import (
-    QuotaExhausted, _is_quota_error, fix_ktiv_chaser, find_ktiv_chaser_violations,
-)
+from generate_root_theory import QuotaExhausted, _is_quota_error
+from hebrew_spelling_rules import fix_ktiv_chaser, find_ktiv_chaser_violations
 
 DEFAULT_MODELS = [
     "gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.7-flash", "gemini-3.8-flash",

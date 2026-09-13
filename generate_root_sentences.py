@@ -39,7 +39,8 @@ except ImportError:
     print("Нужно: pip install google-genai --break-system-packages", file=sys.stderr)
     sys.exit(1)
 
-from generate_root_theory import find_ktiv_chaser_violations, fix_ktiv_chaser, QuotaExhausted, _is_quota_error
+from generate_root_theory import QuotaExhausted, _is_quota_error
+from hebrew_spelling_rules import find_ktiv_chaser_violations, fix_ktiv_chaser
 
 
 RESPONSE_SCHEMA = {

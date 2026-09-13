@@ -40,11 +40,6 @@ DEFAULT_MODELS = [
     "gemini-3.1-flash-lite", "gemini-3.5-flash-lite",
 ]
 
-HEBREW_LETTERS_RE = re.compile(r"[\u05D0-\u05EA]")
-HEBREW_NIQUD_RE = re.compile(r"[\u0591-\u05C7]")
-ALLOWED_CHARS = set(" \t\n.,!?;:\"'()\u00AB\u00BB\u2014\u2013?%0123456789")
-WORD_SPLIT_RE = re.compile(r"[\s\-\u05BE\u2013\u2014]+")
-LEGIT_EXCLUDE = {"(قام)", "عالم", "موت)."}
 BATCH_SIZE = 20
 
 FIX_SCHEMA = {
@@ -76,48 +71,12 @@ i-й элемент выхода это исправленный i-й фрагм
 {items}
 """
 
-_STRIP = ".,!?;:\"'()«»־-"
-
-
-def is_corrupted_word(word):
-    """Ивритское слово (есть ивритская согласная), в которое затесалась
-    буква из ДРУГОГО алфавита — любого, не только арабского. Дефисы уже
-    не долетают до этой функции (WORD_SPLIT_RE рвёт по ним раньше), так
-    что намеренные двуязычные конструкции вроде 'шлемим-корень' не ловятся
-    как одно слово."""
-    if not word or word in LEGIT_EXCLUDE:
-        return False
-    if not HEBREW_LETTERS_RE.search(word):
-        return False
-    for ch in word:
-        if HEBREW_LETTERS_RE.match(ch) or HEBREW_NIQUD_RE.match(ch):
-            continue
-        if ch in ALLOWED_CHARS:
-            continue
-        if ch.isalpha():
-            return True
-    return False
-
-
-def is_corrupted(s):
-    if not isinstance(s, str):
-        return False
-    return any(is_corrupted_word(w) for w in WORD_SPLIT_RE.split(s))
-
-
-def find_corrupted(obj, path=""):
-    """Возвращает список (path, string) для строк с порчей."""
-    found = []
-    if isinstance(obj, dict):
-        for k, v in obj.items():
-            found += find_corrupted(v, f"{path}.{k}" if path else k)
-    elif isinstance(obj, list):
-        for i, v in enumerate(obj):
-            found += find_corrupted(v, f"{path}[{i}]")
-    elif isinstance(obj, str):
-        if is_corrupted(obj):
-            found.append((path, obj))
-    return found
+# Правило "чужой алфавит внутри слова" (is_corrupted_word/find_corrupted)
+# теперь живёт в hebrew_spelling_rules.py вместе с двумя другими
+# правилами честности проекта — импортируем отсюда вместо дублирования;
+# find_homoglyph_violations уже возвращает (path, string), тот же формат,
+# что был у find_corrupted здесь.
+from hebrew_spelling_rules import is_corrupted_word, is_corrupted, find_homoglyph_violations as find_corrupted  # noqa: E402
 
 
 def get_by_path(root, path):

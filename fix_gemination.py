@@ -23,10 +23,8 @@ fix_gemination.py — чинит найденную (по вопросу пол�
 
 import json
 import os
-import re
 import sys
 import time
-import unicodedata
 
 try:
     from google import genai
@@ -35,67 +33,19 @@ except ImportError:
     print("Нужно: pip install google-genai --break-system-packages", file=sys.stderr)
     sys.exit(1)
 
-from generate_root_theory import QuotaExhausted, _is_quota_error, fix_ktiv_chaser, find_ktiv_chaser_violations
-from fix_arabic_contamination import find_corrupted as find_homoglyph_corrupted
+from generate_root_theory import QuotaExhausted, _is_quota_error
+from hebrew_spelling_rules import (
+    fix_ktiv_chaser, find_ktiv_chaser_violations,
+    find_homoglyph_violations as find_homoglyph_corrupted,
+    has_gemination, max_letter_run, split_clusters,
+    DAGESH, VAV, YOD,
+)
 
 DEFAULT_MODELS = [
     "gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.7-flash", "gemini-3.8-flash",
     "gemini-flash-latest", "gemini-flash-lite-latest", "gemini-3-flash-preview",
     "gemini-3.1-flash-lite", "gemini-3.5-flash-lite",
 ]
-
-DAGESH = "ּ"
-VAV = "ו"
-YOD = "י"
-_STRIP = ".,!?;:\"'()«»־-"
-
-
-def split_clusters(word):
-    clusters = []
-    for ch in word:
-        if clusters and unicodedata.category(ch) == "Mn":
-            clusters[-1] += ch
-        else:
-            clusters.append(ch)
-    return clusters
-
-
-def has_gemination(word, middle):
-    """True, если средняя буква корня (middle) стоит с дагешем+огласовкой
-    и НЕ примыкает к голой копии той же буквы ни с одной стороны — то
-    есть ещё не удвоена. Уже верно удвоенные слова кластеризуются двумя
-    способами (оба реально встречаются): голая буква ПЕРЕД дагешированной
-    (לְהִתְבַּייֵּת — י, затем יֵּ) или дагешированная ПЕРЕД голой
-    (חַיִּים — יִּ, затем י) — проверяем обе стороны, иначе уже
-    правильные слова ложно считаются "надо чинить" и от повторного
-    прогона на них модель может добавить ТРЕТЬЮ букву поверх верной
-    формы (реальный баг, пойманный на первом прогоне — см. FEEDBACK_LOG.md)."""
-    clean = word.strip(_STRIP)
-    clusters = split_clusters(clean)
-    for i, cl in enumerate(clusters):
-        if cl[0] == middle and DAGESH in cl[1:] and len(cl) > 2:
-            prev_bare = i > 0 and clusters[i - 1] == middle
-            next_bare = i < len(clusters) - 1 and clusters[i + 1] == middle
-            if prev_bare or next_bare:
-                continue
-            return True
-    return False
-
-
-def max_letter_run(word, middle):
-    """Максимальное число ПОДРЯД идущих кластеров с базовой буквой middle
-    (независимо от огласовок) — 3+ значит слово переудвоено (баг, не
-    цель); используется как жёсткая защита от переисправления в
-    attempt_fix, а не только эвристика для поиска кандидатов."""
-    clean = word.strip(_STRIP)
-    run = maxrun = 0
-    for cl in split_clusters(clean):
-        if cl[0] == middle:
-            run += 1
-            maxrun = max(maxrun, run)
-        else:
-            run = 0
-    return maxrun
 
 
 THEORY_SCHEMA = {"type": "string"}
