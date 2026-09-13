@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.22.6
+  Ивритский тренажёр — v1.22.7
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -672,7 +672,7 @@
     <div class="fb-review-list" id="fb-review-list"></div>
   </div>
 
-  <header class="top">
+  <header class="top" id="app-header">
     <div>
       <h1>Ивритский тренажёр</h1>
       <div class="subtitle" id="subtitle">Загрузка…</div>
@@ -875,7 +875,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.22.6</div>
+  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.22.7</div>
 </div>
 
 <script>
@@ -3390,6 +3390,11 @@ const rootTheoryView = document.getElementById("root-theory-view");
 function showView(view) {
   [dashboardView, reviewArea, deckbasesView, feedbackReviewView, rootTheoryView].forEach(v => v.classList.add("hidden"));
   view.classList.remove("hidden");
+  // Курс «Корни» уже несёт свою собственную шапку (заголовок, "← Назад",
+  // прогресс) — глобальная шапка тренажёра поверх неё (счётчик "Изучено
+  // X/8239", ссылка на читалку) лишняя и не относится к курсу (отзыв
+  // пользователя, 2026-09-13).
+  document.getElementById("app-header").classList.toggle("hidden", view === rootTheoryView);
 }
 document.getElementById("btn-dash-start").addEventListener("click", () => {
   showView(reviewArea);
