@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.22.4
+  Ивритский тренажёр — v1.22.5
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -698,6 +698,7 @@
       <button class="link-btn" id="btn-roots-back">🏠 Обзор</button>
     </div>
     <div class="rt-progress-bar"><div id="rt-progress-fill" style="width:0%"></div></div>
+    <div style="text-align:right;"><button class="reset-link" id="btn-roots-reset">Сбросить прогресс курса</button></div>
     <div class="rt-page" id="rt-page"></div>
   </div>
 
@@ -839,7 +840,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.22.4</div>
+  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.22.5</div>
 </div>
 
 <script>
@@ -2003,6 +2004,7 @@ function renderRootTheory(entry, sentences) {
   const derivedHtml = entry.derived_words.map(w => `
     <div class="rt-derived-card">
       <div class="rt-derived-top">
+        <button class="rt-listen-btn" type="button" aria-label="Прослушать" data-he="${escapeHtml(w.word)}">🔊</button>
         <span class="rt-derived-word">${escapeHtml(w.word)}</span>
         <span class="rt-derived-translation">${escapeHtml(w.translation)}</span>
         <span class="rt-tag-row">${w.binyan ? `<span class="rt-tag binyan">${escapeHtml(w.binyan)}</span>` : ""}<span class="rt-tag">${escapeHtml(w.pos)}</span><span class="rt-tag">${escapeHtml(w.register)}</span></span>
@@ -2013,6 +2015,7 @@ function renderRootTheory(entry, sentences) {
 
   const phrasesHtml = entry.set_phrases.map(p => `
     <div class="rt-phrase-chip">
+      <button class="rt-listen-btn" type="button" aria-label="Прослушать" data-he="${escapeHtml(p.phrase_he)}">🔊</button>
       <span class="he">${escapeHtml(p.phrase_he)}</span><span class="ru">${escapeHtml(p.phrase_ru)}</span>
       ${p.note ? `<span class="note">${escapeHtml(p.note)}</span>` : ""}
       ${rtExampleHtml(p.example_he, p.example_ru)}
@@ -2742,6 +2745,54 @@ resetBtn.addEventListener("click", () => {
     capInput.value = cap;
     updateStatsBar();
     loadCard();
+  }
+});
+
+// "Сбросить прогресс курса" — только Курс «Корни» (пройденные корни,
+// растущие тексты, добавленные ими предложения), не весь тренажёр —
+// отдельная просьба с сайта (2026-09-13), т.к. общий "Сбросить прогресс"
+// выше стирает вообще всё, включая обычные уровни א-ג. DATA — append-only
+// (позиции = ключи progress.items, никогда не переиспользуются, см.
+// комментарий у appendRootSentences), так что старые записи корня из DATA
+// физически не убираем — вместо этого исключаем их индексы из пула
+// (progress.pool.exclude) и чистим их состояние (progress.items), а сам
+// progress.rootsCourse обнуляем, чтобы курс на следующем заходе выдал их
+// заново, уже под новыми индексами (старые тихо остаются висеть в общем
+// корпусе как невидимый пользователю "мусор" — безопасно, лучше, чем риск
+// сдвинуть индексы более поздних динамических карточек).
+const rootsResetBtn = document.getElementById("btn-roots-reset");
+let rootsResetArmed = false, rootsResetTimer = null;
+rootsResetBtn.addEventListener("click", () => {
+  if (!rootsResetArmed) {
+    rootsResetArmed = true;
+    rootsResetBtn.textContent = "Точно сбросить прогресс курса?";
+    rootsResetBtn.classList.add("confirming");
+    rootsResetTimer = setTimeout(() => {
+      rootsResetArmed = false;
+      rootsResetBtn.textContent = "Сбросить прогресс курса";
+      rootsResetBtn.classList.remove("confirming");
+    }, 3000);
+  } else {
+    clearTimeout(rootsResetTimer);
+    const idxMap = progress.rootsCourse.sentenceIndexByRoot || {};
+    const keysToDelete = [];
+    Object.values(idxMap).flat().forEach(i => {
+      ALL_MODES.forEach(m => {
+        const k = i + ":" + m;
+        delete progress.items[k];
+        keysToDelete.push(k);
+      });
+      if (!progress.pool.exclude.includes(i)) progress.pool.exclude.push(i);
+    });
+    progress.rootsCourse = { completedTheory: [], completedGrowingTexts: [], sentenceIndexByRoot: {} };
+    saveProgress();
+    cloudSyncMeta();
+    if (window.cloudDeleteCards) window.cloudDeleteCards(keysToDelete);
+    rootsResetArmed = false;
+    rootsResetBtn.textContent = "Сбросить прогресс курса";
+    rootsResetBtn.classList.remove("confirming");
+    updateStatsBar();
+    openRootsCourseScreen(0);
   }
 });
 
@@ -3525,6 +3576,25 @@ window.cloudSyncCard = function (key, state) {
 window.cloudSyncMeta = function () {
   if (!cloudUid) return;
   setDoc(metaDocRef(cloudUid), metaPayload()).catch(() => {});
+};
+// "Сбросить прогресс курса" (только Корни, не весь тренажёр) — иначе
+// удалённые локально записи о карточках корня просто вернулись бы
+// обратно при следующей синхронизации с другого устройства (тот же
+// принцип, что cloudResetAll, но по конкретному списку ключей, не всей
+// коллекции). Батчами по 400 — тот же лимит Firestore writeBatch.
+window.cloudDeleteCards = async function (keys) {
+  if (!cloudUid || !keys.length) return;
+  try {
+    let batch = writeBatch(fbDb), n = 0;
+    const pending = [];
+    keys.forEach(key => {
+      batch.delete(doc(cardsCol(cloudUid), key));
+      n++;
+      if (n >= 400) { pending.push(batch.commit()); batch = writeBatch(fbDb); n = 0; }
+    });
+    if (n > 0) pending.push(batch.commit());
+    await Promise.all(pending);
+  } catch (e) {}
 };
 // Lets the "Личные карточки" panel remove a card pushed in from the reader
 // (or picked from an AI word-analysis there) — soft-delete only, same
