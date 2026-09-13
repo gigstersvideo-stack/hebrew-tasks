@@ -17,3 +17,5 @@ hebrew_trainer.html
 # Firebase service account key — grants admin access, never commit
 firebase-service-account.json
 *firebase-adminsdk*.json
+
+__pycache__/
