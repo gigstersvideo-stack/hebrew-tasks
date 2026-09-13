@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.22.1
+  Ивритский тренажёр — v1.22.2
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -827,7 +827,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.22.1</div>
+  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.22.2</div>
 </div>
 
 <script>
@@ -1507,6 +1507,20 @@ let lastKey = null, currentIndex = -1, currentMode = "ru2he", checked = false, h
 function sample(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 function currentKey() { return currentIndex + ":" + currentMode; }
 
+// Выделенная сессия "начать N предложений с корнем X" (кнопка после теории
+// корня, см. renderRootTheory) — пока активна, pickNext() берёт карточки
+// ИМЕННО из этих N, а не из общего пула (иначе кнопка обещала бы N
+// предложений корня, а по факту показывала бы случайное из тысяч по всем
+// уровням — отзыв с сайта, 2026-09-13). Один проход = один режим (cloze,
+// самый щадящий, см. подсказку в разделе "Статистика и метод") на каждое
+// предложение; остальные режимы остаются в обычном пуле для будущих
+// повторений как всегда. Не персистится — если перезагрузить страницу
+// посреди сессии, она просто становится обычной тренировкой.
+let rootPracticeSession = null; // { rootId, total, queue: [index, ...] }
+function startRootPracticeSession(rootId, indices) {
+  rootPracticeSession = { rootId, total: indices.length, queue: indices.slice() };
+}
+
 // Отзыв с сайта (2026-09-11): дневная норма новых карточек кончается тихой
 // строчкой текста (#queue-note), легко пропустить — а после этого "учить
 // больше нечего" воспринималось как баг, а не как "теперь просто
@@ -1577,6 +1591,10 @@ function pickI1(candidates) {
 }
 
 function pickNext() {
+  if (rootPracticeSession && rootPracticeSession.queue.length) {
+    const index = rootPracticeSession.queue.shift();
+    return { index, mode: "cloze" };
+  }
   ensureTodayMeta();
   const lvlPool = poolForLevel();
   const poolOnly = DATA.map((_, i) => i).filter(inPool);
@@ -2124,9 +2142,22 @@ function renderRootTheory(entry, sentences) {
 
   cta.addEventListener("click", () => {
     if (!alreadyDone) {
+      // Кнопка обещает "Начать: N предложений с root" — раньше клик
+      // просто добавлял их в пул и тут же уводил на следующий корень
+      // (openRootsCourseScreen), так что реальная тренировка предложений
+      // никогда не открывалась (отзыв с сайта, 2026-09-13). Простой showView
+      // +loadCard() тоже не годился — pickNext() берёт из ОБЩЕГО пула
+      // (тысячи предложений всех уровней), так что именно эти N могли не
+      // попасться вовсе (тот же отзыв, уточнение). Теперь — выделенная
+      // сессия ровно по этим N (см. startRootPracticeSession); на
+      // следующий корень/растущий текст курс переключится, когда
+      // пользователь сам вернётся на экран курса.
       markRootTheoryDone(entry.root, sentences);
-      cta.textContent = "Дальше →";
-      ctaNote.textContent = `Готово! ${(sentences || []).length} новых предложений добавлены в пул повторения.`;
+      const indices = (progress.rootsCourse.sentenceIndexByRoot || {})[entry.root] || [];
+      startRootPracticeSession(entry.root, indices);
+      showView(reviewArea);
+      loadCard();
+      return;
     }
     openRootsCourseScreen();
   });
@@ -2312,6 +2343,11 @@ function loadCard() {
   const d = DATA[currentIndex];
   const lv = LEVELS[d.l];
   els.eyebrow.textContent = wasNew ? "Новая фраза" : "Повторение";
+  if (rootPracticeSession) {
+    const current = rootPracticeSession.total - rootPracticeSession.queue.length;
+    els.eyebrow.textContent = `Корень «${rootPracticeSession.rootId}» · ${current}/${rootPracticeSession.total}`;
+    if (!rootPracticeSession.queue.length) rootPracticeSession = null;
+  }
   els.modeBadge.textContent = MODES[currentMode].label;
   els.badge.textContent = `${lv.sym} · ${lv.label}`;
   renderPrompt(currentMode, d);
