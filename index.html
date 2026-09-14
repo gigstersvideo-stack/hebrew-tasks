@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.22.8
+  Ивритский тренажёр — v1.22.9
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -875,7 +875,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.22.8</div>
+  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.22.9</div>
 </div>
 
 <script>
@@ -2859,6 +2859,16 @@ rootsResetBtn.addEventListener("click", () => {
       if (!progress.pool.exclude.includes(i)) progress.pool.exclude.push(i);
     });
     progress.rootsCourse = { completedTheory: [], completedGrowingTexts: [], sentenceIndexByRoot: {} };
+    // rootSentencesInjectedThisLoad — отдельная, НЕ персистентная защита
+    // "уже разложено в DATA в ЭТУ загрузку страницы" (см. её объявление
+    // выше) — переживает эту функцию, но не reset. Без очистки здесь:
+    // корень, хоть раз вставленный в этой вкладке (в том числе при старом
+    // баге до v1.22.8), навсегда получает пустые индексы после сброса —
+    // guard блокирует повторную вставку, а sentenceIndexByRoot уже
+    // обнулили выше. Баг остаётся до перезагрузки страницы (отзыв
+    // пользователя, 2026-09-14: "на первом корне баг остался... это после
+    // сброса прогресса курса").
+    rootSentencesInjectedThisLoad.clear();
     saveProgress();
     cloudSyncMeta();
     if (window.cloudDeleteCards) window.cloudDeleteCards(keysToDelete);
