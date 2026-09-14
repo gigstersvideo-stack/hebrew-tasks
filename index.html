@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.23.0
+  Ивритский тренажёр — v1.23.1
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -701,17 +701,17 @@
       <div class="dash-num" id="dash-due-total">0</div>
       <div class="dash-hero-label">фраз готовы к повторению сегодня</div>
     </div>
+    <div class="dash-grid" id="dash-grid"></div>
+    <div class="dash-actions">
+      <button class="action primary dash-start" id="btn-dash-start">Начать →</button>
+      <button class="link-btn" id="btn-open-deckbases">🗂 Мои базы</button>
+    </div>
     <div class="roots-banner" id="roots-banner">
       <div>
         <div class="roots-banner-title">📖 Курс «Корни» — системное изучение 200 частотных корней</div>
         <div class="roots-banner-sub" id="roots-banner-sub"></div>
       </div>
       <button class="action primary" id="btn-open-roots"></button>
-    </div>
-    <div class="dash-grid" id="dash-grid"></div>
-    <div class="dash-actions">
-      <button class="action primary dash-start" id="btn-dash-start">Начать →</button>
-      <button class="link-btn" id="btn-open-deckbases">🗂 Мои базы</button>
     </div>
   </div>
 
@@ -720,6 +720,7 @@
       <h2>🗂 Мои базы</h2>
       <button class="link-btn" id="btn-deckbases-back">🏠 Обзор</button>
     </div>
+    <button class="action primary" id="btn-deckbases-start" style="margin: 2px 0 4px;">Начать →</button>
     <div class="deck-grid" id="deck-grid"></div>
   </div>
 
@@ -875,7 +876,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.23.0</div>
+  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.23.1</div>
 </div>
 
 <script>
@@ -3438,6 +3439,10 @@ function showView(view) {
   document.getElementById("app-header").classList.toggle("hidden", view === rootTheoryView || (view === reviewArea && !!rootPracticeSession));
 }
 document.getElementById("btn-dash-start").addEventListener("click", () => {
+  showView(reviewArea);
+  loadCard();
+});
+document.getElementById("btn-deckbases-start").addEventListener("click", () => {
   showView(reviewArea);
   loadCard();
 });
