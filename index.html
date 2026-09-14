@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.22.9
+  Ивритский тренажёр — v1.23.0
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -875,7 +875,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.22.9</div>
+  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.23.0</div>
 </div>
 
 <script>
@@ -2167,6 +2167,7 @@ function renderRootTheory(entry, sentences) {
     <div class="rt-cta-row">
       <button class="action primary" id="rt-cta" disabled>Начать: ${(sentences || []).length} предложений с ${escapeHtml(entry.root)} →</button>
       <span class="rt-cta-note" id="rt-cta-note">ответьте на вопрос выше, чтобы открыть практику</span>
+      <button class="link-btn hidden" id="rt-replay">🔁 Пройти ${(sentences || []).length} предложений ещё раз</button>
     </div>
   `;
 
@@ -2209,6 +2210,22 @@ function renderRootTheory(entry, sentences) {
   if (alreadyDone) {
     unlockCta("теория уже пройдена — предложения в пуле повторения");
     cta.textContent = "Дальше →";
+    // При возврате на уже пройденный корень (напр. кнопкой "← Назад")
+    // раньше не было способа снова пройти именно ЕГО 20 предложений
+    // выделенной сессией — только "Дальше →" вперёд по истории (отзыв
+    // пользователя, 2026-09-14). appendRootSentences сама решает, нужно
+    // ли заново класть предложения в DATA (идемпотентна — если уже
+    // разложены, просто вернёт существующие индексы), так что безопасно
+    // переиспользовать её и здесь, не только при первом прохождении.
+    const replayBtn = document.getElementById("rt-replay");
+    replayBtn.classList.remove("hidden");
+    replayBtn.addEventListener("click", () => {
+      const indices = appendRootSentences(entry.root, sentences);
+      if (!indices.length) return;
+      startRootPracticeSession(entry.root, indices);
+      showView(reviewArea);
+      loadCard();
+    });
   }
 
   cta.addEventListener("click", () => {
@@ -3437,6 +3454,20 @@ document.getElementById("btn-deckbases-back").addEventListener("click", () => {
   renderDashboard();
 });
 document.getElementById("btn-open-roots").addEventListener("click", () => {
+  // Сессия по 20 предложениям корня не персистится, но ЖИВЁТ в памяти,
+  // пока страница не перезагружена — уйти на "🏠 Обзор" посреди сессии
+  // (напр. на 5/20) и не терять прогресс. Без этой проверки
+  // openRootsCourseScreen() без аргумента всегда прыгает на "живой
+  // фронт" курса (completedTheory.length) — а корень сессии уже
+  // отмечен пройденным В МОМЕНТ её старта, так что фронт указывает на
+  // СЛЕДУЮЩИЙ корень, и пользователя молча перекидывало мимо
+  // оставшихся предложений на теорию следующего корня (отзыв
+  // пользователя, 2026-09-14).
+  if (rootPracticeSession && rootPracticeSession.queue.length) {
+    showView(reviewArea);
+    loadCard();
+    return;
+  }
   openRootsCourseScreen();
 });
 document.getElementById("btn-roots-back").addEventListener("click", () => {
