@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.22.7
+  Ивритский тренажёр — v1.22.8
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -875,7 +875,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.22.7</div>
+  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.22.8</div>
 </div>
 
 <script>
@@ -1326,33 +1326,45 @@ window.appendCustomCards = appendCustomCards;
 // тестировании перезагрузки — indices в progress были, а DATA[8239]
 // не существовал).
 const rootSentencesInjectedThisLoad = new Set();
+// Возвращает индексы этого корня в DATA — ВСЕГДА, даже когда ничего не
+// изменилось (уже разложено/пустой sentences), а не только при реальной
+// вставке. Раньше вызывающий код (кнопка курса) сам перечитывал
+// progress.rootsCourse.sentenceIndexByRoot ПОСЛЕ вызова — а это общая
+// мутируемая карта, которую асинхронно трогает ещё и pullAndMerge (см.
+// ниже); если облачный пул между этими двумя моментами успевал что-то
+// поменять, кнопка стартовала сессию с пустыми/чужими индексами (0/0,
+// случайное несвязанное предложение, отзыв пользователя 2026-09-14).
+// Возврат значения напрямую из функции убирает эту гонку: вызывающий код
+// больше не перечитывает общее состояние отдельным шагом.
 function appendRootSentences(rootId, sentences) {
-  if (!sentences || !sentences.length) return;
-  if (rootSentencesInjectedThisLoad.has(rootId)) return;
-  rootSentencesInjectedThisLoad.add(rootId);
   if (!progress.rootsCourse.sentenceIndexByRoot) progress.rootsCourse.sentenceIndexByRoot = {};
+  if (rootSentencesInjectedThisLoad.has(rootId)) return progress.rootsCourse.sentenceIndexByRoot[rootId] || [];
+  if (!sentences || !sentences.length) return progress.rootsCourse.sentenceIndexByRoot[rootId] || [];
+  rootSentencesInjectedThisLoad.add(rootId);
   const indices = sentences.map(s => {
     const index = DATA.length;
     DATA.push({ r: s.ru || "", h: s.he || "", l: ROOTS_BASE1_LEVEL_CODE, c: s.cloze_token || "" });
     return index;
   });
   progress.rootsCourse.sentenceIndexByRoot[rootId] = indices; // всегда свежие индексы для ЭТОЙ загрузки
+  return indices;
 }
 
 // Вызывается ОДИН раз — реальный момент разблокировки — в отличие от
 // replay-цикла ниже, который просто восстанавливает уже пройденное при
 // каждой загрузке страницы (DATA пересоздаётся с нуля при каждой загрузке,
 // поэтому без replay пройденные корни "терялись" бы после перезагрузки).
+// Возвращает индексы предложений ЭТОГО корня — см. appendRootSentences
+// выше про то, зачем возврат значения важен (не просто true/false).
 function markRootTheoryDone(rootId, sentences) {
   if (!progress.rootsCourse) progress.rootsCourse = { completedTheory: [], completedGrowingTexts: [] };
-  if (progress.rootsCourse.completedTheory.includes(rootId)) return false;
-  progress.rootsCourse.completedTheory.push(rootId);
-  appendRootSentences(rootId, sentences);
+  if (!progress.rootsCourse.completedTheory.includes(rootId)) progress.rootsCourse.completedTheory.push(rootId);
+  const indices = appendRootSentences(rootId, sentences);
   if (!progress.pool.levels.includes(ROOTS_BASE1_LEVEL_CODE)) progress.pool.levels.push(ROOTS_BASE1_LEVEL_CODE);
   saveProgress();
   cloudSyncMeta();
   updateStatsBar();
-  return true;
+  return indices;
 }
 window.markRootTheoryDone = markRootTheoryDone;
 
@@ -2211,8 +2223,7 @@ function renderRootTheory(entry, sentences) {
       // сессия ровно по этим N (см. startRootPracticeSession); на
       // следующий корень/растущий текст курс переключится, когда
       // пользователь сам вернётся на экран курса.
-      markRootTheoryDone(entry.root, sentences);
-      const indices = (progress.rootsCourse.sentenceIndexByRoot || {})[entry.root] || [];
+      const indices = markRootTheoryDone(entry.root, sentences);
       startRootPracticeSession(entry.root, indices);
       showView(reviewArea);
       loadCard();
@@ -3393,8 +3404,11 @@ function showView(view) {
   // Курс «Корни» уже несёт свою собственную шапку (заголовок, "← Назад",
   // прогресс) — глобальная шапка тренажёра поверх неё (счётчик "Изучено
   // X/8239", ссылка на читалку) лишняя и не относится к курсу (отзыв
-  // пользователя, 2026-09-13).
-  document.getElementById("app-header").classList.toggle("hidden", view === rootTheoryView);
+  // пользователя, 2026-09-13). То же верно и для reviewArea, когда там
+  // идёт выделенная сессия по конкретному корню (rootPracticeSession) —
+  // это часть того же курсового потока, не обычная тренировка (отзыв
+  // пользователя, 2026-09-14).
+  document.getElementById("app-header").classList.toggle("hidden", view === rootTheoryView || (view === reviewArea && !!rootPracticeSession));
 }
 document.getElementById("btn-dash-start").addEventListener("click", () => {
   showView(reviewArea);
