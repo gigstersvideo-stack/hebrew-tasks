@@ -10,11 +10,15 @@ fix_gemination.py — чинит найденную (по вопросу пол�
 НЕ трогает все ו/י с дагешем подряд (это словил бы и дагеш после
 артикля ה/предлога — другое явление, там как раз ничего чинить не
 надо) — только ту букву, которая является СРЕДНЕЙ буквой САМОГО этого
-корня (root в записи), и только:
-  - заголовок слова + example'ы в derived_words
-  - phrase_he в set_phrases
-  - he + focus_word + cloze_token в root_sentences (все три вместе,
-    т.к. cloze_token должен остаться буквальной подстрокой he)
+корня (root в записи, см. find_gemination_violations в
+hebrew_spelling_rules.py — сканирует ЛЮБОЕ текстовое поле записи, не
+только заголовки слов, как в первой версии этого скрипта).
+
+Для root_theory: каждое затронутое ПОЛЕ (не отдельное слово — если в
+одном длинном тексте несколько нарушений, чиним всё поле одним вызовом)
+чинится точечно, get/set по пути. Для root_sentences: he/focus_word/
+cloze_token чинятся ВСЕ ТРИ ВМЕСТЕ, если нарушение нашлось хотя бы в
+одном — т.к. cloze_token должен остаться буквальной подстрокой he.
 
 Запуск:
     export GEMINI_API_KEY=твой_ключ
@@ -23,6 +27,7 @@ fix_gemination.py — чинит найденную (по вопросу пол�
 
 import json
 import os
+import re
 import sys
 import time
 
@@ -37,9 +42,33 @@ from generate_root_theory import QuotaExhausted, _is_quota_error
 from hebrew_spelling_rules import (
     fix_ktiv_chaser, find_ktiv_chaser_violations,
     find_homoglyph_violations as find_homoglyph_corrupted,
+    find_gemination_violations, root_middle_letter,
     has_gemination, max_letter_run, split_clusters,
+    is_safe_gemination_fix,
     DAGESH, VAV, YOD,
 )
+
+
+def get_by_path(entry, path):
+    """path относителен к entry (объекту одной записи корня), может
+    начинаться прямо с ключа без точки — напр. 'derived_words[0].word',
+    'girzah_note.compare[0].form', 'common_mistakes'."""
+    obj = entry
+    for key, idx in re.findall(r"\.?([^.\[\]]+)|\[(\d+)\]", path):
+        obj = obj[key] if key else obj[int(idx)]
+    return obj
+
+
+def set_by_path(entry, path, value):
+    tokens = re.findall(r"\.?([^.\[\]]+)|\[(\d+)\]", path)
+    obj = entry
+    for key, idx in tokens[:-1]:
+        obj = obj[key] if key else obj[int(idx)]
+    lk, li = tokens[-1]
+    if lk:
+        obj[lk] = value
+    else:
+        obj[int(li)] = value
 
 DEFAULT_MODELS = [
     "gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.7-flash", "gemini-3.8-flash",
@@ -139,7 +168,9 @@ def fix_theory_word(client, model, root, middle, word):
     fixed = fix_ktiv_chaser(fixed)
     if find_homoglyph_corrupted({"x": fixed}):
         return None
-    if abs(len(fixed) - len(word)) > max(3, len(word) * 0.3):
+    if fixed == word:
+        return fixed
+    if not is_safe_gemination_fix(word, fixed, middle):
         return None
     if max_letter_run(fixed, middle) >= 3:  # переисправление — 3+ буквы подряд
         return None
@@ -168,11 +199,37 @@ def fix_sentence(client, model, root, middle, s):
         return None
     if fixed["cloze_token"] and fixed["cloze_token"] not in fixed["he"]:
         return None
-    if abs(len(fixed["he"]) - len(s["he"])) > max(5, len(s["he"]) * 0.3):
+    if fixed["he"] != s["he"] and not is_safe_gemination_fix(s["he"], fixed["he"], middle):
+        return None
+    if fixed["focus_word"] != s.get("focus_word", "") and not is_safe_gemination_fix(s.get("focus_word", ""), fixed["focus_word"], middle):
+        return None
+    if fixed["cloze_token"] != s.get("cloze_token", "") and not is_safe_gemination_fix(s.get("cloze_token", ""), fixed["cloze_token"], middle):
         return None
     if max_letter_run(fixed["he"], middle) >= 3:  # переисправление
         return None
     return fixed
+
+
+VERIFIED_OK_PATH = "gemination_verified_ok.json"
+
+
+def load_verified_ok():
+    """Кэш (root, path/idx)-ключей, для которых модель уже сказала "не
+    надо чинить" — has_gemination сканирует ВСЁ текстовое поле целиком,
+    а не только слово этого конкретного корня, поэтому регулярно ловит
+    случайные слова ДРУГИХ корней с дагешем по совсем другой причине
+    (напр. дагеш хазак после артикля ה: "הַיֶּלֶד" не имеет отношения к
+    корню ה-י-ה, хотя формально совпадает по паттерну). Без этого кэша
+    один и тот же ложный кандидат переспрашивается у модели в КАЖДОМ
+    прогоне, впустую тратя суточную квоту."""
+    try:
+        return set(tuple(x) for x in json.load(open(VERIFIED_OK_PATH, encoding="utf-8")))
+    except FileNotFoundError:
+        return set()
+
+
+def save_verified_ok(verified):
+    json.dump(sorted(list(x) for x in verified), open(VERIFIED_OK_PATH, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
 
 
 def with_rotation(fn, args_list, client_factory, dead_models, max_rounds=4):
@@ -208,6 +265,12 @@ def with_rotation(fn, args_list, client_factory, dead_models, max_rounds=4):
 
 
 def main():
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--skip-theory", action="store_true", help="не трогать root_theory_all.json — вся квота этого прогона достаётся предложениям")
+    ap.add_argument("--skip-sentences", action="store_true", help="не трогать root_sentences_all.json")
+    args = ap.parse_args()
+
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
         print("Нужен GEMINI_API_KEY в окружении.", file=sys.stderr)
@@ -217,64 +280,92 @@ def main():
 
     theory = json.load(open("root_theory_all.json", encoding="utf-8"))
     sentences = json.load(open("root_sentences_all.json", encoding="utf-8"))
+    verified_ok = load_verified_ok()
 
-    by_root_middle = {}
-    for e in theory:
-        letters = e["root"].split("-")
-        if len(letters) == 3 and letters[1] in (VAV, YOD):
-            by_root_middle[e["root"]] = letters[1]
+    # ---- theory: ЛЮБОЕ текстовое поле записи (не только заголовки слов
+    # и set_phrases, как раньше) — find_gemination_violations сканирует
+    # всю запись рекурсивно. Дедуп по ПУТИ: если в одном длинном тексте
+    # (напр. common_mistakes) несколько нарушений, чиним всё поле целиком
+    # одним вызовом, а не слово за словом.
+    if not args.skip_theory:
+        theory_targets = []  # (root, middle, entry, path)
+        skipped_cached = 0
+        for e in theory:
+            middle = root_middle_letter(e["root"])
+            if not middle:
+                continue
+            seen_paths = set()
+            for path, _word in find_gemination_violations(e, e["root"]):
+                if path in seen_paths:
+                    continue
+                seen_paths.add(path)
+                if ("theory", e["root"], path) in verified_ok:
+                    skipped_cached += 1
+                    continue
+                theory_targets.append((e["root"], middle, e, path))
 
-    # ---- theory: derived_words headwords + set_phrases ----
-    theory_targets = []  # (root, middle, setter)
-    for e in theory:
-        middle = by_root_middle.get(e["root"])
-        if not middle:
-            continue
-        for w in e["derived_words"]:
-            if has_gemination(w["word"], middle):
-                theory_targets.append((e["root"], middle, w, "word"))
-        for p in e["set_phrases"]:
-            if has_gemination(p["phrase_he"], middle):
-                theory_targets.append((e["root"], middle, p, "phrase_he"))
+        print(f"Теория: {len(theory_targets)} кандидатов ({skipped_cached} пропущено — уже подтверждены как не-нарушения)", file=sys.stderr)
+        args_list = [(root, middle, get_by_path(entry, path)) for root, middle, entry, path in theory_targets]
+        results = with_rotation(fix_theory_word, args_list, client_factory, dead_models)
+        fixed_count = 0
+        for i, fixed in results.items():
+            root, middle, entry, path = theory_targets[i]
+            original = get_by_path(entry, path)
+            if fixed != original:
+                print(f"  {root}: {original!r} -> {fixed!r}", file=sys.stderr)
+                fixed_count += 1
+            else:
+                verified_ok.add(("theory", root, path))
+            set_by_path(entry, path, fixed)
+        print(f"Теория готово: {len(results)}/{len(theory_targets)} обработано, {fixed_count} реально изменено", file=sys.stderr)
+        json.dump(theory, open("root_theory_all.json", "w", encoding="utf-8"), ensure_ascii=False, indent=2)
+        save_verified_ok(verified_ok)
+    else:
+        print("Теория пропущена (--skip-theory)", file=sys.stderr)
 
-    print(f"Теория: {len(theory_targets)} кандидатов", file=sys.stderr)
-    args_list = [(root, middle, obj[key]) for root, middle, obj, key in theory_targets]
-    results = with_rotation(fix_theory_word, args_list, client_factory, dead_models)
-    fixed_count = 0
-    for i, fixed in results.items():
-        root, middle, obj, key = theory_targets[i]
-        if fixed != obj[key]:
-            print(f"  {root}: {obj[key]!r} -> {fixed!r}", file=sys.stderr)
-            fixed_count += 1
-        obj[key] = fixed
-    print(f"Теория готово: {len(results)}/{len(theory_targets)} обработано, {fixed_count} реально изменено", file=sys.stderr)
-    json.dump(theory, open("root_theory_all.json", "w", encoding="utf-8"), ensure_ascii=False, indent=2)
+    if args.skip_sentences:
+        print("Предложения пропущены (--skip-sentences)", file=sys.stderr)
+        return
 
-    # ---- sentences: focus_word/cloze_token-flagged sentences ----
+    # ---- sentences: he/focus_word/cloze_token — по ЛЮБОМУ из трёх,
+    # дедуп по индексу предложения (чиним все три поля вместе)
     sent_targets = []
+    skipped_cached2 = 0
     for entry in sentences:
-        middle = by_root_middle.get(entry["root"])
+        middle = root_middle_letter(entry["root"])
         if not middle:
             continue
-        for s in entry["sentences"]:
-            fw, ct = s.get("focus_word", ""), s.get("cloze_token", "")
-            if (fw and has_gemination(fw, middle)) or (ct and has_gemination(ct, middle)):
-                sent_targets.append((entry["root"], middle, s))
+        seen_idx = set()
+        for path, _word in find_gemination_violations(entry, entry["root"]):
+            m = re.match(r"sentences\[(\d+)\]", path)
+            if not m:
+                continue
+            idx = int(m.group(1))
+            if idx in seen_idx:
+                continue
+            seen_idx.add(idx)
+            if ("sentence", entry["root"], idx) in verified_ok:
+                skipped_cached2 += 1
+                continue
+            sent_targets.append((entry["root"], middle, entry["sentences"][idx], idx))
 
-    print(f"\nПредложения: {len(sent_targets)} кандидатов", file=sys.stderr)
-    args_list2 = [(root, middle, s) for root, middle, s in sent_targets]
+    print(f"\nПредложения: {len(sent_targets)} кандидатов ({skipped_cached2} пропущено — уже подтверждены как не-нарушения)", file=sys.stderr)
+    args_list2 = [(root, middle, s) for root, middle, s, _idx in sent_targets]
     results2 = with_rotation(fix_sentence, args_list2, client_factory, dead_models)
     fixed_count2 = 0
     for i, fixed in results2.items():
-        root, middle, s = sent_targets[i]
+        root, middle, s, idx = sent_targets[i]
         if fixed["he"] != s["he"] or fixed["focus_word"] != s.get("focus_word") or fixed["cloze_token"] != s.get("cloze_token"):
             print(f"  {root}: {s['he']!r} -> {fixed['he']!r}", file=sys.stderr)
             fixed_count2 += 1
+        else:
+            verified_ok.add(("sentence", root, idx))
         s["he"] = fixed["he"]
         s["focus_word"] = fixed["focus_word"]
         s["cloze_token"] = fixed["cloze_token"]
     print(f"Предложения готово: {len(results2)}/{len(sent_targets)} обработано, {fixed_count2} реально изменено", file=sys.stderr)
     json.dump(sentences, open("root_sentences_all.json", "w", encoding="utf-8"), ensure_ascii=False, indent=2)
+    save_verified_ok(verified_ok)
 
 
 if __name__ == "__main__":

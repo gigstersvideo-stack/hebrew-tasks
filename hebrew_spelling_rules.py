@@ -288,6 +288,69 @@ def root_middle_letter(root):
     return None
 
 
+def _single_insertion_ok(orig_word, fixed_word, middle):
+    """True если fixed_word получено из orig_word вставкой РОВНО одного
+    кластера с базовой буквой middle рядом с уже существующим кластером
+    той же базовой буквы — единственное изменение, которое допустимо
+    называть 'исправлением удвоения'.
+
+    Сравнивает ЦЕЛЫЕ кластеры (буква+огласовки), а не только базовые
+    буквы — иначе проходит и такой "фикс", где модель заодно меняет
+    огласовку на соседней букве (напр. patach -> tsere) или вовсе теряет
+    её, оставляя голую букву без единого значка (רַוַּח -> רווַח, ר
+    осталась вовсе без огласовки) — прямое нарушение принципа проекта
+    "всегда полная огласовка". Поймано вручную на живом прогоне
+    2026-09-14, старая версия (сравнение только базовых букв) это
+    пропускала."""
+    orig_clusters = split_clusters(orig_word.strip(_STRIP_PUNCT))
+    fixed_clusters = split_clusters(fixed_word.strip(_STRIP_PUNCT))
+    if len(fixed_clusters) != len(orig_clusters) + 1:
+        return False
+    for i in range(len(orig_clusters) + 1):
+        if fixed_clusters[:i] != orig_clusters[:i]:
+            continue
+        if fixed_clusters[i + 1:] != orig_clusters[i:]:
+            continue
+        inserted = fixed_clusters[i]
+        if inserted[0] != middle:
+            continue
+        before = orig_clusters[i - 1] if i > 0 else None
+        after = orig_clusters[i] if i < len(orig_clusters) else None
+        if (before is not None and before[0] == middle) or (after is not None and after[0] == middle):
+            return True
+    return False
+
+
+def is_safe_gemination_fix(original, fixed, middle):
+    """Жёсткий guard на результат модели: True только если fixed
+    отличается от original РОВНО вставкой одной копии буквы middle рядом
+    с её существующей копией, слово за словом (WORD_SPLIT_RE игнорирует
+    пунктуацию/пробелы) — отклоняет любое другое изменение (лишние
+    буквы, переписанный текст, другое слово). Добавлено после реального
+    случая, когда модель при ротации придумала буквы, не относящиеся к
+    корню вообще (לְצָרֵף -> לְצַוּוֵרֵף — в корне צ-ר-פ нет ו), а старые
+    guard'ы (разница длины + max_letter_run) это пропустили.
+
+    Дополнительно требует, чтобы КАЖДОЕ изменённое слово само по себе
+    было нарушением по has_gemination ДО фикса — иначе модель может
+    "поправить" слово, которое вообще не было отмечено (напр. מִין,
+    у которого дагеша нет вовсе), просто потому что оно похоже на
+    настоящее целевое слово в том же тексте (см. FEEDBACK_LOG.md,
+    разбор от 2026-09-13)."""
+    orig_words = [w for w in WORD_SPLIT_RE.split(original) if w]
+    fixed_words = [w for w in WORD_SPLIT_RE.split(fixed) if w]
+    if len(orig_words) != len(fixed_words):
+        return False
+    for ow, fw in zip(orig_words, fixed_words):
+        if ow == fw:
+            continue
+        if not has_gemination(ow, middle):
+            return False
+        if not _single_insertion_ok(ow, fw, middle):
+            return False
+    return True
+
+
 def find_gemination_violations(obj, root, path=""):
     """root — строка корня этой записи (e.g. 'ה-י-ה'); правило
     неприменимо (возвращает []), если средняя буква корня не ו/י."""
