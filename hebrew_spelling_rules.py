@@ -393,25 +393,44 @@ def _main():
     here = os.path.dirname(os.path.abspath(__file__))
     theory_path = os.path.join(here, "root_theory_all.json")
     sentences_path = os.path.join(here, "root_sentences_all.json")
+    # fix_gemination.py кэширует (тип, корень, путь/индекс), для которых
+    # МОДЕЛЬ уже подтвердила "не нарушение" (has_gemination сканирует
+    # ЦЕЛОЕ поле/предложение, а не только слово нужного корня — регулярно
+    # цепляет чужие слова с дагешем по другой причине). Без учёта кэша
+    # здесь "Всего нарушений" вводит в заблуждение — считает подтверждённый
+    # шум как нерешённые нарушения.
+    verified_ok_path = os.path.join(here, "gemination_verified_ok.json")
+    verified_ok = set()
+    if os.path.exists(verified_ok_path):
+        verified_ok = set(tuple(x) for x in json.load(open(verified_ok_path, encoding="utf-8")))
 
     total = 0
+    confirmed_noise = 0
     if os.path.exists(theory_path):
         theory = json.load(open(theory_path, encoding="utf-8"))
         for entry in theory:
             v = find_all_violations(entry, root=entry.get("root"))
-            total += len(v)
             for item in v:
+                if item["rule"] == "gemination" and ("theory", entry["root"], item["path"]) in verified_ok:
+                    confirmed_noise += 1
+                    continue
+                total += 1
                 print(f"[theory:{entry['root']}] {item['rule']} · {item['path']} · {item['word']!r}", file=sys.stderr)
 
     if os.path.exists(sentences_path):
         sentences = json.load(open(sentences_path, encoding="utf-8"))
         for entry in sentences:
             v = find_all_violations(entry, root=entry.get("root"))
-            total += len(v)
             for item in v:
+                m = re.match(r"sentences\[(\d+)\]", item["path"])
+                idx = int(m.group(1)) if m else None
+                if item["rule"] == "gemination" and idx is not None and ("sentence", entry["root"], idx) in verified_ok:
+                    confirmed_noise += 1
+                    continue
+                total += 1
                 print(f"[sentences:{entry['root']}] {item['rule']} · {item['path']} · {item['word']!r}", file=sys.stderr)
 
-    print(f"\nВсего нарушений: {total}", file=sys.stderr)
+    print(f"\nВсего нарушений: {total} (плюс {confirmed_noise} подтверждённых моделью не-нарушений, исключены)", file=sys.stderr)
     sys.exit(1 if total else 0)
 
 
