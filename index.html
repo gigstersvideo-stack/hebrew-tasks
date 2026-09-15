@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.23.1
+  Ивритский тренажёр — v1.24.0
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -773,6 +773,9 @@
       <input type="number" id="cap-input" min="1" max="200" step="1">
     </div>
     <div class="cap-advice" id="cap-advice"></div>
+    <div class="cap-row">
+      <label for="autoplay-toggle"><input type="checkbox" id="autoplay-toggle"> Автоматически проигрывать озвучку (HE→RU — при показе карточки, RU→HE — после проверки)</label>
+    </div>
 
     <h2>Слова, в которых чаще всего ошибаетесь</h2>
     <div class="mistakes-block" id="mistakes-block"></div>
@@ -876,7 +879,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.23.1</div>
+  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.24.0</div>
 </div>
 
 <script>
@@ -932,7 +935,7 @@ function todayStr() { return new Date().toISOString().slice(0, 10); }
 function defaultProgress() {
   return {
     items: {},
-    meta: { dailyNewCap: 20, newToday: { date: todayStr(), count: 0 } },
+    meta: { dailyNewCap: 20, newToday: { date: todayStr(), count: 0 }, autoPlayAudio: true },
     mistakesHe: {}, mistakesRu: {},
     streak: { lastDate: null, count: 0 },
     pool: { levels: [0, 1, 2, 3, 4], include: [], exclude: [] },
@@ -946,6 +949,7 @@ if (!progress.mistakesHe) progress.mistakesHe = {};
 if (!progress.mistakesRu) progress.mistakesRu = {};
 if (!progress.streak) progress.streak = { lastDate: null, count: 0 };
 if (!progress.pool) progress.pool = { levels: [0, 1, 2, 3, 4], include: [], exclude: [] };
+if (progress.meta.autoPlayAudio === undefined) progress.meta.autoPlayAudio = true;
 if (!progress.rootsCourse) progress.rootsCourse = { completedTheory: [] };
 if (!progress.rootsCourse.completedGrowingTexts) progress.rootsCourse.completedGrowingTexts = [];
 // Migrating from SM-2 (had an `ease` field) to FSRS (difficulty/stability):
@@ -2518,6 +2522,14 @@ function loadCard() {
     : tokenize(d.h).length;
   els.btnHint.disabled = hintRefLen <= 1;
   if (currentMode !== "listen") els.answer.focus();
+  // HE→RU shows Hebrew text with no audio control otherwise (unlike
+  // RU→HE, which gets a 🔊 after checking, or "Аудирование", which is
+  // audio-first by design) — auto-play it right away so this direction
+  // doubles as listening practice, not just reading. speak() already
+  // no-ops safely (voice missing, browser blocked it before any user
+  // gesture on the page, etc.) so there's nothing to guard here beyond
+  // the mode and the user's own toggle.
+  if (currentMode === "he2ru" && progress.meta.autoPlayAudio) speak(d.h, speakRateFor(currentIndex));
   updateStatsBar();
 }
 
@@ -2572,6 +2584,12 @@ function showFeedback(isCorrect, fb) {
     // clickable after checking too — a second "🔊 Прослушать" for the
     // same audio right here would just be the same control twice.
     els.btnAudio.classList.toggle("hidden", currentMode === "listen");
+    // RU→HE: the user just typed Hebrew from memory — play the reference
+    // pronunciation right away as confirmation, instead of making them
+    // reach for the 🔊 button (which stays for replays). Not for "listen":
+    // that mode's whole task IS hearing the audio, already covered by its
+    // own big play button, so auto-firing it again here would be noise.
+    if (currentMode === "ru2he" && progress.meta.autoPlayAudio) speak(DATA[currentIndex].h, speakRateFor(currentIndex));
   }
 
   if (fb.kind === "he" || fb.kind === "cloze") {
@@ -2788,6 +2806,18 @@ capInput.addEventListener("change", () => {
   saveProgress();
   cloudSyncMeta();
 });
+
+const autoplayToggle = document.getElementById("autoplay-toggle");
+if (!ttsSupported) {
+  autoplayToggle.closest(".cap-row").style.display = "none";
+} else {
+  autoplayToggle.checked = progress.meta.autoPlayAudio;
+  autoplayToggle.addEventListener("change", () => {
+    progress.meta.autoPlayAudio = autoplayToggle.checked;
+    saveProgress();
+    cloudSyncMeta();
+  });
+}
 
 const btnPoolReset = document.getElementById("btn-pool-reset");
 btnPoolReset.addEventListener("click", () => {
@@ -3850,6 +3880,7 @@ async function pullAndMerge(uid) {
     }
     if (remoteMeta.pool) progress.pool = remoteMeta.pool;
     if (remoteMeta.meta && remoteMeta.meta.dailyNewCap) progress.meta.dailyNewCap = remoteMeta.meta.dailyNewCap;
+    if (remoteMeta.meta && remoteMeta.meta.autoPlayAudio !== undefined) progress.meta.autoPlayAudio = remoteMeta.meta.autoPlayAudio;
     // Курс «Корни»: объединяем список пройденных корней (не перезаписываем,
     // как pool выше, — а сливаем, чтобы не потерять то, что уже сделано на
     // ЭТОМ устройстве, но ещё не долетело до сервера) и сразу же
