@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.24.0
+  Ивритский тренажёр — v1.25.0
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -879,7 +879,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.24.0</div>
+  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.25.0</div>
 </div>
 
 <script>
@@ -1205,6 +1205,55 @@ HE_SYNONYMS.forEach(group => {
   normGroup.forEach(w => { HE_SYN_MAP[w] = normGroup; });
 });
 function heSynonymMatch(a, b) { const g = HE_SYN_MAP[a]; return !!g && g.includes(b); }
+
+// Иврит — корневой (шаблонный) язык: согласные КОРНЯ всегда в середине
+// слова, а грамматика (лицо/время/род/число) выражается приставками и
+// суффиксами на КРАЯХ слова — א/ת/י/נ спереди (лицо в будущем
+// вр./причастии), ת/ה/ו/ם/ן сзади (род/число/лицо в прошедшем). Отзыв с
+// сайта (2026-09-16): נהיה/נהיתה («мы станем»/«она стала» — разное лицо)
+// засчитывались как один и тот же верный ответ, потому что отличаются на
+// одну букву (ת) — ровно то расстояние, что levenshteinLE(...,1) ниже
+// прощает как опечатку. Разница на краю слова в одну из этих букв — это
+// НЕ опечатка, а другая грамматическая форма; разница внутри слова
+// (корневые буквы) по-прежнему прощается как раньше — конкретный пример
+// с сайта был именно граничным случаем, общий смысл "прощать опечатки"
+// сохраняется для середины слова.
+const HE_PREFIX_MARKERS = new Set(["א", "ת", "י", "נ"]);
+const HE_SUFFIX_MARKERS = new Set(["ת", "ה", "ו", "ם", "ן", "י"]);
+// Более узкий набор для СЛУЧАЯ ВСТАВКИ/УДАЛЕНИЯ буквы (не замены): ה/ו/י —
+// это ещё и самые обычные гласные буквы (матрес лекционис) практически в
+// любом месте слова, поэтому "лишняя ו перед последней буквой" гораздо
+// чаще безобидная опечатка (מחשב/מחשוב, живой пример), чем смена формы.
+// ת/ם/ן почти никогда не бывают "просто гласной" — если ОДНА из них
+// появляется/пропадает у самого края слова, это гораздо надёжнее сигнал
+// грамматики (род/число/лицо), не опечатки. При ЗАМЕНЕ буквы (ветка выше)
+// такого шума меньше — там сравнивается КОНКРЕТНАЯ пара букв на конкретном
+// месте, а не просто факт вставки, так что там весь набор безопасен.
+const HE_SUFFIX_INSERTION_MARKERS = new Set(["ת", "ם", "ן"]);
+function isGrammaticalEdgeEdit(na, nb) {
+  if (na.length === nb.length) {
+    let i = 0;
+    while (i < na.length && na[i] === nb[i]) i++;
+    if (i !== 0 && i !== na.length - 1) return false;
+    const markers = i === 0 ? HE_PREFIX_MARKERS : HE_SUFFIX_MARKERS;
+    return markers.has(na[i]) && markers.has(nb[i]);
+  }
+  const shorter = na.length < nb.length ? na : nb;
+  const longer = na.length < nb.length ? nb : na;
+  let i = 0;
+  while (i < shorter.length && shorter[i] === longer[i]) i++;
+  if (longer.slice(0, i) + longer.slice(i + 1) !== shorter) return false;
+  const extra = longer[i];
+  // "На краю" — не буквально первый/последний индекс (נהיה→נהיתה: лишняя
+  // ת стоит ПЕРЕД финальной ה, а не после неё), а: перед вставкой ничего
+  // не осталось (i===0, приставка) ИЛИ после вставки остаётся не больше
+  // одной уже совпадающей буквы (суффиксальная зона — большинство маркеров
+  // рода/числа/лица однобуквенные и цепляются прямо к финальной букве
+  // основы).
+  if (i === 0) return HE_PREFIX_MARKERS.has(extra);
+  if (shorter.length - i <= 1) return HE_SUFFIX_INSERTION_MARKERS.has(extra);
+  return false;
+}
 // 0 = не совпадает, 1 = совпадает приблизительно, 2 = совпадает точно
 function heMatchDegree(a, b) {
   const na = heBaseNorm(a), nb = heBaseNorm(b);
@@ -1213,7 +1262,7 @@ function heMatchDegree(a, b) {
   const la = heLooseNorm(a), lb = heLooseNorm(b);
   if (la === lb) return 1;
   if (heSynonymMatch(na, nb) || heSynonymMatch(nb, na)) return 1;
-  if (Math.min(na.length, nb.length) >= 3 && levenshteinLE(na, nb, 1)) return 1;
+  if (Math.min(na.length, nb.length) >= 3 && levenshteinLE(na, nb, 1) && !isGrammaticalEdgeEdit(na, nb)) return 1;
   return 0;
 }
 
