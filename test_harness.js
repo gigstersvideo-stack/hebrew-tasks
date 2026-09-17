@@ -83,7 +83,7 @@ vm.runInContext(script, sandbox, { filename: 'script.js' });
 
 // ---- now run assertions using functions exposed on sandbox ----
 const {
-  heMatchDegree, diffTokensGeneric, tokenize, russianCheck, schedule, isMastered,
+  heMatchDegree, heMatchDetail, diffTokensGeneric, tokenize, russianCheck, schedule, isMastered,
   levenshteinLE, heBaseNorm, heLooseNorm,
 } = sandbox;
 
@@ -114,11 +114,35 @@ check('levenshtein short word no match without letters', heMatchDegree('הוא',
 // 6. genuinely different words should NOT match
 check('different words do not match', heMatchDegree('ספר', 'כלב') === 0);
 
+// 6b. grammatical-form differences (v1.25.0) must NOT count as correct at all
+check('different-person forms rejected', heMatchDegree('נהיה', 'נהיתה') === 0);
+check('different-prefix-person forms rejected', heMatchDegree('אכתוב', 'יכתוב') === 0);
+check('different-suffix-person forms rejected', heMatchDegree('כתבה', 'כתבו') === 0);
+
+// 6c. heMatchDetail (v1.25+): kind distinguishes typo (gets a highlight
+// position) from loose/synonym (no highlight — not actually a mistake)
+check('loose (male/chaser) match has kind=loose, no position', (() => {
+  const d = heMatchDetail('תיישב', 'תישב');
+  return d.degree === 1 && d.kind === 'loose' && d.posA === undefined && d.posB === undefined;
+})());
+check('synonym match has kind=synonym, no position', (() => {
+  const d = heMatchDetail('כאן', 'פה');
+  return d.degree === 1 && d.kind === 'synonym';
+})());
+check('real interior typo (extra letter) has kind=typo with a position on the longer side', (() => {
+  const d = heMatchDetail('שולחן', 'שלחן'); // interior vav typo, from earlier session example — user's word is longer (extra ו)
+  return d.degree === 1 && d.kind === 'typo' && d.posA === 1 && d.posB === null;
+})());
+check('real interior typo (substitution, same length) has a position on both sides', (() => {
+  const d = heMatchDetail('מחשק', 'מחשב'); // single substituted letter, same length
+  return d.degree === 1 && d.kind === 'typo' && typeof d.posA === 'number' && typeof d.posB === 'number' && d.posA === d.posB;
+})());
+
 // 7. diff alignment: one word changed in the middle
 {
   const user = tokenize('אני רוצה ללכת הביתה');
   const ref = tokenize('אני רוצה לחזור הביתה');
-  const { userOps, refOps } = diffTokensGeneric(user, ref, heMatchDegree);
+  const { userOps, refOps } = diffTokensGeneric(user, ref, heMatchDetail);
   const errCount = userOps.filter(o => o.t === 'del').length + refOps.filter(o => o.t === 'ins').length;
   check('diff finds exactly one real error for one changed word', errCount === 2); // 1 del + 1 ins for the swapped word
   check('diff keeps surrounding words as eq', userOps[0].t === 'eq' && userOps[userOps.length-1].t === 'eq');

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.25.0
+  Ивритский тренажёр — v1.26.0
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -256,6 +256,10 @@
   .tok.del { color: var(--bad); text-decoration: line-through; text-decoration-thickness: 1.5px; background: var(--del-bg); }
   .tok.ins { color: var(--good); font-weight: 600; background: var(--ins-bg); }
   .tok.fuzzy { color: var(--text); border-bottom: 1px dotted var(--accent-strong); background: var(--fuzzy-bg); }
+  /* Внутри .tok.fuzzy — конкретная буква опечатки (не всё слово целиком,
+     как раньше пунктир), отдельным цветом от .tok.del/.tok.ins (это не
+     "неверно", просто "вот тут разошлось буквами"). */
+  .typo-char { color: var(--amber); font-weight: 700; text-decoration: underline; text-decoration-color: var(--amber); text-decoration-thickness: 2px; text-underline-offset: 2px; }
   .tok.miss { color: var(--amber); background: var(--miss-bg); font-weight: 600; }
   .listen-meaning { font-family: 'IBM Plex Sans', 'Segoe UI', sans-serif; direction: ltr; text-align: left; font-size: 0.85rem; color: var(--text-muted); margin-top: 6px; }
 
@@ -879,7 +883,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.25.0</div>
+  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.26.0</div>
 </div>
 
 <script>
@@ -1254,16 +1258,67 @@ function isGrammaticalEdgeEdit(na, nb) {
   if (shorter.length - i <= 1) return HE_SUFFIX_INSERTION_MARKERS.has(extra);
   return false;
 }
-// 0 = не совпадает, 1 = совпадает приблизительно, 2 = совпадает точно
-function heMatchDegree(a, b) {
+// Позиция (индекс в нормализованной, без огласовок строке) правки между
+// двумя словами, отличающимися РОВНО на одну букву — переиспользует тот же
+// разбор "где вставка/замена", что и isGrammaticalEdgeEdit выше, только
+// возвращает индекс по каждой стороне (null — если на этой стороне нет
+// буквы для показа, т.е. как раз в ней чего-то не хватает). Используется
+// только для отрисовки жёлтой подсветки опечатки, не для решения "верно
+// или нет" — то решает isGrammaticalEdgeEdit/levenshteinLE, как раньше.
+function findEditPositions(na, nb) {
+  if (na.length === nb.length) {
+    let i = 0;
+    while (i < na.length && na[i] === nb[i]) i++;
+    return { posA: i, posB: i };
+  }
+  const aShorter = na.length < nb.length;
+  const shorter = aShorter ? na : nb;
+  const longer = aShorter ? nb : na;
+  let i = 0;
+  while (i < shorter.length && shorter[i] === longer[i]) i++;
+  return aShorter ? { posA: null, posB: i } : { posA: i, posB: null };
+}
+// 0 = не совпадает, 1 = совпадает приблизительно, 2 = совпадает точно.
+// kind различает, ПОЧЕМУ degree===1 — нужно отдельно от самого degree,
+// чтобы отрисовка могла подсветить жёлтым конкретную букву только для
+// настоящей опечатки (typo), а не для "то же слово другим написанием"
+// (loose — יי/י и т.п.) или синонима, которые вообще не ошибка.
+function heMatchDetail(a, b) {
   const na = heBaseNorm(a), nb = heBaseNorm(b);
-  if (!na || !nb) return 0;
-  if (na === nb) return 2;
+  if (!na || !nb) return { degree: 0, kind: "none" };
+  if (na === nb) return { degree: 2, kind: "exact" };
   const la = heLooseNorm(a), lb = heLooseNorm(b);
-  if (la === lb) return 1;
-  if (heSynonymMatch(na, nb) || heSynonymMatch(nb, na)) return 1;
-  if (Math.min(na.length, nb.length) >= 3 && levenshteinLE(na, nb, 1) && !isGrammaticalEdgeEdit(na, nb)) return 1;
-  return 0;
+  if (la === lb) return { degree: 1, kind: "loose" };
+  if (heSynonymMatch(na, nb) || heSynonymMatch(nb, na)) return { degree: 1, kind: "synonym" };
+  if (Math.min(na.length, nb.length) >= 3 && levenshteinLE(na, nb, 1) && !isGrammaticalEdgeEdit(na, nb)) {
+    return { degree: 1, kind: "typo", ...findEditPositions(na, nb) };
+  }
+  return { degree: 0, kind: "none" };
+}
+function heMatchDegree(a, b) { return heMatchDetail(a, b).degree; }
+// Оборачивает букву на позиции pos (индекс среди "настоящих" букв — как
+// возвращает findEditPositions, т.е. без огласовок) жёлтым спаном внутри
+// ИСХОДНОГО слова (с огласовками) — опечатка отмечена не по индексу в
+// нормализованной строке (там огласовки уже вырезаны), а по грапхеме
+// (буква + её огласовки) в реальном отображаемом тексте, иначе подсветка
+// попадёт не на ту букву при наличии никуда. pos===null (для стороны,
+// где просто не хватает буквы, а не где она лишняя/другая) — возвращает
+// слово без подсветки, просто экранированное.
+function heHighlightPos(word, pos) {
+  if (pos == null) return escapeHtml(word);
+  const clusters = heGraphemes(word);
+  let letterIdx = -1, targetIdx = -1;
+  for (let k = 0; k < clusters.length; k++) {
+    if (/[א-ת0-9\-]/.test(clusters[k][0])) {
+      letterIdx++;
+      if (letterIdx === pos) { targetIdx = k; break; }
+    }
+  }
+  if (targetIdx === -1) return escapeHtml(word);
+  return clusters.map((cl, k) => k === targetIdx
+    ? `<span class="typo-char">${escapeHtml(cl)}</span>`
+    : escapeHtml(cl)
+  ).join("");
 }
 
 function heGraphemes(word) {
@@ -1459,7 +1514,12 @@ function renderCustomCardsPanel() {
 function diffTokensGeneric(userToks, refToks, matchFn) {
   const n = userToks.length, m = refToks.length;
   const deg = Array.from({ length: n }, () => new Array(m));
-  for (let i = 0; i < n; i++) for (let j = 0; j < m; j++) deg[i][j] = matchFn(userToks[i], refToks[j]) > 0;
+  const detail = Array.from({ length: n }, () => new Array(m));
+  for (let i = 0; i < n; i++) for (let j = 0; j < m; j++) {
+    const dt = matchFn(userToks[i], refToks[j]);
+    detail[i][j] = dt;
+    deg[i][j] = dt.degree > 0;
+  }
   const dp = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
   for (let i = n - 1; i >= 0; i--)
     for (let j = m - 1; j >= 0; j--)
@@ -1468,9 +1528,11 @@ function diffTokensGeneric(userToks, refToks, matchFn) {
   let i = 0, j = 0;
   while (i < n && j < m) {
     if (deg[i][j]) {
-      const d = matchFn(userToks[i], refToks[j]);
-      const t = d === 2 ? "eq" : "eqf";
-      userOps.push({ t, w: userToks[i] }); refOps.push({ t, w: refToks[j] });
+      const dt = detail[i][j];
+      const t = dt.degree === 2 ? "eq" : "eqf";
+      const isTypo = dt.kind === "typo";
+      userOps.push({ t, w: userToks[i], typoPos: isTypo ? dt.posA : null });
+      refOps.push({ t, w: refToks[j], typoPos: isTypo ? dt.posB : null });
       i++; j++;
     } else if (dp[i+1][j] >= dp[i][j+1]) { userOps.push({ t: "del", w: userToks[i] }); i++; }
     else { refOps.push({ t: "ins", w: refToks[j] }); j++; }
@@ -1481,11 +1543,13 @@ function diffTokensGeneric(userToks, refToks, matchFn) {
 }
 function renderOps(ops) {
   return ops.map(o => {
-    const w = escapeHtml(o.w);
-    if (o.t === "eq") return `<span class="tok">${w}</span>`;
-    if (o.t === "eqf") return `<span class="tok fuzzy" title="Принято: похожая форма">${w}</span>`;
-    if (o.t === "del") return `<span class="tok del">${w}</span>`;
-    return `<span class="tok ins">${w}</span>`;
+    if (o.t === "eq") return `<span class="tok">${escapeHtml(o.w)}</span>`;
+    if (o.t === "eqf") {
+      const title = o.typoPos != null ? "Похоже, опечатка — отмечена буква" : "Принято: похожая форма";
+      return `<span class="tok fuzzy" title="${title}">${heHighlightPos(o.w, o.typoPos)}</span>`;
+    }
+    if (o.t === "del") return `<span class="tok del">${escapeHtml(o.w)}</span>`;
+    return `<span class="tok ins">${escapeHtml(o.w)}</span>`;
   }).join(" ");
 }
 
@@ -2611,16 +2675,20 @@ function showFeedback(isCorrect, fb) {
     const toks = tokenize(d.h);
     const idx = toks.indexOf(d.c);
     const cls = isCorrect && fb.degree === 1 ? "tok fuzzy" : isCorrect ? "tok" : "tok ins";
+    const isTypo = fb.typoKind === "typo";
     els.diffRef.innerHTML = toks.map((t, i) => i === idx
-      ? `<span class="${cls}">${escapeHtml(t)}</span>`
+      ? `<span class="${cls}">${isTypo ? heHighlightPos(t, fb.posB) : escapeHtml(t)}</span>`
       : escapeHtml(t)
     ).join(" ");
     // Always show what was typed with the same exact/fuzzy/wrong coloring
     // the reference side gets — including on a correct-but-fuzzy answer,
     // where "accepted as a close form" is exactly the thing worth seeing,
     // not just a bare "✓ Верно" with no trace of what was approximate.
+    // Для настоящей опечатки (не варианта написания/синонима) буква
+    // отмечается жёлтым — тем же приёмом, что и в предложениях (renderOps).
     const userCls = !isCorrect ? "tok del" : (fb.degree === 1 ? "tok fuzzy" : "tok");
-    showAnswerDiff(fb.userWord ? `<span class="${userCls}">${escapeHtml(fb.userWord)}</span>` : '<span class="tok">(пусто)</span>', false);
+    const userContent = fb.userWord ? (isTypo ? heHighlightPos(fb.userWord, fb.posA) : escapeHtml(fb.userWord)) : null;
+    showAnswerDiff(userContent ? `<span class="${userCls}">${userContent}</span>` : '<span class="tok">(пусто)</span>', false);
   } else {
     els.diffRef.classList.remove("ltr");
     els.diffRefLabel.textContent = "Правильный ответ";
@@ -2697,15 +2765,16 @@ function doCheck() {
     if (!isCorrect) result.missing.forEach(w => tallyMistake(progress.mistakesRu, w));
   } else if (currentMode === "cloze") {
     const userWord = tokenize(userText)[0] || "";
-    const degree = userWord ? heMatchDegree(userWord, d.c) : 0;
+    const dt = userWord ? heMatchDetail(userWord, d.c) : { degree: 0, kind: "none" };
+    const degree = dt.degree;
     isCorrect = degree > 0;
     quality = degree === 2 ? 5 : degree === 1 ? 4 : 1;
-    fb = { kind: "cloze", userWord, degree };
+    fb = { kind: "cloze", userWord, degree, typoKind: dt.kind, posA: dt.posA, posB: dt.posB };
     if (!isCorrect) tallyMistake(progress.mistakesHe, heBaseNorm(d.c));
   } else {
     const userToks = tokenize(userText);
     const refToks = tokenize(d.h);
-    const { userOps, refOps } = diffTokensGeneric(userToks, refToks, heMatchDegree);
+    const { userOps, refOps } = diffTokensGeneric(userToks, refToks, heMatchDetail);
     const errorCount = userOps.filter(o => o.t === "del").length + refOps.filter(o => o.t === "ins").length;
     const hadFuzzy = userOps.some(o => o.t === "eqf");
     isCorrect = userToks.length > 0 && errorCount === 0;
