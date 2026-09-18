@@ -31,6 +31,10 @@ find_homoglyph_violations, find_gemination_violations) для скриптов,
     python3 hebrew_spelling_rules.py
 """
 
+import datetime
+import hashlib
+import json
+import os
 import re
 import sys
 import unicodedata
@@ -168,7 +172,11 @@ def fix_ktiv_chaser(obj):
 HEBREW_LETTERS_RE = re.compile(r"[א-ת]")
 HEBREW_NIQUD_RE = re.compile(r"[֑-ׇ]")
 CYRILLIC_RE = re.compile(r"[Ѐ-ӿ]")
-ALLOWED_CHARS = set(" \t\n.,!?;:\"'()«»—–?%/0123456789")
+# обратный апостроф — используется в грамматических пометках как знак
+# гортанной ע (напр. "hиф`иль") наравне с латинской h — легитимная
+# конвенция, не порча (найдено при консолидации QA на корпусе читалки,
+# 2026-09-18: без него h из-за соседнего ` ошибочно считался порчей).
+ALLOWED_CHARS = set(" \t\n.,!?;:\"'()«»—–?%/0123456789`")
 WORD_SPLIT_RE = re.compile(r"[\s\-־–—]+")
 # осознанные цитаты настоящих арабских слов-когнатов (этимология) — не
 # порча, единственное реальное исключение, найденное при разборе всего
@@ -366,30 +374,256 @@ def find_gemination_violations(obj, root, path=""):
 
 
 # ============================================================
+# Правило 4: текст не в канонической NFC-нормализации
+# ============================================================
+# ВАЖНО (проверено эмпирически при консолидации QA, 2026-09-18): для
+# ивритского текста с никудом в этом корпусе unicodedata.normalize('NFC',
+# s) != s почти ВСЕГДА означает лишь другой порядок комбинирующих знаков
+# (дагеш/огласовка) внутри одного кластера — канонически эквивалентно,
+# визуально и по смыслу идентично, НЕ баг (прогон по всему
+# root_theory_all.json+root_sentences_all.json: 3531 срабатываний, из
+# них 3531 — тот же набор символов той же длины, просто переставлены;
+# 0 — с реальным добавлением/потерей символа). Поэтому эта функция
+# НАМЕРЕННО не вызывается из find_all_violations — как блокирующая
+# проверка "весь корпус должен быть NFC" она создаёт только шум. Она
+# остаётся отдельной утилитой для точечных, штучных проверок, где
+# сравниваются ДВЕ строки, которые обязаны совпадать буквально (не через
+# нормализацию по буквам, как это теперь сделано в
+# find_cloze_mismatch_violations ниже).
+
+def find_non_nfc_violations(obj, path=""):
+    violations = []
+    for p, s in _walk_strings(obj, path):
+        if unicodedata.normalize("NFC", s) != s:
+            violations.append((p, s))
+    return violations
+
+
+# ============================================================
+# Правило 5 (НЕ включено в find_all_violations — см. предупреждение):
+# заявленный корень не является подпоследовательностью согласных слова
+# ============================================================
+# ЗАДУМЫВАЛОСЬ как дешёвая защита от "утечки" полей между соседними
+# записями батч-генерации. ПРОВЕРЕНО ЭМПИРИЧЕСКИ на реальном корпусе
+# (2026-09-18) и ОТКЛОНЕНО как небезопасное для "слабых" корней (גזרות
+# — ע"ו/ע"י, פ"נ, כפולים и т.п.): у них производные слова регулярно НЕ
+# содержат буквально все согласные корня — слабая буква ассимилируется,
+# выпадает или заменяется другой (напр. корень ק-ו-ם -> לְהָקִים,
+# кайам קַיָּם — ו пропадает вовсе; ר-ב-ב -> רוֹב — удвоенная ב
+# схлопывается в одну). На реальном корпусе это дало 190 срабатываний,
+# из них ни одно не оказалось реальной ошибкой — все объясняются
+# нормальной морфологией слабых корней. Без отдельной модели/списка
+# исключений по типу גזרה это не отличить от настоящей утечки полей
+# простой строковой проверкой, поэтому функция НЕ вызывается из
+# find_all_violations и не участвует в audit_corpus.py — оставлена как
+# задел, если тема "проверка корня" будет исследована отдельно и
+# глубже (см. ROADMAP тренажёра).
+
+_HEADWORD_FIELD_NAMES = {"word", "lemma", "t"}
+
+
+def find_root_mismatch_violations(obj, root, path=""):
+    if not root:
+        return []
+    root_letters = [c for c in root.split("-") if c]
+    if not root_letters:
+        return []
+    violations = []
+    for p, s in _walk_strings(obj, path):
+        field = p.rsplit(".", 1)[-1].split("[")[0]
+        if field not in _HEADWORD_FIELD_NAMES:
+            continue
+        bare = _bare_consonants(s)
+        it = iter(bare)
+        if not all(letter in it for letter in root_letters):
+            violations.append((p, s))
+    return violations
+
+
+# ============================================================
+# Правило 6: посторонние управляющие/комбинирующие символы
+# ============================================================
+# bidi-метки (LRM/RLM/изоляты) и кантилляционные знаки (те'амим) не
+# принадлежат современному огласованному тексту курса — спекулятивный
+# класс ошибок (не пойман вживую), но чёрный список дёшев, включаю на
+# всякий случай.
+
+_STRAY_CONTROL_RE = re.compile(
+    "[\u200e\u200f\u2066-\u2069\u0591-\u05af]"
+)
+
+
+def find_stray_control_char_violations(obj, path=""):
+    violations = []
+    for p, s in _walk_strings(obj, path):
+        m = _STRAY_CONTROL_RE.search(s)
+        if m:
+            violations.append((p, s, f"посторонний символ U+{ord(m.group()):04X}"))
+    return violations
+
+
+# ============================================================
+# Правило 7: cloze_token не встречается как слово в своём предложении
+# ============================================================
+# Раньше — разовые скрипты по факту находки (7 случаев, 2026-09-14, см.
+# ROADMAP.md/FEEDBACK_LOG.md), теперь постоянно переиспользуемая функция.
+#
+# Сравнение идёт по СОГЛАСНЫМ БЕЗ ОГЛАСОВОК (_bare_consonants), а не по
+# буквальному '==' — огласовки/дагеш могут храниться в другом порядке
+# (канонически эквивалентно, см. Правило 4) без реального рассинхрона.
+# Учтено два реальных, НЕ баговых случая, оба нашлись только на живом
+# прогоне по всему корпусу (2026-09-18), наивная версия давала на них
+# сотни/десятки ложных срабатываний:
+#   1. слитный предлог-частица (ה/ו/ב/כ/ל/מ/ש) спереди слова —
+#      'שנייה' в тексте как 'השנייה' — не баг, нормальная связность речи
+#      (то же явление, что hanging-prefix в читалке, тут частица уже
+#      правильно слита, а не оторвана).
+#   2. cloze_token — МНОГОСЛОВНАЯ фраза (напр. 'אֶת הַסֵּפֶר', 'בִּלְתִּי
+#      צָפוּי') — ищем её как последовательность слов подряд в he, а не
+#      одним токеном целиком.
+
+def _word_matches_token_part(word_bare, part_bare):
+    if not part_bare or word_bare == part_bare:
+        return True
+    if word_bare.endswith(part_bare):
+        prefix = word_bare[: len(word_bare) - len(part_bare)]
+        if 0 < len(prefix) <= 3 and all(c in _PREFIX_LETTERS for c in prefix):
+            return True
+    return False
+
+
+def find_cloze_mismatch_violations(entry, path=""):
+    violations = []
+    for i, sent in enumerate(entry.get("sentences", []) if isinstance(entry, dict) else []):
+        he = sent.get("he", "")
+        token = sent.get("cloze_token", "")
+        if not token:
+            continue
+        token_parts = [_bare_consonants(t) for t in token.split()]
+        he_words = [_bare_consonants(w.strip(_STRIP_PUNCT)) for w in he.split()]
+        found = False
+        for start in range(len(he_words) - len(token_parts) + 1):
+            if all(
+                _word_matches_token_part(he_words[start + k], token_parts[k])
+                for k in range(len(token_parts))
+            ):
+                found = True
+                break
+        if not found:
+            p = f"{path}.sentences[{i}]" if path else f"sentences[{i}]"
+            violations.append((p, token, he))
+    return violations
+
+
+# ============================================================
+# Правило 8 (структурное, читалка): оторванная приставка-обрубок,
+# оставшаяся отдельным словом-объектом вместо слияния со следующим словом
+# ============================================================
+# Детект вынесен сюда из E:\hebrew-reader\5_gemini_pipeline.py, чтобы им
+# могли пользоваться и генерирующий пайплайн (форвард-guard), и
+# ретроактивный аудит всего существующего корпуса (см. ROADMAP —
+# 792 таких случая нашлись в двух книгах, созданных ДО того, как
+# фиксер появился в пайплайне 2026-09-12).
+
+_PREFIX_LETTERS = "הבוכלמש"
+
+
+def _bare_letters_for_prefix_check(t):
+    return re.sub(r"[^א-ת]", "", re.sub(r"[֑-ׇ]", "", t or ""))
+
+
+def _is_prefix_fragment(w):
+    b = _bare_letters_for_prefix_check(w.get("t", ""))
+    return len(b) == 1 and b in _PREFIX_LETTERS
+
+
+def find_hanging_prefix_violations(sentences, path=""):
+    """sentences — список {"words": [{"t": ...}, ...]} (формат
+    book-data-*.json/song-data-*.json читалки). Возвращает список
+    (path, слово) для каждого найденного оторванного фрагмента-приставки,
+    независимо от того, есть ли за ним следующее слово для слияния (в
+    отличие от merge_prefix_fragments, который молча пропускает
+    приставку в самом конце массива — тут это тоже репортим, раз это
+    аудит, а не автофикс)."""
+    violations = []
+    for i, s in enumerate(sentences):
+        ws = s.get("words", [])
+        for j, w in enumerate(ws):
+            if _is_prefix_fragment(w):
+                p = f"{path}.sentences[{i}].words[{j}]" if path else f"sentences[{i}].words[{j}]"
+                violations.append((p, w.get("t", "")))
+    return violations
+
+
+# ============================================================
+# Обобщённый кэш подтверждённых не-нарушений (не только геминация) —
+# теперь с хэшем содержимого, чтобы не быть уязвимым к тихой устарелости,
+# если текст в этом месте поменяется позже (старая версия кэша была
+# привязана только к (rule, root, path), без хэша).
+# ============================================================
+
+def _text_hash(text):
+    return hashlib.sha1((text or "").encode("utf-8")).hexdigest()[:16]
+
+
+def load_verified_cache(cache_path):
+    if os.path.exists(cache_path):
+        return json.load(open(cache_path, encoding="utf-8"))
+    return {}
+
+
+def save_verified_cache(cache, cache_path):
+    with open(cache_path, "w", encoding="utf-8") as f:
+        json.dump(cache, f, ensure_ascii=False, indent=2)
+
+
+def _cache_key(rule, path):
+    return f"{rule}::{path}"
+
+
+def is_verified(cache, rule, path, text):
+    entry = cache.get(_cache_key(rule, path))
+    return bool(entry) and entry.get("hash") == _text_hash(text)
+
+
+def mark_verified(cache, rule, path, text):
+    cache[_cache_key(rule, path)] = {
+        "hash": _text_hash(text),
+        "verified_at": datetime.date.today().isoformat(),
+    }
+
+
+# ============================================================
 # Единая точка входа
 # ============================================================
 
 def find_all_violations(obj, root=None, path=""):
-    """Прогоняет все три правила разом. root (корень записи, e.g.
-    'ה-י-ה') нужен только для правила 3 — без него оно просто
-    пропускается (напр. для контента, не привязанного к одному корню).
+    """Прогоняет все правила разом (три исходных плюс non_nfc/
+    stray_control, добавленные при консолидации QA — см. ROADMAP).
+    root (корень записи, e.g. 'ה-י-ה') нужен для gemination и
+    root_mismatch — без него оба просто пропускаются (напр. для
+    контента, не привязанного к одному корню). cloze_mismatch и
+    hanging_prefix требуют своей особой структуры записи (sentences[]/
+    words[]), поэтому НЕ включены сюда — вызываются отдельно в
+    audit_corpus.py, где эта структура точно есть.
     Возвращает список словарей {rule, path, word, reason?} — единый
-    формат вместо трёх разных форм кортежей у отдельных find_*."""
+    формат вместо разных форм кортежей у отдельных find_*."""
     out = []
     for p, word, reason in find_ktiv_chaser_violations(obj, path):
         out.append({"rule": "ktiv_chaser", "path": p, "word": word, "reason": reason})
     for p, word in find_homoglyph_violations(obj, path):
         out.append({"rule": "homoglyph", "path": p, "word": word})
+    for p, word, reason in find_stray_control_char_violations(obj, path):
+        out.append({"rule": "stray_control", "path": p, "word": word, "reason": reason})
     if root:
         for p, word in find_gemination_violations(obj, root, path):
             out.append({"rule": "gemination", "path": p, "word": word})
+        # find_root_mismatch_violations сознательно НЕ подключено — см.
+        # предупреждение у самой функции (слабые корни дают шум).
     return out
 
 
 def _main():
-    import json
-    import os
-
     here = os.path.dirname(os.path.abspath(__file__))
     theory_path = os.path.join(here, "root_theory_all.json")
     sentences_path = os.path.join(here, "root_sentences_all.json")
