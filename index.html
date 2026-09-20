@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.27.11
+  Ивритский тренажёр — v1.28.0
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -932,7 +932,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.27.11</div>
+  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.28.0</div>
 </div>
 
 <script>
@@ -1004,6 +1004,12 @@ if (!progress.streak) progress.streak = { lastDate: null, count: 0 };
 if (!progress.pool) progress.pool = { levels: [0, 1, 2, 3, 4], include: [], exclude: [] };
 if (progress.meta.autoPlayAudio === undefined) progress.meta.autoPlayAudio = true;
 if (!progress.rootsCourse) progress.rootsCourse = { completedTheory: [] };
+// v1.28.0: раскладка DATA, под которую записаны СТАРЫЕ числовые ключи карточек
+// корней/личных (до перехода на стабильные id) — нужна ровно один раз для
+// миграции, потом флаг keysV2 её отключает.
+const legacyKeyLayout = (!progress.keysV2 && progress.rootsCourse.sentenceIndexByRoot)
+  ? JSON.parse(JSON.stringify(progress.rootsCourse.sentenceIndexByRoot)) : {};
+const legacyMapActive = !progress.keysV2;
 if (!progress.rootsCourse.completedGrowingTexts) progress.rootsCourse.completedGrowingTexts = [];
 // Migrating from SM-2 (had an `ease` field) to FSRS (difficulty/stability):
 // the two models aren't convertible, so the review schedule resets — but the
@@ -1017,7 +1023,102 @@ function ensureTodayMeta() {
     progress.meta.newToday = { date: todayStr(), count: 0 };
   }
 }
-function saveProgress() { try { localStorage.setItem(STORE_KEY, JSON.stringify(progress)); } catch (e) {} }
+// ---- Стабильные ключи карточек (v1.28.0) ----
+// Раньше карточка хранилась и синхронизировалась под ключом «номер в DATA:режим».
+// Для встроенных фраз (до BUILTIN_DATA_LENGTH) номер стабилен, а для фраз курса
+// «Корни» и личных карточек это позиция в массиве, который каждое устройство
+// собирает у себя (порядок разблокировки корней, гонка с загрузкой личных
+// карточек) — на другом устройстве та же карточка «повторена 4 раза» оказывалась
+// приклеена к чужому предложению (проверено на двух «устройствах»,
+// 2026-09-20). Теперь во ВНЕШНЕМ мире (localStorage, облако) такие карточки
+// живут под id самого предложения: «r|<корень>|<номер в корне>» и
+// «c|<id личной карточки>», а внутри работы приложения по-прежнему «номер:режим»
+// (progress.items) — перевод только на границах.
+const sidToIndex = {};      // sid -> индекс в DATA ЭТОЙ загрузки
+let pendingItems = {};      // стабильный ключ -> состояние; предложение ещё не разложено в DATA
+function sidOfIndex(i) { const d = DATA[i]; return (d && d._sid) || null; }
+function toStableKey(key) {
+  const c = key.lastIndexOf(":");
+  const sid = sidOfIndex(Number(key.slice(0, c)));
+  return sid ? sid + key.slice(c) : key;
+}
+function newerCardState(a, b) {
+  if (!a) return b; if (!b) return a;
+  return (a.lastReview || 0) >= (b.lastReview || 0) ? a : b;
+}
+// Ключ (любой формы) -> стабильный ключ, либо null: числовой ключ ≥ BUILTIN —
+// это старая позиционная форма; в первую загрузку после перехода её можно
+// восстановить по раскладке, под которую она писалась, дальше — нельзя.
+function canonicalCardKey(key) {
+  const c = key.lastIndexOf(":");
+  const head = key.slice(0, c);
+  if (!/^\d+$/.test(head)) return key;
+  const n = Number(head);
+  if (n < BUILTIN_DATA_LENGTH) return key;
+  if (!legacyMapActive) return null;
+  for (const rootId in legacyKeyLayout) {
+    const k = legacyKeyLayout[rootId].indexOf(n);
+    if (k !== -1) return "r|" + rootId + "|" + k + key.slice(c);
+  }
+  return null;
+}
+// Стабильный ключ -> «номер:режим» этой загрузки, либо null, пока не разложено.
+function runtimeCardKey(sk) {
+  const c = sk.lastIndexOf(":");
+  const head = sk.slice(0, c);
+  if (/^\d+$/.test(head)) return sk;
+  const i = sidToIndex[head];
+  return i === undefined ? null : i + sk.slice(c);
+}
+function ingestItems(stableItems) {
+  for (const key in stableItems) {
+    const sk = canonicalCardKey(key);
+    if (sk === null) continue;
+    const rk = runtimeCardKey(sk);
+    if (rk !== null) progress.items[rk] = newerCardState(progress.items[rk], stableItems[key]);
+    else pendingItems[sk] = newerCardState(pendingItems[sk], stableItems[key]);
+  }
+}
+// Вызывается после того, как в DATA добавились предложения (корни/личные).
+function flushPendingItems() {
+  for (const sk of Object.keys(pendingItems)) {
+    const rk = runtimeCardKey(sk);
+    if (rk === null) continue;
+    progress.items[rk] = newerCardState(progress.items[rk], pendingItems[sk]);
+    delete pendingItems[sk];
+  }
+}
+function resetPendingItems() { pendingItems = {}; }
+function serializeItems() {
+  const out = {};
+  for (const k in progress.items) out[toStableKey(k)] = progress.items[k];
+  for (const sk in pendingItems) if (!(sk in out)) out[sk] = pendingItems[sk];
+  return out;
+}
+// В pool.include/exclude остаются только встроенные фразы: позиции корней и
+// личных карточек не переносятся между загрузками/устройствами, и всё нужное
+// (личные карточки в пуле, удалённые — в исключениях) каждый раз заново
+// выводится при их раскладке в DATA.
+function persistedPool() {
+  return Object.assign({}, progress.pool, {
+    include: progress.pool.include.filter(i => i < BUILTIN_DATA_LENGTH),
+    exclude: progress.pool.exclude.filter(i => i < BUILTIN_DATA_LENGTH),
+  });
+}
+function persistView() {
+  return Object.assign({}, progress, { items: serializeItems(), pool: persistedPool(), keysV2: true });
+}
+function saveProgress() { try { localStorage.setItem(STORE_KEY, JSON.stringify(persistView())); } catch (e) {} }
+// Загруженный из localStorage progress.items — в стабильной (или старой) форме.
+{
+  const stored = progress.items;
+  progress.items = {};
+  ingestItems(stored);
+  progress.pool.include = progress.pool.include.filter(i => i < BUILTIN_DATA_LENGTH);
+  progress.pool.exclude = progress.pool.exclude.filter(i => i < BUILTIN_DATA_LENGTH);
+  progress.keysV2 = true;
+  if (legacyMapActive) saveProgress(); // миграцию сразу закрепляем на диске в новой форме
+}
 
 // No-op until the separate Firebase module script (loaded independently, see
 // bottom of file) overrides these on `window` once signed in. Keeps the app
@@ -1476,14 +1577,15 @@ function appendCustomCards(cards) {
     if (customCardIndexBySource[card.id] !== undefined) return; // already appended this session
     const index = DATA.length;
     customCardIndexBySource[card.id] = index;
+    sidToIndex["c|" + card.id] = index;
     if (card.deleted) {
-      DATA.push({ r: "", h: "", l: CUSTOM_LEVEL_CODE, c: "", _tombstone: true });
+      DATA.push({ r: "", h: "", l: CUSTOM_LEVEL_CODE, c: "", _tombstone: true, _sid: "c|" + card.id });
       if (!progress.pool.exclude.includes(index)) { progress.pool.exclude.push(index); changed = true; }
       return;
     }
     const toks = tokenize(card.he || "");
     const focus = card.focusWord && toks.includes(card.focusWord) ? card.focusWord : (toks[0] || "");
-    DATA.push({ r: card.ru || "", h: card.he || "", l: CUSTOM_LEVEL_CODE, c: focus });
+    DATA.push({ r: card.ru || "", h: card.he || "", l: CUSTOM_LEVEL_CODE, c: focus, _sid: "c|" + card.id });
     customCardsInfo[card.id] = { he: card.he || "", ru: card.ru || "", index };
     if (!progress.pool.include.includes(index)) { progress.pool.include.push(index); changed = true; }
     // A ready-made built-in sentence for the same word, if the corpus has
@@ -1498,6 +1600,7 @@ function appendCustomCards(cards) {
       }
     }
   });
+  flushPendingItems();
   if (changed) saveProgress();
   if (typeof renderCustomCardsPanel === "function") renderCustomCardsPanel();
   return sorted.map(card => customCardIndexBySource[card.id]);
@@ -1537,12 +1640,15 @@ function appendRootSentences(rootId, sentences) {
   if (rootSentencesInjectedThisLoad.has(rootId)) return progress.rootsCourse.sentenceIndexByRoot[rootId] || [];
   if (!sentences || !sentences.length) return progress.rootsCourse.sentenceIndexByRoot[rootId] || [];
   rootSentencesInjectedThisLoad.add(rootId);
-  const indices = sentences.map(s => {
+  const indices = sentences.map((s, k) => {
     const index = DATA.length;
-    DATA.push({ r: s.ru || "", h: s.he || "", l: ROOTS_BASE1_LEVEL_CODE, c: s.cloze_token || "" });
+    const sid = "r|" + rootId + "|" + k;
+    DATA.push({ r: s.ru || "", h: s.he || "", l: ROOTS_BASE1_LEVEL_CODE, c: s.cloze_token || "", _sid: sid });
+    sidToIndex[sid] = index;
     return index;
   });
   progress.rootsCourse.sentenceIndexByRoot[rootId] = indices; // всегда свежие индексы для ЭТОЙ загрузки
+  flushPendingItems();
   return indices;
 }
 
@@ -3257,8 +3363,8 @@ rootsResetBtn.addEventListener("click", () => {
     Object.values(idxMap).flat().forEach(i => {
       ALL_MODES.forEach(m => {
         const k = i + ":" + m;
+        keysToDelete.push(toStableKey(k)); // до delete: нужен DATA[i]._sid
         delete progress.items[k];
-        keysToDelete.push(k);
       });
       if (!progress.pool.exclude.includes(i)) progress.pool.exclude.push(i);
     });
@@ -4071,7 +4177,7 @@ async function pullCustomCards(uid) {
 function metaPayload() {
   return {
     meta: progress.meta, mistakesHe: progress.mistakesHe, mistakesRu: progress.mistakesRu,
-    streak: progress.streak, pool: progress.pool,
+    streak: progress.streak, pool: persistedPool(),
     // Только completedTheory — устройство-независимый список id корней.
     // sentenceIndexByRoot НЕ синхронизируется намеренно: это чистые DATA-
     // индексы этого конкретного устройства, на другом устройстве те же
@@ -4086,7 +4192,7 @@ function metaPayload() {
 // script would never see it, so it has to go through `window` explicitly).
 window.cloudSyncCard = function (key, state) {
   if (!cloudUid) return;
-  setDoc(doc(cardsCol(cloudUid), key), state).catch(() => {});
+  setDoc(doc(cardsCol(cloudUid), toStableKey(key)), state).catch(() => {});
 };
 window.cloudSyncMeta = function () {
   if (!cloudUid) return;
@@ -4217,10 +4323,18 @@ function mergeCounterMaps(a, b) {
   return out;
 }
 async function pullAndMerge(uid) {
-  const localItems = progress.items;
+  const localItems = serializeItems(); // в стабильных ключах
   const remoteItems = {};
+  const legacyDocs = [];
   const snap = await withAuthRaceRetry(() => getDocs(cardsCol(uid)));
-  snap.forEach(d => { remoteItems[d.id] = d.data(); });
+  snap.forEach(d => {
+    const sk = canonicalCardKey(d.id);
+    const c = d.id.lastIndexOf(":");
+    const isLegacy = /^\d+$/.test(d.id.slice(0, c)) && Number(d.id.slice(0, c)) >= BUILTIN_DATA_LENGTH;
+    if (isLegacy) legacyDocs.push(d.id); // старая позиционная форма: переехала (или не восстановима) — убрать из облака
+    if (sk === null) return;
+    remoteItems[sk] = mergeCardStates(remoteItems[sk], d.data());
+  });
   const allKeys = new Set([...Object.keys(localItems), ...Object.keys(remoteItems)]);
   const mergedItems = {};
   allKeys.forEach(k => { mergedItems[k] = mergeCardStates(localItems[k], remoteItems[k]); });
@@ -4228,14 +4342,25 @@ async function pullAndMerge(uid) {
   const metaSnap = await withAuthRaceRetry(() => getDoc(metaDocRef(uid)));
   const remoteMeta = metaSnap.exists() ? metaSnap.data() : null;
 
-  progress.items = mergedItems;
+  progress.items = {};
+  resetPendingItems();
+  ingestItems(mergedItems);
   if (remoteMeta) {
     progress.mistakesHe = mergeCounterMaps(progress.mistakesHe, remoteMeta.mistakesHe || {});
     progress.mistakesRu = mergeCounterMaps(progress.mistakesRu, remoteMeta.mistakesRu || {});
     if (remoteMeta.streak && (remoteMeta.streak.lastDate || "") > (progress.streak.lastDate || "")) {
       progress.streak = remoteMeta.streak;
     }
-    if (remoteMeta.pool) progress.pool = remoteMeta.pool;
+    if (remoteMeta.pool) {
+      // Из облака берём уровни и точечные правки встроенных фраз; позиции
+      // корней/личных карточек (в старых записях их много) отбрасываем, а то,
+      // что этому устройству уже известно про свои личные карточки, оставляем.
+      const rp = remoteMeta.pool;
+      progress.pool = Object.assign({}, rp, {
+        include: (rp.include || []).filter(i => i < BUILTIN_DATA_LENGTH).concat(progress.pool.include.filter(i => i >= BUILTIN_DATA_LENGTH)),
+        exclude: (rp.exclude || []).filter(i => i < BUILTIN_DATA_LENGTH).concat(progress.pool.exclude.filter(i => i >= BUILTIN_DATA_LENGTH)),
+      });
+    }
     if (remoteMeta.meta && remoteMeta.meta.dailyNewCap) progress.meta.dailyNewCap = remoteMeta.meta.dailyNewCap;
     if (remoteMeta.meta && remoteMeta.meta.autoPlayAudio !== undefined) progress.meta.autoPlayAudio = remoteMeta.meta.autoPlayAudio;
     // Курс «Корни»: объединяем список пройденных корней (не перезаписываем,
@@ -4261,6 +4386,7 @@ async function pullAndMerge(uid) {
   saveProgress();
 
   await commitInBatches(uid, allKeys, k => mergedItems[k]);
+  if (legacyDocs.length) await window.cloudDeleteCards(legacyDocs);
   await setDoc(metaDocRef(uid), metaPayload());
 }
 

@@ -456,5 +456,97 @@ if (!fs.existsSync(sentencesPath)) {
   check('root session: a finished session leaves nothing saved', run(`progress.rootsCourse.activeSession`) === null);
 }
 
+// Стабильные ключи карточек (v1.28.0): карточка корня/личная живёт под id самого
+// предложения, а не под позицией в DATA — иначе на устройстве с другим порядком
+// разблокировки корней она оказывается приклеена к чужому предложению (проверено
+// на двух «устройствах» 2026-09-20).
+{
+  const run = (code) => vm.runInContext(code, sandbox);
+  const res = JSON.parse(run(`(function () {
+    const base = BUILTIN_DATA_LENGTH;
+    const S1 = [{he:'אחד', ru:'one', cloze_token:'אחד'}, {he:'שניים', ru:'two', cloze_token:'שניים'}];
+    const S2 = [{he:'שלוש', ru:'three', cloze_token:'שלוש'}, {he:'ארבע', ru:'four', cloze_token:'ארבע'}];
+    const CARDS = [{id:'reader:b1:s1', he:'כלב גדול', ru:'big dog', focusWord:'כלב', addedAt:10},
+                   {id:'reader:b1:s2', he:'חתול קטן', ru:'small cat', focusWord:'חתול', addedAt:20}];
+    function reset() {
+      DATA.length = base;
+      for (const k in sidToIndex) delete sidToIndex[k];
+      for (const k in customCardIndexBySource) delete customCardIndexBySource[k];
+      for (const k in customCardsInfo) delete customCardsInfo[k];
+      progress.items = {}; resetPendingItems(); rootSentencesInjectedThisLoad.clear();
+      progress.pool = { levels: [0,1,2,3,4], include: [], exclude: [] };
+      progress.rootsCourse = { completedTheory: [], completedGrowingTexts: [], sentenceIndexByRoot: {} };
+    }
+    const out = {};
+    // device A: root a first, then b; the card is a review of sentence #1 of root b ("four")
+    reset(); appendRootSentences('a-a-a', S1); appendRootSentences('b-b-b', S2);
+    const idxA = progress.rootsCourse.sentenceIndexByRoot['b-b-b'][1];
+    progress.items[idxA + ':cloze'] = { stability: 30, reps: 4, lastReview: 5 };
+    const stored = serializeItems();
+    out.storedKeys = Object.keys(stored);
+    out.builtinKeyUnchanged = toStableKey('5:cloze') === '5:cloze';
+    // device B: the opposite order of unlocking
+    reset(); appendRootSentences('b-b-b', S2); appendRootSentences('a-a-a', S1);
+    ingestItems(stored);
+    const idxB = progress.rootsCourse.sentenceIndexByRoot['b-b-b'][1];
+    out.idxA = idxA; out.idxB = idxB;
+    out.landsOnSameSentence = !!progress.items[idxB + ':cloze'] && DATA[idxB].h === 'ארבע' && progress.items[idxB + ':cloze'].reps === 4;
+    out.noStrayCard = !progress.items[idxA + ':cloze'];
+    // cards arrive BEFORE their sentences are laid out (cloud pull first, root replay second)
+    reset(); ingestItems(stored);
+    out.pendingBefore = Object.keys(pendingItems).length;
+    out.notAttachedYet = Object.keys(progress.items).length === 0;
+    appendRootSentences('a-a-a', S1);
+    out.stillPendingAfterOtherRoot = Object.keys(pendingItems).length;
+    appendRootSentences('b-b-b', S2);
+    const idxC = progress.rootsCourse.sentenceIndexByRoot['b-b-b'][1];
+    out.pendingCleared = Object.keys(pendingItems).length === 0 && DATA[idxC].h === 'ארבע' && progress.items[idxC + ':cloze'].reps === 4;
+    // a card whose sentence is not laid out on this device is kept (and written back), not lost
+    reset(); ingestItems(stored);
+    out.roundTripKeepsPending = Object.keys(serializeItems())[0] === 'r|b-b-b|1:cloze';
+    // personal cards: same sentence whether they are appended before or after the roots
+    reset(); appendCustomCards(CARDS); appendRootSentences('a-a-a', S1);
+    const cIdx1 = customCardIndexBySource['reader:b1:s2'];
+    progress.items[cIdx1 + ':he2ru'] = { stability: 9, reps: 2, lastReview: 7 };
+    const cStored = serializeItems();
+    out.customKey = Object.keys(cStored)[0];
+    reset(); appendRootSentences('a-a-a', S1); appendCustomCards(CARDS); ingestItems(cStored);
+    const cIdx2 = customCardIndexBySource['reader:b1:s2'];
+    out.customSame = cIdx1 !== cIdx2 && DATA[cIdx2].h === 'חתול קטן' && progress.items[cIdx2 + ':he2ru'].reps === 2;
+    // the persisted pool keeps only built-in phrases (root/custom positions are per-load)
+    progress.pool.include = [3, cIdx2]; progress.pool.exclude = [4, 99999];
+    const pv = persistView();
+    out.poolFiltered = JSON.stringify(pv.pool.include) === '[3]' && JSON.stringify(pv.pool.exclude) === '[4]' && pv.keysV2 === true;
+    // a newer review wins when both sides have the card
+    reset(); appendRootSentences('b-b-b', S2);
+    const i1 = progress.rootsCourse.sentenceIndexByRoot['b-b-b'][1];
+    progress.items[i1 + ':cloze'] = { reps: 9, lastReview: 100 };
+    ingestItems({ 'r|b-b-b|1:cloze': { reps: 1, lastReview: 50 } });
+    out.newerWins = progress.items[i1 + ':cloze'].reps === 9;
+    // old positional keys: unrecoverable ones are dropped, recoverable ones move to stable ids
+    out.legacyDropped = canonicalCardKey(String(base + 500) + ':cloze') === null;
+    legacyKeyLayout['x-y-z'] = [base + 40, base + 41];
+    out.legacyMapped = canonicalCardKey((base + 41) + ':cloze') === 'r|x-y-z|1:cloze';
+    delete legacyKeyLayout['x-y-z'];
+    reset();
+    return JSON.stringify(out);
+  })()`));
+  check('stable keys: a root card is stored under the sentence id, not its position', res.storedKeys.length === 1 && res.storedKeys[0] === 'r|b-b-b|1:cloze');
+  check('stable keys: built-in phrases keep their plain numeric key', res.builtinKeyUnchanged);
+  check('stable keys: the two devices really had different positions', res.idxA !== res.idxB);
+  check('stable keys: the card lands on the same sentence on the device with the opposite unlock order', res.landsOnSameSentence);
+  check('stable keys: nothing is attached to the other device\'s position', res.noStrayCard);
+  check('stable keys: a card that arrives before its sentences waits instead of being lost', res.pendingBefore === 1 && res.notAttachedYet);
+  check('stable keys: an unrelated root being laid out does not release it', res.stillPendingAfterOtherRoot === 1);
+  check('stable keys: it is attached as soon as its own root is laid out', res.pendingCleared);
+  check('stable keys: a still-waiting card is written back under its stable key', res.roundTripKeepsPending);
+  check('stable keys: a personal card gets a stable key', res.customKey === 'c|reader:b1:s2:he2ru');
+  check('stable keys: a personal card lands on the same sentence whichever is appended first', res.customSame);
+  check('stable keys: the saved pool keeps only built-in phrases', res.poolFiltered);
+  check('stable keys: the more recently reviewed side wins on merge', res.newerWins);
+  check('stable keys: an old positional key with no known layout is dropped', res.legacyDropped);
+  check('stable keys: an old positional key inside the last known layout is migrated', res.legacyMapped);
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
