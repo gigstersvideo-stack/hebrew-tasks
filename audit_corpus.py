@@ -17,6 +17,12 @@ audit_corpus.py — единая точка входа для ретроакти
 
 Запуск: python audit_corpus.py
 Ненулевой exit code, если найдено хоть одно неподтверждённое нарушение.
+
+Запуск python audit_corpus.py --dict — дополнительно словарная проверка
+полного написания (Hspell, см. hebrew_spelling_rules.py, правило 1в): слова,
+которых нет в словаре, но есть вариант с одним лишним/недостающим י или ו.
+Отдельный режим, пока в корпусе есть такие слова; отчёт пишется в
+_dict/audit_report.json.
 """
 
 import glob
@@ -116,7 +122,59 @@ def audit_growing_texts(cache, total, confirmed_noise):
     return total, confirmed_noise
 
 
+def _iter_corpus_entries():
+    """(метка, объект) для всех файлов курса: теория, предложения, растущие тексты."""
+    p = os.path.join(HERE, "root_theory_all.json")
+    if os.path.exists(p):
+        for entry in json.load(open(p, encoding="utf-8")):
+            yield f"theory[{entry.get('root')}]", entry
+    p = os.path.join(HERE, "root_sentences_all.json")
+    if os.path.exists(p):
+        for entry in json.load(open(p, encoding="utf-8")):
+            yield f"sentences[{entry.get('root')}]", entry
+    for f in sorted(glob.glob(os.path.join(HERE, "growing_texts", "checkpoint_??.json"))):
+        yield os.path.basename(f), json.load(open(f, encoding="utf-8"))
+
+
+def audit_dictionary():
+    words = rules.load_dictionary()
+    if not words:
+        print("Словарь Hspell недоступен (нет сети и нет _dict/he_IL.dic).", file=sys.stderr)
+        return 2
+    import collections
+    occurrences = collections.Counter()
+    locations = {}
+    for label, entry in _iter_corpus_entries():
+        for path, token, reason, cands in rules.find_dictionary_spelling_violations(entry, label, words=words):
+            occurrences[token] += 1
+            locations.setdefault(token, path)
+    auto = review = 0
+    auto_occ = review_occ = 0
+    report = []
+    for token, n in occurrences.most_common():
+        fix = rules.suggest_dictionary_fix(token, words)
+        kind = fix[0] if fix else "review"
+        value = fix[1] if fix else []
+        if kind == "auto":
+            auto += 1
+            auto_occ += n
+        else:
+            review += 1
+            review_occ += n
+        report.append({"word": token, "count": n, "kind": kind, "suggest": value, "where": locations[token]})
+    os.makedirs(rules.DICT_DIR, exist_ok=True)
+    out = os.path.join(rules.DICT_DIR, "audit_report.json")
+    json.dump(report, open(out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    print(f"Словарная проверка: {len(occurrences)} слов, {sum(occurrences.values())} вхождений", file=sys.stderr)
+    print(f"  можно исправить механически: {auto} слов ({auto_occ} вхождений)", file=sys.stderr)
+    print(f"  нужна ручная проверка:       {review} слов ({review_occ} вхождений)", file=sys.stderr)
+    print(f"  отчёт: {out}", file=sys.stderr)
+    return 1 if occurrences else 0
+
+
 def main():
+    if "--dict" in sys.argv:
+        sys.exit(audit_dictionary())
     cache = rules.load_verified_cache(CACHE_PATH)
     legacy_gemination = _load_legacy_gemination_cache()
     total = 0

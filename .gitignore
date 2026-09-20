@@ -19,3 +19,5 @@ firebase-service-account.json
 *firebase-adminsdk*.json
 
 __pycache__/
+
+_dict/
