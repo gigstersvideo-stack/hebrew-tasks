@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.26.0
+  Ивритский тренажёр — v1.27.0
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -28,7 +28,7 @@
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "ae7ff50abdb349218be10b3fd417f163"}'></script><!-- End Cloudflare Web Analytics -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@400;500;700&family=David+Libre:wght@400;500;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700&family=Noto+Sans+Hebrew:wght@400;500;700&family=David+Libre:wght@400;500;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #EDEFEA;
@@ -608,32 +608,51 @@
   .rt-loading { font-size: 0.85rem; color: var(--text-faint); padding: 24px 0; text-align: center; }
 
   /* ---- растущий текст (между корнями, каждые 3) ---- */
-  .rt-gt-body { display: flex; flex-direction: column; gap: 2px; }
-  .rt-gt-sentence { display: flex; align-items: flex-start; gap: 8px; padding: 7px 0; border-bottom: 1px dashed var(--border); }
-  .rt-gt-sentence:last-child { border-bottom: none; }
-  .rt-gt-listen-btn {
-    flex-shrink: 0; margin-top: 1px; width: 26px; height: 26px; border-radius: 50%;
-    border: 1px solid var(--border); background: var(--surface-2); color: var(--accent-strong);
-    font-size: 0.72rem; line-height: 1; display: flex; align-items: center; justify-content: center;
-    cursor: pointer; padding: 0;
+  /* Оформление как у читалки: сплошной текст абзацами, крупный Frank Ruhl
+     Libre с большим межстрочным, предложения — инлайн, перевод — по значку
+     «א» в конце предложения (тот же круглый значок, что в читалке). */
+  .rt-gt-read { display: flex; flex-direction: column; gap: 14px; }
+  .rt-gt-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .rt-gt-toolbar .rt-gt-meta { font-size: 0.76rem; color: var(--text-faint); }
+  .rt-gt-playall {
+    border: 1px solid var(--border); background: var(--surface); color: var(--accent-strong);
+    font: inherit; font-size: 0.8rem; font-weight: 600; padding: 6px 14px; border-radius: 999px; cursor: pointer;
   }
-  .rt-gt-listen-btn:hover { background: var(--accent-soft); border-color: var(--accent-strong); }
-  .rt-gt-listen-btn.playing { background: var(--accent); border-color: var(--accent); color: var(--surface); }
-  .rt-gt-text { flex: 1; min-width: 0; }
-  /* Атомарные инлайн-боксы (inline-flex/inline-block) в RTL-тексте браузер
-     иногда отрывает от строки при переносе (см. project memory про баг
-     значка "א" в читалке) — значок перевода здесь намеренно display:inline,
-     размер через padding/line-height, а не width/height. */
-  .rt-gt-he { font-family: 'Noto Sans Hebrew', serif; font-size: 1.05rem; color: var(--text); line-height: 1.85; direction: rtl; unicode-bidi: isolate; }
+  .rt-gt-playall:hover { background: var(--accent-soft); border-color: var(--accent-strong); }
+  .rt-gt-playall.on { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+  .rt-gt-page {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 22px clamp(16px, 4vw, 34px) 14px; box-shadow: var(--shadow);
+  }
+  .rt-gt-para {
+    font-family: 'Frank Ruhl Libre', 'David Libre', 'Noto Sans Hebrew', serif;
+    font-size: clamp(1.35rem, 3.4vw, 1.65rem); line-height: 2.05; color: var(--text);
+    direction: rtl; text-align: start; margin: 0 0 10px;
+  }
+  .rt-gt-s { position: relative; border-radius: 3px; cursor: pointer; transition: background .25s ease; }
+  .rt-gt-s:hover { background: var(--accent-soft); }
+  .rt-gt-s.playing { background: var(--amber-soft); }
+  .rt-gt-w { border-radius: 3px; padding: 0 1px; transition: background .15s ease, color .15s ease; }
+  .rt-gt-w.speaking { background: var(--accent); color: #fff; }
+  /* Значок перевода: display:inline намеренно (атомарные inline-flex/
+     inline-block боксы в RTL-тексте браузер отрывает от строки при
+     переносе — тот же баг был у «א» в читалке); размер — через
+     padding/line-height, а не width/height. */
   .rt-gt-toggle {
-    display: inline; direction: ltr; border-radius: 50%; margin: 0 0.3em;
-    border: 1px solid var(--border); background: var(--surface-2); color: var(--text-faint);
-    font-family: 'David Libre', 'Noto Sans Hebrew', serif; font-weight: 700; font-size: 0.7rem;
-    line-height: 1; padding: 0.38em 0.42em; cursor: pointer;
+    display: inline; padding: 0 4px; line-height: 18px; text-align: center; margin-inline: 4px 6px;
+    color: var(--amber); border: 1px solid var(--amber); border-radius: 50%; font-size: 11px;
+    font-family: 'Inter', 'IBM Plex Sans', sans-serif; vertical-align: middle; cursor: pointer;
+    user-select: none; background: transparent;
   }
-  .rt-gt-toggle:hover { border-color: var(--accent-strong); color: var(--accent-strong); }
-  .rt-gt-ru { display: none; font-size: 0.82rem; color: var(--text-faint); margin-top: 3px; }
-  .rt-gt-sentence.show-ru .rt-gt-ru { display: block; }
+  .rt-gt-toggle:hover, .rt-gt-toggle.open { background: var(--amber-soft); }
+  .rt-gt-tr {
+    direction: ltr; text-align: left; font-family: 'IBM Plex Sans', 'Segoe UI', sans-serif;
+    font-size: 0.9rem; color: var(--text); line-height: 1.5; background: var(--surface-2);
+    border-inline-start: 2px solid var(--amber); padding: 10px 14px; margin: 2px 0 12px; border-radius: 0 8px 8px 0;
+  }
+  .rt-gt-tr[hidden] { display: none; }
+  .rt-gt-tr .rt-gt-tr-label { display: block; font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); font-weight: 600; margin-bottom: 2px; }
+  @media (prefers-reduced-motion: reduce) { .rt-gt-s, .rt-gt-w { transition: none; } }
 
   @media (max-width: 520px) {
     .rt-conj-compare, .rt-culture-grid { grid-template-columns: 1fr; }
@@ -883,7 +902,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.26.0</div>
+  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.27.0</div>
 </div>
 
 <script>
@@ -2446,47 +2465,116 @@ function openRootsCourseScreen(position) {
 // теории/предложений это НЕ инлайн и НЕ предзагружается со всем курсом
 // разом — аудио на все 66 чекпоинтов весит 127 МБ, качаем только тот
 // чекпоинт, до которого реально дошли.
+const RT_GT_PER_PARAGRAPH = 5;
+let rtGtStop = null; // останавливает озвучку растущего текста при смене экрана
 function renderGrowingTextScreen(checkpoint, position) {
+  if (rtGtStop) { rtGtStop(); rtGtStop = null; }
   const page = document.getElementById("rt-page");
   page.innerHTML = '<p class="rt-loading">Загрузка растущего текста…</p>';
   const cpStr = String(checkpoint).padStart(2, "0");
   fetch(`growing_texts/checkpoint_${cpStr}_audio.json`)
     .then(r => r.json())
     .then(data => {
-      const sentencesHtml = data.sentences.map((s, i) => {
-        const heText = s.words.map(w => w.t).join(" ");
-        return `
-        <div class="rt-gt-sentence" data-idx="${i}">
-          <button class="rt-gt-listen-btn" type="button" aria-label="Прослушать" data-audio="growing_texts/${escapeHtml(s.audio)}">🔊</button>
-          <span class="rt-gt-text">
-            <bdi class="rt-gt-he">${escapeHtml(heText)}<button class="rt-gt-toggle" type="button" aria-label="Показать перевод">א</button></bdi>
-            <div class="rt-gt-ru">${escapeHtml(s.ru)}</div>
-          </span>
-        </div>`;
-      }).join("");
+      // Предложения — инлайн в абзацах по RT_GT_PER_PARAGRAPH штук (в данных
+      // нет разметки абзацев); перевод каждого предложения — под своим
+      // абзацем, по значку «א».
+      const paragraphsHtml = [];
+      for (let start = 0; start < data.sentences.length; start += RT_GT_PER_PARAGRAPH) {
+        const chunk = data.sentences.slice(start, start + RT_GT_PER_PARAGRAPH);
+        const inline = chunk.map((s, k) => {
+          const i = start + k;
+          const words = s.words.map((w, j) => `<span class="rt-gt-w" data-w="${j}">${escapeHtml(w.t)}</span>`).join(" ");
+          return `<span class="rt-gt-s" data-idx="${i}">${words}</span><button class="rt-gt-toggle" type="button" data-idx="${i}" aria-label="Показать перевод" aria-expanded="false">א</button>`;
+        }).join(" ");
+        const panels = chunk.map((s, k) =>
+          `<div class="rt-gt-tr" data-tr="${start + k}" hidden><span class="rt-gt-tr-label">Перевод</span>${escapeHtml(s.ru)}</div>`
+        ).join("");
+        paragraphsHtml.push(`<p class="rt-gt-para">${inline}</p>${panels}`);
+      }
       page.innerHTML = `
         <div class="rt-section-head">
           <h3>📖 ${escapeHtml(data.title)}</h3>
-          <span class="hint">Растущий текст ${checkpoint} — использует в основном слова уже пройденных корней (нажмите «א», чтобы увидеть перевод предложения).</span>
+          <span class="hint">Растущий текст ${checkpoint} — использует в основном слова уже пройденных корней. Нажмите на предложение, чтобы его прослушать, «א» — чтобы увидеть перевод.</span>
         </div>
-        <div class="rt-gt-body">${sentencesHtml}</div>
+        <div class="rt-gt-read">
+          <div class="rt-gt-toolbar">
+            <button class="rt-gt-playall" id="rt-gt-playall" type="button">▶ Слушать подряд</button>
+            <span class="rt-gt-meta">${data.sentences.length} предложений</span>
+          </div>
+          <div class="rt-gt-page">${paragraphsHtml.join("")}</div>
+        </div>
         <div class="rt-cta-row">
           <button class="action primary" id="rt-gt-continue">Дальше →</button>
         </div>
       `;
-      page.querySelectorAll(".rt-gt-toggle").forEach(btn => {
-        btn.addEventListener("click", () => btn.closest(".rt-gt-sentence").classList.toggle("show-ru"));
+
+      // ---- озвучка: клик по предложению или «Слушать подряд» ----
+      const sentEls = Array.from(page.querySelectorAll(".rt-gt-s"));
+      const playAllBtn = document.getElementById("rt-gt-playall");
+      let audio = null;
+      let sequence = false;
+      const clearMarks = () => {
+        page.querySelectorAll(".rt-gt-s.playing").forEach(e => e.classList.remove("playing"));
+        page.querySelectorAll(".rt-gt-w.speaking").forEach(e => e.classList.remove("speaking"));
+      };
+      const stopAudio = () => {
+        sequence = false;
+        playAllBtn.classList.remove("on");
+        playAllBtn.textContent = "▶ Слушать подряд";
+        if (audio) { audio.pause(); audio = null; }
+        clearMarks();
+      };
+      rtGtStop = stopAudio;
+      const playSentence = (i) => {
+        if (audio) { audio.pause(); audio = null; }
+        clearMarks();
+        const s = data.sentences[i];
+        const el = sentEls[i];
+        if (!s || !el) { stopAudio(); return; }
+        el.classList.add("playing");
+        if (sequence && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          el.scrollIntoView({ block: "center", behavior: "smooth" });
+        }
+        const a = new Audio(`growing_texts/${s.audio}`);
+        audio = a;
+        const wordEls = Array.from(el.querySelectorAll(".rt-gt-w"));
+        const timed = s.words.length > 0 && s.words.every(w => typeof w.start === "number");
+        if (timed) {
+          a.addEventListener("timeupdate", () => {
+            if (audio !== a) return; // запоздалое событие уже остановленного аудио
+            let idx = -1;
+            for (let j = 0; j < s.words.length; j++) if (a.currentTime >= s.words[j].start) idx = j;
+            wordEls.forEach((we, j) => we.classList.toggle("speaking", j === idx));
+          });
+        }
+        a.addEventListener("ended", () => {
+          if (audio !== a) return;
+          if (sequence && i + 1 < data.sentences.length) playSentence(i + 1);
+          else stopAudio();
+        });
+        a.play().catch(() => { if (audio === a) stopAudio(); });
+      };
+      page.querySelectorAll(".rt-gt-s").forEach(el => {
+        el.addEventListener("click", () => { sequence = false; playAllBtn.classList.remove("on"); playAllBtn.textContent = "▶ Слушать подряд"; playSentence(Number(el.dataset.idx)); });
       });
-      page.querySelectorAll(".rt-gt-listen-btn").forEach(btn => {
+      playAllBtn.addEventListener("click", () => {
+        if (sequence) { stopAudio(); return; }
+        sequence = true;
+        playAllBtn.classList.add("on");
+        playAllBtn.textContent = "⏹ Остановить";
+        playSentence(0);
+      });
+      page.querySelectorAll(".rt-gt-toggle").forEach(btn => {
         btn.addEventListener("click", () => {
-          page.querySelectorAll(".rt-gt-listen-btn.playing").forEach(b => b.classList.remove("playing"));
-          const audio = new Audio(btn.dataset.audio);
-          btn.classList.add("playing");
-          audio.addEventListener("ended", () => btn.classList.remove("playing"));
-          audio.play().catch(() => btn.classList.remove("playing"));
+          const panel = page.querySelector(`.rt-gt-tr[data-tr="${btn.dataset.idx}"]`);
+          const open = panel.hidden;
+          panel.hidden = !open;
+          btn.classList.toggle("open", open);
+          btn.setAttribute("aria-expanded", String(open));
         });
       });
       document.getElementById("rt-gt-continue").addEventListener("click", () => {
+        stopAudio();
         if (!progress.rootsCourse.completedGrowingTexts.includes(checkpoint)) {
           progress.rootsCourse.completedGrowingTexts.push(checkpoint);
           saveProgress();
