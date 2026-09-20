@@ -428,5 +428,33 @@ if (!fs.existsSync(sentencesPath)) {
   check('cloze: an empty cloze is not found', findCloze(tokenize('אני הולך'), '') === null);
 }
 
+// Сессия практики корня переживает обновление страницы (v1.27.7): раньше она
+// жила только в памяти, а корень отмечался пройденным в момент старта — после
+// перезагрузки «Продолжить» вело на теорию СЛЕДУЮЩЕГО корня (отзыв 2026-09-16).
+{
+  const run = (code) => vm.runInContext(code, sandbox);
+  run(`progress.rootsCourse = { completedTheory: ['x-y-z'], completedGrowingTexts: [], sentenceIndexByRoot: { 'x-y-z': [100, 101, 102, 103] } };
+       rootPracticeSession = null;`);
+  run(`startRootPracticeSession('x-y-z', [100, 101, 102, 103])`);
+  const first = run(`pickNext().index`);                   // показана 1-я, ответа ещё нет
+  check('root session: the first card of the session is served in order', first === 100);
+  check('root session: the active session is saved with the current card kept',
+    run(`JSON.stringify(progress.rootsCourse.activeSession.queue)`) === '[1,2,3]' && run(`progress.rootsCourse.activeSession.current`) === 0);
+
+  // «обновление страницы»: память пуста, индексы корня заново разложены со сдвигом
+  run(`rootPracticeSession = null; progress.rootsCourse.sentenceIndexByRoot['x-y-z'] = [200, 201, 202, 203]; restoreRootSession();`);
+  check('root session: after a reload the session is restored (positions, not stale indices)',
+    run(`JSON.stringify(rootPracticeSession.queue)`) === '[200,201,202,203]' && run(`rootPracticeSession.total`) === 4);
+
+  // сессия старше суток не восстанавливается
+  run(`rootPracticeSession = null; progress.rootsCourse.activeSession.at = Date.now() - 25 * 3600 * 1000; restoreRootSession();`);
+  check('root session: a session older than a day is dropped, not restored',
+    run(`rootPracticeSession`) === null && run(`progress.rootsCourse.activeSession`) === null);
+
+  // закончена — сохранённая сессия убирается
+  run(`startRootPracticeSession('x-y-z', [200, 201]); pickNext(); pickNext(); rootPracticeSession = null; persistRootSession(null);`);
+  check('root session: a finished session leaves nothing saved', run(`progress.rootsCourse.activeSession`) === null);
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

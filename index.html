@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.27.6
+  Ивритский тренажёр — v1.27.7
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -902,7 +902,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.27.6</div>
+  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.27.7</div>
 </div>
 
 <script>
@@ -1749,11 +1749,50 @@ function currentKey() { return currentIndex + ":" + currentMode; }
 // уровням — отзыв с сайта, 2026-09-13). Один проход = один режим (cloze,
 // самый щадящий, см. подсказку в разделе "Статистика и метод") на каждое
 // предложение; остальные режимы остаются в обычном пуле для будущих
-// повторений как всегда. Не персистится — если перезагрузить страницу
-// посреди сессии, она просто становится обычной тренировкой.
+// повторений как всегда.
+// v1.27.7: сессия ПЕРСИСТИТСЯ (progress.rootsCourse.activeSession) — раньше
+// корень отмечался пройденным в момент старта, а сама сессия жила только в
+// памяти, поэтому обновление страницы на середине (напр. 8/20) теряло её, и
+// «Продолжить» вело на «живой фронт» курса, то есть на теорию СЛЕДУЮЩЕГО
+// корня (отзыв с сайта 2026-09-16, повтор багов v1.22.8/v1.23.0). Хранятся
+// не индексы DATA (они пересобираются при каждой загрузке), а ПОЗИЦИИ внутри
+// списка предложений корня (sentenceIndexByRoot[rootId]); восстановление —
+// после replay-цикла, когда индексы снова известны. Старше суток — не
+// восстанавливается.
+const ROOT_SESSION_MAX_AGE_MS = 24 * 3600 * 1000;
 let rootPracticeSession = null; // { rootId, total, queue: [index, ...] }
+function persistRootSession(currentIndex) {
+  if (!progress.rootsCourse) return;
+  if (!rootPracticeSession) {
+    if (progress.rootsCourse.activeSession) { progress.rootsCourse.activeSession = null; saveProgress(); }
+    return;
+  }
+  const idxs = (progress.rootsCourse.sentenceIndexByRoot || {})[rootPracticeSession.rootId] || [];
+  const pos = i => idxs.indexOf(i);
+  const s = {
+    rootId: rootPracticeSession.rootId, total: rootPracticeSession.total, at: Date.now(),
+    current: currentIndex == null ? null : pos(currentIndex),
+    queue: rootPracticeSession.queue.map(pos),
+  };
+  progress.rootsCourse.activeSession = (s.queue.concat(s.current == null ? [] : [s.current]).some(p => p < 0)) ? null : s;
+  saveProgress();
+}
+function restoreRootSession() {
+  const s = progress.rootsCourse && progress.rootsCourse.activeSession;
+  if (!s || rootPracticeSession) return;
+  const idxs = (progress.rootsCourse.sentenceIndexByRoot || {})[s.rootId] || [];
+  const queue = (s.current == null ? [] : [s.current]).concat(s.queue || []).map(p => idxs[p]);
+  const stale = !s.at || Date.now() - s.at > ROOT_SESSION_MAX_AGE_MS;
+  if (stale || !idxs.length || !queue.length || queue.some(i => typeof i !== "number")) {
+    progress.rootsCourse.activeSession = null;
+    saveProgress();
+    return;
+  }
+  rootPracticeSession = { rootId: s.rootId, total: s.total, queue };
+}
 function startRootPracticeSession(rootId, indices) {
   rootPracticeSession = { rootId, total: indices.length, queue: indices.slice() };
+  persistRootSession(null);
 }
 
 // Отзыв с сайта (2026-09-11): дневная норма новых карточек кончается тихой
@@ -1828,6 +1867,7 @@ function pickI1(candidates) {
 function pickNext() {
   if (rootPracticeSession && rootPracticeSession.queue.length) {
     const index = rootPracticeSession.queue.shift();
+    persistRootSession(index); // текущая карточка остаётся в сохранённой сессии до ответа
     return { index, mode: "cloze" };
   }
   ensureTodayMeta();
@@ -2217,6 +2257,7 @@ if (progress.rootsCourse.completedTheory.length) {
     progress.rootsCourse.completedTheory.forEach(rootId => {
       if (sentencesByRoot[rootId]) appendRootSentences(rootId, sentencesByRoot[rootId]);
     });
+    restoreRootSession(); // индексы корней снова известны — вернуть сессию практики
     updateStatsBar();
   });
 }
@@ -2972,6 +3013,7 @@ function commitAndAdvance(quality) {
     // 2026-09-13: "после прохождения предложений должно вести на новый
     // корень").
     rootPracticeSession = null;
+    persistRootSession(null); // сессия закончена — убрать сохранённую
     openRootsCourseScreen();
     return;
   }
@@ -3158,6 +3200,7 @@ rootsResetBtn.addEventListener("click", () => {
       if (!progress.pool.exclude.includes(i)) progress.pool.exclude.push(i);
     });
     progress.rootsCourse = { completedTheory: [], completedGrowingTexts: [], sentenceIndexByRoot: {} };
+    rootPracticeSession = null; // сессия старого прогресса больше не действует
     // rootSentencesInjectedThisLoad — отдельная, НЕ персистентная защита
     // "уже разложено в DATA в ЭТУ загрузку страницы" (см. её объявление
     // выше) — переживает эту функцию, но не reset. Без очистки здесь:
