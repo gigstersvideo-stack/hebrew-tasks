@@ -84,7 +84,7 @@ vm.runInContext(script, sandbox, { filename: 'script.js' });
 // ---- now run assertions using functions exposed on sandbox ----
 const {
   heMatchDegree, heMatchDetail, diffTokensGeneric, tokenize, russianCheck, schedule, isMastered,
-  levenshteinLE, heBaseNorm, heLooseNorm,
+  levenshteinLE, heBaseNorm, heLooseNorm, findCloze,
 } = sandbox;
 
 let pass = 0, fail = 0;
@@ -409,6 +409,23 @@ if (!fs.existsSync(sentencesPath)) {
   check('replaying the full batch reproduces the exact same indices in order',
     replay.length === 4 && replay[0] === newIndex && replay[1] === secondIndex &&
     replay[2] === tombstoneIndex && replay[3] === afterTombstoneIndex);
+}
+
+// findCloze (v1.27.6): пропуск находится и рядом со знаками препинания, и
+// внутри слова с приставкой, и для cloze из нескольких слов (отзыв с сайта:
+// «нет пропуска» — слово в конце предложения не находилось).
+{
+  const show = (he, c) => {
+    const toks = tokenize(he); const h = findCloze(toks, c);
+    return h ? toks.slice(0, h.start).concat([h.before + '_____' + h.after], toks.slice(h.end + 1)).join(' ') : null;
+  };
+  check('cloze: a word in the middle is found as before', show('אני הולך הביתה', 'הולך') === 'אני _____ הביתה');
+  check('cloze: the last word before a full stop is found and the stop is kept', show('הם חברים טובים כבר הרבה שנים.', 'שנים') === 'הם חברים טובים כבר הרבה _____.');
+  check('cloze: a word before a comma or question mark is found', show('מה, אתה גר כאן?', 'כאן') === 'מה, אתה גר _____?' && show('אתה, בטוח?', 'אתה') === '_____, בטוח?');
+  check('cloze: a word glued to a prefix keeps the prefix visible', show('ברוב המקרים זה עובד', 'רוב') === 'ב_____ המקרים זה עובד');
+  check('cloze: a two-word cloze is replaced as one blank', show('קניתי את הספר הזה', 'את הספר') === 'קניתי _____ הזה');
+  check('cloze: an unrelated word is not found', findCloze(tokenize('אני הולך הביתה'), 'כלב') === null);
+  check('cloze: an empty cloze is not found', findCloze(tokenize('אני הולך'), '') === null);
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

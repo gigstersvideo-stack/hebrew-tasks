@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.27.5
+  Ивритский тренажёр — v1.27.6
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -902,7 +902,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.27.5</div>
+  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.27.6</div>
 </div>
 
 <script>
@@ -1194,6 +1194,43 @@ function enabledModes() {
 // ---- normalization ----
 const NIQQUD = /[֑-ׇֽֿׁׂׅׄ]/g;
 function tokenize(s) { return s.trim().split(/\s+/).filter(Boolean); }
+// Где в предложении слово для пропуска (cloze). Раньше искали только точное
+// совпадение целого слова между пробелами (toks.indexOf(c)), поэтому слово
+// перед точкой/запятой/«?» ("שָׁנִים."), слово, приклеенное к приставке
+// ("בְּרוֹב" при cloze "רוֹב"), и cloze из нескольких слов не находились, и
+// пропуск просто не рисовался (отзыв с сайта 2026-09-16: «нет пропуска» —
+// у 347 из 4000 предложений курса). Возвращает { start, end, before, after }:
+// токены start..end заменяются на before + пропуск + after (before/after —
+// окружающая пунктуация и приставка/окончание), либо null.
+const CLOZE_PUNCT = ".,!?;:\"'()«»־-—…״׳";
+function clozeCore(t) {
+  let a = 0, b = t.length;
+  while (a < b && CLOZE_PUNCT.includes(t[a])) a++;
+  while (b > a && CLOZE_PUNCT.includes(t[b - 1])) b--;
+  return [a, b];
+}
+function findCloze(toks, c) {
+  if (!c) return null;
+  const n = c.split(/\s+/).filter(Boolean).length;
+  const exact = toks.indexOf(c);
+  if (exact !== -1) return { start: exact, end: exact, before: "", after: "" };
+  for (let i = 0; i + n <= toks.length; i++) {
+    const [a] = clozeCore(toks[i]);
+    const [, b] = clozeCore(toks[i + n - 1]);
+    const span = toks.slice(i, i + n).join(" ");
+    const core = span.slice(a, span.length - (toks[i + n - 1].length - b));
+    if (core === c) return { start: i, end: i + n - 1, before: span.slice(0, a), after: span.slice(span.length - (toks[i + n - 1].length - b)) };
+  }
+  if (n === 1) {
+    for (let i = 0; i < toks.length; i++) {
+      const [a, b] = clozeCore(toks[i]);
+      const core = toks[i].slice(a, b);
+      const at = core.indexOf(c);
+      if (at !== -1) return { start: i, end: i, before: toks[i].slice(0, a) + core.slice(0, at), after: core.slice(at + c.length) + toks[i].slice(b) };
+    }
+  }
+  return null;
+}
 function escapeHtml(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 function levenshteinLE(a, b, maxD) {
   const la = a.length, lb = b.length;
@@ -1374,7 +1411,8 @@ function findChunkFor(index) {
   const d = DATA[index];
   const toks = tokenize(d.h);
   const norms = toks.map(heBaseNorm);
-  const focusIdx = toks.indexOf(d.c);
+  const hitCloze = findCloze(toks, d.c);
+  const focusIdx = hitCloze ? hitCloze.start : -1;
   if (focusIdx === -1) return null;
   if (focusIdx > 0) {
     const key = norms[focusIdx - 1] + "|" + norms[focusIdx];
@@ -2639,8 +2677,10 @@ function renderPrompt(mode, d) {
       els.prompt.textContent = d.h; els.prompt.classList.add("hebrew-prompt");
     } else if (mode === "cloze") {
       const toks = tokenize(d.h);
-      const idx = toks.indexOf(d.c);
-      els.prompt.textContent = toks.map((t, i) => i === idx ? "_____" : t).join(" ");
+      const hit = findCloze(toks, d.c);
+      els.prompt.textContent = hit
+        ? toks.slice(0, hit.start).concat([hit.before + "_____" + hit.after], toks.slice(hit.end + 1)).join(" ")
+        : toks.join(" ");
       els.prompt.classList.add("hebrew-prompt");
       els.clozeCaption.textContent = d.r;
       els.clozeCaption.classList.add("show");
@@ -2761,12 +2801,17 @@ function showFeedback(isCorrect, fb) {
     els.diffRefLabel.textContent = "Полное предложение";
     const d = DATA[currentIndex];
     const toks = tokenize(d.h);
-    const idx = toks.indexOf(d.c);
+    const hit = findCloze(toks, d.c);
     const cls = isCorrect && fb.degree === 1 ? "tok fuzzy" : isCorrect ? "tok" : "tok ins";
     const isTypo = fb.typoKind === "typo";
-    els.diffRef.innerHTML = toks.map((t, i) => i === idx
-      ? `<span class="${cls}">${isTypo ? heHighlightPos(t, fb.posB) : escapeHtml(t)}</span>`
-      : escapeHtml(t)
+    // Слово для пропуска выделяем само (без окружающей пунктуации/приставки),
+    // остальное предложение — как есть.
+    const clozeHtml = hit
+      ? escapeHtml(hit.before) + `<span class="${cls}">${isTypo ? heHighlightPos(d.c, fb.posB) : escapeHtml(d.c)}</span>` + escapeHtml(hit.after)
+      : null;
+    els.diffRef.innerHTML = (hit
+      ? toks.slice(0, hit.start).map(escapeHtml).concat([clozeHtml], toks.slice(hit.end + 1).map(escapeHtml))
+      : toks.map(escapeHtml)
     ).join(" ");
     // Always show what was typed with the same exact/fuzzy/wrong coloring
     // the reference side gets — including on a correct-but-fuzzy answer,
