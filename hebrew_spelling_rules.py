@@ -87,6 +87,11 @@ YOD = "י"
 # не нарушение כתיב מלא (двух-трёхбуквенные слова этого типа в него не
 # разворачиваются ни в каком стиле письма)
 KTIV_CHASER_ALLOWLIST = {"לֹא", "כֹּה", "זֹאת", "פֹּה"}
+# основы, где холам без вав — норма в любой форме слова (רֹאשׁ, הָרֹאשׁ, רֹאשׁוֹ,
+# רֹאשִׁית): ראש пишется без вав даже в полном написании. Раньше автоправка
+# ktiv_chaser вставляла сюда лишний вав (רוֹאשׁ) — 128 слов, найдено словарной
+# проверкой 2026-09-20.
+KTIV_CHASER_ALLOWED_STEMS = {"ראש"}
 _STRIP_PUNCT = ".,!?;:\"'()«»־-־"
 
 
@@ -102,6 +107,8 @@ def _matches_allowlist(word):
     if word in KTIV_CHASER_ALLOWLIST:
         return True
     bare = _bare_consonants(word)
+    if any(stem in bare for stem in KTIV_CHASER_ALLOWED_STEMS):
+        return True
     return any(bare.endswith(_bare_consonants(allowed)) for allowed in KTIV_CHASER_ALLOWLIST)
 
 
