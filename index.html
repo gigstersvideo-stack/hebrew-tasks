@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.27.8
+  Ивритский тренажёр — v1.27.9
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -894,7 +894,7 @@
       <div class="diff-line">
         <div class="diff-label-row">
           <div class="diff-label" id="diff-ref-label">Правильный ответ</div>
-          <button class="icon-btn" id="btn-audio" type="button">🔊 Прослушать</button>
+          <button class="rt-listen-btn" id="btn-audio" type="button" aria-label="Прослушать" title="Прослушать">🔊</button>
         </div>
         <div class="diff-text" id="diff-ref"></div>
       </div>
@@ -932,7 +932,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.27.8</div>
+  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.27.9</div>
 </div>
 
 <script>
@@ -2345,7 +2345,7 @@ function renderRootTheory(entry, sentences) {
     <div class="rt-culture-card">
       <span class="eyebrow">Песня / цитата</span>
       <p>${escapeHtml(songNote.text)}</p>
-      <span class="caveat">атрибуция не сверена вручную</span>
+      ${entry.song_or_quote_verified ? "" : '<span class="caveat">атрибуция не сверена вручную</span>'}
     </div>` : "");
 
   const quizOptionsHtml = entry.comprehension_question.options.map((optionText, i) => `
