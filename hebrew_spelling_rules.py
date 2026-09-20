@@ -255,6 +255,78 @@ def fix_yod_doubling(obj):
 
 
 # ============================================================
+# Правило 1г: известные ошибочные написания
+# ============================================================
+# Точечный список слов, где ошибка не укладывается в общие классы (нет
+# удвоения и нет матрес после хирика), но известна и однозначна. Ловится и
+# чинится без словаря. Найдено словарной проверкой 2026-09-20: разговорное
+# עכשו (39 вхождений) вместо עכשיו.
+KNOWN_MISSPELLINGS = {
+    "עכשו": "עכשיו",
+}
+_KNOWN_PREFIX_LETTERS = "ובהכלמש"
+
+
+def _known_misspelling(word):
+    """(число приставок, ошибочная основа, верная основа) или None."""
+    bare = _bare_consonants(word)
+    for n in range(0, 4):
+        if n > len(bare):
+            break
+        if all(c in _KNOWN_PREFIX_LETTERS for c in bare[:n]):
+            stem = bare[n:]
+            if stem in KNOWN_MISSPELLINGS:
+                return n, stem, KNOWN_MISSPELLINGS[stem]
+    return None
+
+
+def find_known_misspelling_violations(obj, path=""):
+    violations = []
+    for p, s in _walk_strings(obj, path):
+        for word in s.split():
+            clean = word.strip(_STRIP_PUNCT)
+            hit = _known_misspelling(clean) if clean else None
+            if hit:
+                violations.append((p, clean, f"известная ошибка: {hit[1]} -> {hit[2]}"))
+    return violations
+
+
+def _fix_known_misspelling_word(word):
+    hit = _known_misspelling(word)
+    if not hit:
+        return word
+    n, wrong, right = hit
+    i = next(k for k in range(min(len(wrong), len(right)) + 1)
+             if k >= len(wrong) or k >= len(right) or wrong[k] != right[k])
+    if len(right) != len(wrong) + 1 or right[i] == wrong[i:i + 1]:
+        return word  # поддерживаем только вставку одной буквы
+    clusters = split_clusters(word)
+    clusters.insert(n + i, right[i])
+    return "".join(clusters)
+
+
+def fix_known_misspellings(obj):
+    """Рекурсивно чинит все строки JSON-объекта (пунктуация и пробелы на
+    границах слов сохраняются)."""
+    if isinstance(obj, dict):
+        return {k: fix_known_misspellings(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [fix_known_misspellings(v) for v in obj]
+    elif isinstance(obj, str):
+        tokens = re.split(r"(\s+)", obj)
+        for idx, tok in enumerate(tokens):
+            if not tok or tok.isspace():
+                continue
+            core = tok.strip(_STRIP_PUNCT)
+            if not core or not _known_misspelling(core):
+                continue
+            start = tok.index(core)
+            tokens[idx] = tok[:start] + _fix_known_misspelling_word(core) + tok[start + len(core):]
+        return "".join(tokens)
+    return obj
+
+
+# ============================================================
 # Правило 1в: словарная проверка полного написания (Hspell)
 # ============================================================
 # yod_doubling ловит одно семейство слов. Общий способ найти ВСЕ слова, у
@@ -887,6 +959,8 @@ def find_all_violations(obj, root=None, path=""):
         out.append({"rule": "ktiv_chaser", "path": p, "word": word, "reason": reason})
     for p, word, reason in find_yod_doubling_violations(obj, path):
         out.append({"rule": "yod_doubling", "path": p, "word": word, "reason": reason})
+    for p, word, reason in find_known_misspelling_violations(obj, path):
+        out.append({"rule": "known_misspelling", "path": p, "word": word, "reason": reason})
     for p, word in find_homoglyph_violations(obj, path):
         out.append({"rule": "homoglyph", "path": p, "word": word})
     for p, word, reason in find_stray_control_char_violations(obj, path):
