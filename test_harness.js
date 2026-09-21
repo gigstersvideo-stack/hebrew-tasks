@@ -548,5 +548,19 @@ if (!fs.existsSync(sentencesPath)) {
   check('stable keys: an old positional key inside the last known layout is migrated', res.legacyMapped);
 }
 
+// Дневной лимит новых карточек и сессия по корню (v1.28.1): 20 фраз сессии в лимит не входят.
+{
+  const run = (code) => vm.runInContext(code, sandbox);
+  run(`ensureTodayMeta(); progress.meta.newToday = { date: todayStr(), count: 3 }; rootPracticeSession = null;`);
+  const a = run(`countNewCardToday(true)`);
+  check('daily cap: a new card of free practice counts', a === true && run(`progress.meta.newToday.count`) === 4);
+  run(`rootPracticeSession = { rootId: 'x-y-z', total: 20, queue: [1, 2] };`);
+  const b = run(`countNewCardToday(true)`);
+  check('daily cap: a new card inside a root session does NOT count', b === false && run(`progress.meta.newToday.count`) === 4);
+  run(`rootPracticeSession = null;`);
+  const c = run(`countNewCardToday(false)`);
+  check('daily cap: a card that is not new never counts', c === false && run(`progress.meta.newToday.count`) === 4);
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

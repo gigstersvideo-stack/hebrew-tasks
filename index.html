@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.28.0
+  Ивритский тренажёр — v1.28.1
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -932,7 +932,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.28.0</div>
+  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.28.1</div>
 </div>
 
 <script>
@@ -2922,12 +2922,21 @@ function configureAnswerInput(mode) {
   }
 }
 
+// Дневной лимит новых карточек относится к свободной практике. 20 предложений
+// сессии по корню (rootPracticeSession) — осознанный шаг курса, который запускает
+// сам пользователь, — в лимит НЕ входят: раньше один корень съедал его целиком, и
+// общий пул сразу писал «норма выполнена» (решение владельца, 2026-09-21).
+function countNewCardToday(wasNew) {
+  if (!wasNew || rootPracticeSession) return false;
+  ensureTodayMeta(); progress.meta.newToday.count++; saveProgress();
+  return true;
+}
 function loadCard() {
   const picked = pickNext();
   currentIndex = picked.index; currentMode = picked.mode;
   const key = currentKey();
   const wasNew = !progress.items[key];
-  if (wasNew) { ensureTodayMeta(); progress.meta.newToday.count++; saveProgress(); }
+  countNewCardToday(wasNew);
   lastKey = key; checked = false; hintsUsed = 0;
   const d = DATA[currentIndex];
   const lv = LEVELS[d.l];
