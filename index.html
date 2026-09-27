@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.28.1
+  Ивритский тренажёр — v1.29.0
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -932,7 +932,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.28.1</div>
+  <div id="appVersionFooter" style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.29.0</div>
 </div>
 
 <script>
@@ -3993,10 +3993,68 @@ document.getElementById("btn-roots-prev").addEventListener("click", () => {
 const OWNER_UID = "JYkCrXPmBwhFaW5fyb6eQcWkihf1";
 window.OWNER_UID = OWNER_UID;
 
+// Отзыв сам запоминает место (2026-09-26, идея владельца, см. ROADMAP —
+// та же идея, что в читалке). Снимок делаем в момент ОТКРЫТИЯ формы (не
+// отправки): пока человек печатает текст, экран мог уже смениться.
+function getFeedbackContext(){
+  const ctx = {};
+  if (!rootTheoryView.classList.contains("hidden")) {
+    ctx.screen = "roots-course";
+    ctx.rootId = ROOTS_ORDER[rootsCoursePosition] || null;
+    ctx.position = rootsCoursePosition + 1;
+    ctx.totalRoots = ROOTS_ORDER.length;
+    ctx.subscreen = document.querySelector(".rt-gt-read") ? "growing-text" : "theory";
+    if (ctx.subscreen === "growing-text") ctx.checkpoint = Math.floor(rootsCoursePosition / ROOTS_PER_CHECKPOINT_HINT);
+  } else if (!reviewArea.classList.contains("hidden")) {
+    ctx.screen = "card";
+    ctx.mode = currentMode;
+    const d = currentIndex >= 0 ? DATA[currentIndex] : null;
+    // Встроенные фразы (без своего _sid, см. sidOfIndex) стабильно
+    // определяются позицией — но для триажа полезнее сам текст, а не
+    // число: с ним можно сразу узнать предложение в панели/буфере.
+    ctx.cardId = d ? (sidOfIndex(currentIndex) || String(currentIndex)) : null;
+    if (d) ctx.he = d.h;
+    if (rootPracticeSession) {
+      ctx.rootId = rootPracticeSession.rootId;
+      ctx.rootSessionProgress = (rootPracticeSession.total - rootPracticeSession.queue.length) + "/" + rootPracticeSession.total;
+    }
+  } else if (!deckbasesView.classList.contains("hidden")) {
+    ctx.screen = "deckbases";
+  } else {
+    ctx.screen = "dashboard";
+  }
+  const verEl = document.getElementById("appVersionFooter");
+  ctx.version = verEl ? verEl.textContent.trim() : null;
+  return ctx;
+}
+
+// Короткая читаемая строка для админ-панели отзывов и экспорта в буфер —
+// см. использование ниже, тот же принцип, что в читалке.
+function formatFeedbackContext(ctx){
+  if (!ctx) return "";
+  if (ctx.screen === "dashboard") return "обзор (дашборд)";
+  if (ctx.screen === "deckbases") return "мои колоды";
+  if (ctx.screen === "card"){
+    const parts = [`карточка ${ctx.cardId || "?"}`, `режим ${ctx.mode || "?"}`];
+    if (ctx.he) parts.push(`«${ctx.he}»`);
+    if (ctx.rootId) parts.push(`сессия корня ${ctx.rootId} (${ctx.rootSessionProgress || "?"})`);
+    return parts.join(", ");
+  }
+  if (ctx.screen === "roots-course"){
+    const parts = [`курс «Корни», корень ${ctx.rootId || "?"} (${ctx.position}/${ctx.totalRoots})`];
+    if (ctx.subscreen === "growing-text") parts.push(`растущий текст, чекпоинт ${ctx.checkpoint}`);
+    else parts.push("теория");
+    return parts.join(", ");
+  }
+  return "";
+}
+
 const fbModal = document.getElementById("fb-modal-backdrop");
 const fbTextEl = document.getElementById("fb-text");
 const fbStatusEl = document.getElementById("fb-status");
+let fbCapturedContext = null;
 document.getElementById("btn-feedback-open").addEventListener("click", () => {
+  fbCapturedContext = getFeedbackContext();
   fbModal.classList.remove("hidden");
   fbTextEl.value = "";
   fbStatusEl.textContent = "";
@@ -4011,7 +4069,7 @@ document.getElementById("fb-submit").addEventListener("click", async () => {
   fbStatusEl.textContent = "Отправляю…"; fbStatusEl.className = "fb-status";
   try {
     if (!window.cloudSubmitFeedback) throw new Error("нет соединения с базой");
-    await window.cloudSubmitFeedback(type, text, "trainer");
+    await window.cloudSubmitFeedback(type, text, "trainer", fbCapturedContext);
     fbStatusEl.textContent = "Спасибо, отправлено!"; fbStatusEl.className = "fb-status ok";
     setTimeout(() => fbModal.classList.add("hidden"), 900);
   } catch (e) {
@@ -4044,6 +4102,7 @@ async function renderFeedbackReview() {
         <span>${it.createdAt ? new Date(it.createdAt).toLocaleString("ru-RU") : ""}</span>
       </div>
       <div class="fb-review-text">${escapeHtml(it.text || "")}</div>
+      ${it.context ? `<div class="fb-review-meta" style="margin-top:-2px;">📍 ${escapeHtml(formatFeedbackContext(it.context))}</div>` : ""}
       <div class="fb-review-actions">
         ${it.status === "new" ? `<button class="action ghost fb-mark-reviewed" data-id="${it.id}">Просмотрено</button>` : ""}
         <button class="action ghost fb-delete" data-id="${it.id}">Удалить</button>
@@ -4073,7 +4132,8 @@ document.getElementById("btn-feedback-export").addEventListener("click", async (
     const text = items.map(it => {
       const when = it.createdAt ? new Date(it.createdAt).toLocaleString("ru-RU") : "?";
       const kind = it.type === "bug" ? "БАГ" : "ПРЕДЛОЖЕНИЕ";
-      return `[${kind}] ${it.app || "?"} · ${when} · ${it.status || "?"}\n${it.text || ""}`;
+      const where = it.context ? formatFeedbackContext(it.context) : "";
+      return `[${kind}] ${it.app || "?"} · ${when} · ${it.status || "?"}${where ? " · 📍 " + where : ""}\n${it.text || ""}`;
     }).join("\n\n---\n\n");
     await navigator.clipboard.writeText(`Отзывы с сайта (${items.length}):\n\n${text}`);
     statusEl.textContent = `Скопировано (${items.length}) — вставьте в чат.`;
@@ -4272,10 +4332,11 @@ function pullCloudAiKey() {
 // delete one, enforced by a matching Firestore security rule. Submitting
 // doesn't require being signed in at all — the whole point is a lower
 // bar than the old "file a GitHub issue" flow.
-window.cloudSubmitFeedback = function (type, text, app) {
+window.cloudSubmitFeedback = function (type, text, app, context) {
   return setDoc(doc(collection(fbDb, "feedback")), {
     type, text, app, url: location.href, uid: cloudUid || null,
     userAgent: navigator.userAgent, createdAt: Date.now(), status: "new",
+    context: context || null,
   });
 };
 window.cloudFetchFeedback = async function () {

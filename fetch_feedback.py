@@ -51,6 +51,9 @@ def parse_value(v):
         return v["booleanValue"]
     if "nullValue" in v:
         return None
+    if "mapValue" in v:
+        fields = v["mapValue"].get("fields", {})
+        return {k: parse_value(vv) for k, vv in fields.items()}
     return v
 
 
@@ -77,6 +80,60 @@ def fetch_all(session):
         if not page_token:
             break
     return items
+
+
+# Читает context, приложенный самим сайтом при отправке (2026-09-26, см.
+# ROADMAP.md обоих репозиториев, "Отзыв сам запоминает, где был
+# пользователь") — те же поля, что формирует getFeedbackContext() в
+# reader-prototype.html/hebrew_trainer.html, и та же логика форматирования,
+# что formatFeedbackContext() там же (сознательно не общий модуль — Python
+# и JS, дублирование маленькое и стабильное).
+def format_context(ctx):
+    if not ctx:
+        return None
+    screen = ctx.get("screen")
+    base = ""
+    if screen == "library":
+        base = "библиотека"
+    elif screen == "song":
+        base = f"песня «{ctx.get('title') or ctx.get('id')}»"
+    elif screen == "book":
+        parts = [f"книга «{ctx.get('title') or ctx.get('id')}»" + (" (приватная)" if ctx.get("private") else "")]
+        if ctx.get("chapter"):
+            parts.append(f"глава {ctx['chapter']}")
+        if ctx.get("page"):
+            parts.append(f"стр. {ctx['page']}")
+        if ctx.get("sentenceId"):
+            parts.append(f"предложение {ctx['sentenceId']}")
+        if ctx.get("mode") == "fade":
+            parts.append("режим fade")
+        if ctx.get("overlay") == "training-tab":
+            parts.append("вкладка «Тренировка»")
+        word = ctx.get("word")
+        if word:
+            parts.append(f"слово «{word.get('t')}»")
+        base = ", ".join(parts)
+    elif screen == "dashboard":
+        base = "обзор (дашборд)"
+    elif screen == "deckbases":
+        base = "мои колоды"
+    elif screen == "card":
+        parts = [f"карточка {ctx.get('cardId') or '?'}", f"режим {ctx.get('mode') or '?'}"]
+        if ctx.get("he"):
+            parts.append(f"«{ctx['he']}»")
+        if ctx.get("rootId"):
+            parts.append(f"сессия корня {ctx['rootId']} ({ctx.get('rootSessionProgress') or '?'})")
+        base = ", ".join(parts)
+    elif screen == "roots-course":
+        parts = [f"курс «Корни», корень {ctx.get('rootId') or '?'} ({ctx.get('position')}/{ctx.get('totalRoots')})"]
+        if ctx.get("subscreen") == "growing-text":
+            parts.append(f"растущий текст, чекпоинт {ctx.get('checkpoint')}")
+        else:
+            parts.append("теория")
+        base = ", ".join(parts)
+    if ctx.get("overlay") == "global-review":
+        base += (", " if base else "") + "окно «Повторение слов»"
+    return base or None
 
 
 def mark_reviewed(session, ids):
@@ -117,6 +174,9 @@ def main():
         )
         print(f"[{date_str}] app={it.get('app')} type={it.get('type')} status={it.get('status')}")
         print(f"  {(it.get('text') or '').strip()}")
+        where = format_context(it.get("context"))
+        if where:
+            print(f"  📍 {where}")
         print(f"  id={it.get('id')} uid={it.get('uid')}")
         print()
 
