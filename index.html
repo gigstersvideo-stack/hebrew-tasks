@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.30.2
+  Ивритский тренажёр — v1.30.3
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -312,6 +312,11 @@
   .cap-advice { font-size: 0.76rem; color: var(--amber); margin-top: -4px; }
 
   .auth-box { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  .support-link {
+    display: inline-flex; align-items: center; gap: 5px; background: var(--amber); color: #fff;
+    border-radius: 14px; padding: 5px 12px; font-size: 0.78rem; font-weight: 600; text-decoration: none;
+  }
+  .support-link:hover { opacity: .88; }
   .auth-user { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--text-muted); }
   .auth-avatar { width: 22px; height: 22px; border-radius: 50%; }
   .auth-status { font-size: 0.7rem; color: var(--text-faint); }
@@ -694,7 +699,6 @@
 
 
 <button class="feedback-fab" id="btn-feedback-open" title="Оставить отзыв или сообщить о проблеме">💬</button>
-
 <div class="fb-modal-backdrop hidden" id="fb-modal-backdrop">
   <div class="fb-modal">
     <h3>Отзыв о тренажёре</h3>
@@ -730,7 +734,6 @@
       <h1>Ивритский тренажёр</h1>
       <div class="subtitle" id="subtitle">Загрузка…</div>
       <div class="cross-link"><a href="https://gigstersvideo-stack.github.io/hebrew-reader/reader-prototype.html" id="cross-link-reader">קורא — читаем целые истории с разбором слов →</a></div>
-      <div class="cross-link"><a href="https://gigstersvideo-stack.github.io/hebrew-reader/support.html">Поддержать проект →</a></div>
     </div>
     <div class="stats">
       <span>Изучено <b id="stat-seen">0</b>/<span id="stat-total">0</span></span>
@@ -739,6 +742,7 @@
       <span>Дней подряд <b id="stat-daystreak">0</b></span>
     </div>
     <div class="auth-box" id="auth-box">
+      <a class="support-link" href="https://gigstersvideo-stack.github.io/hebrew-reader/support.html">♥ Donate</a>
       <button class="link-btn" id="btn-signin">Войти через Google — синхронизировать прогресс</button>
       <div class="auth-user" id="auth-user" style="display:none;">
         <img class="auth-avatar" id="auth-avatar" alt="">
@@ -933,7 +937,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div id="appVersionFooter" style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.30.2</div>
+  <div id="appVersionFooter" style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.30.3</div>
 </div>
 
 <script>
