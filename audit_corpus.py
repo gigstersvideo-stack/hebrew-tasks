@@ -104,6 +104,47 @@ def audit_root_sentences(cache, legacy_gemination, total, confirmed_noise):
     return total, confirmed_noise
 
 
+_DATA_RE = re.compile(r"const DATA = (\[.*?\]);", re.S)
+
+
+def audit_base_pool(cache, total, confirmed_noise):
+    """8239 предложений свободной практики, встроены прямо в
+    hebrew_trainer.html как `const DATA = [...]` — до сих пор НИ РАЗУ не
+    проверялись этим скриптом (найдено 2026-09-27 при разборе двух
+    опечаток с затесавшейся кириллицей в ивритском тексте, см. ROADMAP).
+    Только homoglyph/stray_control — сознательно НЕ ktiv_chaser/
+    yod_doubling/gemination/known_misspelling: те кодируют педагогическую
+    конвенцию курса "Корни" (см. docstring hebrew_spelling_rules.py и
+    feedback-память читалки про то же самое), а DATA — обычная
+    разговорная проза, не курс; на ней те правила дадут те же ложные
+    срабатывания на легитимно-חסר словах (חודש/ראש/כל), что и в прозе
+    читалки. non_nfc ТОЖЕ сознательно не включён — проверено эмпирически
+    (2026-09-27): на реальных предложениях DATA даёт ~2300 срабатываний
+    (почти на каждом четвёртом), и при разборе конкретных примеров
+    оказалось, что это каноническая перестановка порядка комбинирующих
+    знаков (напр. дагеш U+05BC и шва U+05B0 в одном знаке местами) —
+    рендерится и читается одинаково в любом порядке, семантической
+    порчи нет. Настоящую порчу (чужой алфавит) ловит homoglyph, для non_nfc
+    отдельного надёжного признака порчи не нашлось."""
+    p = os.path.join(HERE, "hebrew_trainer.html")
+    if not os.path.exists(p):
+        return total, confirmed_noise
+    html = open(p, encoding="utf-8").read()
+    m = _DATA_RE.search(html)
+    if not m:
+        print("  data_pool_missing · const DATA не найден в hebrew_trainer.html", file=sys.stderr)
+        return total, confirmed_noise
+    data = json.loads(m.group(1))
+    print(f"\n=== hebrew_trainer.html: const DATA ({len(data)} предложений) ===", file=sys.stderr)
+    for i, entry in enumerate(data):
+        base_path = f"DATA[{i}]"
+        for p2, word in rules.find_homoglyph_violations(entry, base_path):
+            total, confirmed_noise = _report(cache, "homoglyph", p2, word, "", total, confirmed_noise)
+        for p2, word, reason in rules.find_stray_control_char_violations(entry, base_path):
+            total, confirmed_noise = _report(cache, "stray_control", p2, word, f" ({reason})", total, confirmed_noise)
+    return total, confirmed_noise
+
+
 def audit_growing_texts(cache, total, confirmed_noise):
     files = sorted(glob.glob(os.path.join(HERE, "growing_texts", "checkpoint_*.json")))
     files = [f for f in files if not re.search(r"_audio\.json$", f)]
@@ -182,6 +223,7 @@ def main():
     total, confirmed_noise = audit_root_theory(cache, legacy_gemination, total, confirmed_noise)
     total, confirmed_noise = audit_root_sentences(cache, legacy_gemination, total, confirmed_noise)
     total, confirmed_noise = audit_growing_texts(cache, total, confirmed_noise)
+    total, confirmed_noise = audit_base_pool(cache, total, confirmed_noise)
 
     print(
         f"\nВсего нарушений: {total} "
