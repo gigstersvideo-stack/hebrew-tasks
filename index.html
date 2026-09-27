@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.29.0
+  Ивритский тренажёр — v1.30.0
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -932,7 +932,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div id="appVersionFooter" style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.29.0</div>
+  <div id="appVersionFooter" style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.30.0</div>
 </div>
 
 <script>
@@ -3940,26 +3940,50 @@ function showView(view) {
   // пользователя, 2026-09-14).
   document.getElementById("app-header").classList.toggle("hidden", view === rootTheoryView || (view === reviewArea && !!rootPracticeSession));
 }
+
+// Кнопка «назад»: экраны обзор/повторение/мои базы/курс «Корни»/отзывы
+// пишут себя в историю браузера при входе — раньше в SPA не было ни
+// одной записи, и «назад» сразу уводило с сайта целиком (см. ROADMAP,
+// та же идея, что уже сделана в читалке). Переключение между корнями
+// ВНУТРИ курса (btn-roots-prev, растущий текст «Дальше →») историю не
+// засоряет — как листание страниц книги в читалке.
+const VIEW_BY_NAME = { dashboard: dashboardView, review: reviewArea, deckbases: deckbasesView, roots: rootTheoryView, feedback: feedbackReviewView };
+function pushViewHistory(name){
+  try { history.pushState({ v: name }, "", location.pathname + location.search); } catch(err){}
+}
+function goBackToDashboard(){
+  if (history.state && history.state.v && history.state.v !== "dashboard"){ history.back(); return; }
+  showView(dashboardView);
+  renderDashboard();
+}
+window.addEventListener("popstate", (e) => {
+  const name = (e.state && e.state.v) || "dashboard";
+  const view = VIEW_BY_NAME[name] || dashboardView;
+  showView(view);
+  if (view === deckbasesView) renderDeckBases();
+  else if (view === rootTheoryView) openRootsCourseScreen();
+  else if (view === feedbackReviewView) renderFeedbackReview();
+  else if (view === reviewArea) loadCard();
+  else renderDashboard();
+});
+
 document.getElementById("btn-dash-start").addEventListener("click", () => {
   showView(reviewArea);
+  pushViewHistory("review");
   loadCard();
 });
 document.getElementById("btn-deckbases-start").addEventListener("click", () => {
   showView(reviewArea);
+  pushViewHistory("review");
   loadCard();
 });
-document.getElementById("btn-back-dash").addEventListener("click", () => {
-  showView(dashboardView);
-  renderDashboard();
-});
+document.getElementById("btn-back-dash").addEventListener("click", goBackToDashboard);
 document.getElementById("btn-open-deckbases").addEventListener("click", () => {
   showView(deckbasesView);
+  pushViewHistory("deckbases");
   renderDeckBases();
 });
-document.getElementById("btn-deckbases-back").addEventListener("click", () => {
-  showView(dashboardView);
-  renderDashboard();
-});
+document.getElementById("btn-deckbases-back").addEventListener("click", goBackToDashboard);
 document.getElementById("btn-open-roots").addEventListener("click", () => {
   // Сессия по 20 предложениям корня не персистится, но ЖИВЁТ в памяти,
   // пока страница не перезагружена — уйти на "🏠 Обзор" посреди сессии
@@ -3972,15 +3996,14 @@ document.getElementById("btn-open-roots").addEventListener("click", () => {
   // пользователя, 2026-09-14).
   if (rootPracticeSession && rootPracticeSession.queue.length) {
     showView(reviewArea);
+    pushViewHistory("review");
     loadCard();
     return;
   }
+  pushViewHistory("roots");
   openRootsCourseScreen();
 });
-document.getElementById("btn-roots-back").addEventListener("click", () => {
-  showView(dashboardView);
-  renderDashboard();
-});
+document.getElementById("btn-roots-back").addEventListener("click", goBackToDashboard);
 document.getElementById("btn-roots-prev").addEventListener("click", () => {
   if (rootsCoursePosition > 0) openRootsCourseScreen(rootsCoursePosition - 1);
 });
@@ -4079,12 +4102,10 @@ document.getElementById("fb-submit").addEventListener("click", async () => {
 
 document.getElementById("btn-open-feedback-review").addEventListener("click", () => {
   showView(feedbackReviewView);
+  pushViewHistory("feedback");
   renderFeedbackReview();
 });
-document.getElementById("btn-feedback-review-back").addEventListener("click", () => {
-  showView(dashboardView);
-  renderDashboard();
-});
+document.getElementById("btn-feedback-review-back").addEventListener("click", goBackToDashboard);
 
 async function renderFeedbackReview() {
   const list = document.getElementById("fb-review-list");
@@ -4150,6 +4171,7 @@ async function updateFeedbackUnreadBadge() {
   } catch (e) { /* not the owner, or offline — badge just stays at 0 */ }
 }
 
+try { history.replaceState({ v: "dashboard" }, "", location.pathname + location.search); } catch(err){}
 renderDashboard();
 
 // PWA install support — safe no-op if manifest.json/sw.js aren't served
