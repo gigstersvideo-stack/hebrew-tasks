@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.30.5
+  Ивритский тренажёр — v1.32.0
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -819,6 +819,10 @@
     </div>
 
     <h2>Личные карточки</h2>
+    <div class="cap-row">
+      <button class="link-btn" id="btn-import-tsv">📥 Импортировать колоду (TSV)</button>
+      <input type="file" id="import-tsv-file" accept=".txt,.tsv,.csv" style="display:none">
+    </div>
     <div id="custom-cards-list"></div>
 
     <h2>Прогресс по уровням</h2>
@@ -939,7 +943,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div id="appVersionFooter" style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.30.5</div>
+  <div id="appVersionFooter" style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.32.0</div>
 </div>
 
 <script>
@@ -1711,6 +1715,34 @@ function renderCustomCardsPanel() {
   });
 }
 
+// Простой TSV-импорт внешней колоды: строки "иврит<TAB>перевод", тот же
+// плоский формат, в который Anki экспортирует ("Notes → Export → Notes
+// in Plain Text", .txt) — так закрывается разрыв "Anki экспортирует, а
+// импортировать в тренажёр было некуда". Строки без табуляции и строки
+// вида "#separator:tab" (шапка экспорта Anki) пропускаются молча.
+function parseTsvDeck(text) {
+  const rows = [];
+  text.split(/\r\n|\r|\n/).forEach(line => {
+    if (!line.trim() || line.startsWith("#")) return;
+    const cols = line.split("\t");
+    const he = (cols[0] || "").trim(), ru = (cols[1] || "").trim();
+    if (he && ru) rows.push({ he, ru });
+  });
+  return rows;
+}
+function importTsvDeck(text) {
+  const rows = parseTsvDeck(text);
+  if (!rows.length) {
+    alert("Не нашёл ни одной строки вида «иврит[табуляция]перевод». Экспортируйте колоду из Anki: Notes → Export → «Notes in Plain Text» (.txt), и загрузите этот файл.");
+    return;
+  }
+  const stamp = Date.now();
+  const cards = rows.map((row, i) => ({ id: "import:" + stamp + "_" + i, he: row.he, ru: row.ru, addedAt: stamp + i }));
+  appendCustomCards(cards);
+  if (window.cloudPushCustomCards) window.cloudPushCustomCards(cards);
+  alert("Импортировано фраз: " + rows.length + ".");
+}
+
 function diffTokensGeneric(userToks, refToks, matchFn) {
   const n = userToks.length, m = refToks.length;
   const deg = Array.from({ length: n }, () => new Array(m));
@@ -2227,22 +2259,65 @@ function updateRootsBanner() {
   document.getElementById("btn-open-roots").textContent = done > 0 ? "Продолжить →" : "Начать →";
 }
 
+// Reader-side book level ("א"/"ב"/... — reading difficulty of the whole
+// book, from the reader's OWN books-manifest.json), live-fetched so
+// reader-sourced custom cards can be grouped by level below instead of by
+// book: sentences saved from different books at the same level end up in
+// one tile, which is the practical unit for a review session, not "which
+// book was this from". Fetched live (cross-origin, GitHub Pages sends
+// permissive CORS) rather than duplicated into each card's own `source`
+// id at save time — the reader's manifest stays the one place a book's
+// level lives, so editing it there needs no migration here. localStorage
+// cache gives an instant map on next load; the fetch still refreshes it
+// in the background and re-renders if it changes anything.
+let bookLevelMap = null; // bookId -> level string, null until first resolve
+(function loadBookLevelMap() {
+  const cacheKey = "bookLevelMapCache";
+  try {
+    const cached = JSON.parse(localStorage.getItem(cacheKey) || "null");
+    if (cached && cached.map) bookLevelMap = cached.map;
+  } catch (e) {}
+  fetch("https://gigstersvideo-stack.github.io/hebrew-reader/books-manifest.json", { cache: "no-store" })
+    .then(r => (r.ok ? r.json() : null))
+    .then(data => {
+      if (!data || !Array.isArray(data.books)) return;
+      const map = {};
+      data.books.forEach(b => { if (b.id && b.level) map[b.id] = b.level; });
+      bookLevelMap = map;
+      try { localStorage.setItem(cacheKey, JSON.stringify({ map })); } catch (e) {}
+      if (typeof renderCustomCardsPanel === "function") renderCustomCardsPanel();
+      if (typeof renderDeckBases === "function") renderDeckBases();
+    })
+    .catch(() => {});
+})();
+
 // ---- Мои базы: where sentences come from, browsable and mixable. Groups
-// are DERIVED from data that already exists — the built-in level code and
-// the "reader:<bookId>:..." / "ai:<lemma>:..." shape of a customCard's own
-// source id — rather than a new hand-maintained hierarchy, so this needs
-// no migration and no retroactive tagging of the corpus.
+// are DERIVED from data that already exists — the built-in level code,
+// the reader's own book-level map above, and the "reader:<bookId>:..." /
+// "ai:<lemma>:..." shape of a customCard's own source id — rather than a
+// new hand-maintained hierarchy, so this needs no migration and no
+// retroactive tagging of the corpus.
 function groupCustomCards() {
   const groups = {};
   Object.entries(customCardsInfo).forEach(([source, info]) => {
     let key, label;
     const readerMatch = source.match(/^reader:([^:]+):/);
     if (readerMatch) {
-      key = "reader:" + readerMatch[1];
-      label = "📖 " + readerMatch[1].replace(/[-_]/g, " ");
+      const bookId = readerMatch[1];
+      const level = bookLevelMap && bookLevelMap[bookId];
+      if (level) {
+        key = "level:" + level;
+        label = "📖 Уровень " + level;
+      } else {
+        key = "reader:" + bookId;
+        label = "📖 " + bookId.replace(/[-_]/g, " ");
+      }
     } else if (source.startsWith("ai:")) {
       key = "ai";
       label = "🎓 ИИ-разбор";
+    } else if (source.startsWith("import:")) {
+      key = "import";
+      label = "📥 Импорт";
     } else {
       key = "other";
       label = "✎ Другое";
@@ -3305,6 +3380,17 @@ btnPoolReset.addEventListener("click", () => {
   updateStatsBar();
 });
 
+const importTsvFile = document.getElementById("import-tsv-file");
+document.getElementById("btn-import-tsv").addEventListener("click", () => importTsvFile.click());
+importTsvFile.addEventListener("change", () => {
+  const file = importTsvFile.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => { importTsvDeck(String(reader.result || "")); updateStatsBar(); };
+  reader.readAsText(file);
+  importTsvFile.value = "";
+});
+
 const btnExcludeCard = document.getElementById("btn-exclude-card");
 btnExcludeCard.addEventListener("click", () => {
   if (checked) return;
@@ -4321,6 +4407,15 @@ window.cloudDeleteCards = async function (keys) {
 window.cloudRemoveCustomCard = function (source) {
   if (!cloudUid || !source) return;
   setDoc(doc(fbDb, "users", cloudUid, "customCards", source), { deleted: true }, { merge: true }).catch(() => {});
+};
+// Write-through for the TSV-import UI (see importTsvDeck in the classic
+// script) — same customCards doc scheme the reader writes, just with a
+// batch of freshly-parsed cards instead of one at a time.
+window.cloudPushCustomCards = function (cards) {
+  if (!cloudUid || !cards || !cards.length) return;
+  cards.forEach(c => {
+    setDoc(doc(fbDb, "users", cloudUid, "customCards", c.id), { he: c.he, ru: c.ru, addedAt: c.addedAt }).catch(() => {});
+  });
 };
 // Own Gemini key for the ИИ-педагог feature — deliberately a separate doc
 // from meta/state, and deliberately the SAME path+shape the קורא reader
