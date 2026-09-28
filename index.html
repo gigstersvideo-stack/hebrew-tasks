@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.33.0
+  Ивритский тренажёр — v1.34.0
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -384,6 +384,19 @@
   .deck-tile-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; cursor: pointer; }
   .deck-tile-name { font-weight: 600; font-size: 0.92rem; }
   .deck-tile-name .lvl { font-family: 'David Libre', 'Noto Sans Hebrew', serif; margin-right: 3px; }
+  /* Значки групп на "Мои базы" (📖/🌳/🎓/📥/✎ раньше были разными эмодзи
+     без общего стиля — отзыв владельца 2026-09-28, "разнобой иконок").
+     Теперь одноцветные контурные PNG (сгенерированы Cloudflare Workers
+     AI flux-1-schnell, обработаны в маску: белый фон -> прозрачность),
+     показаны через CSS mask — тем же способом, что и текст бейджа,
+     цвет наследуется из var(--accent-strong), значит тема (свет/тёмный)
+     подхватывается сама, без второй версии картинки на тему. Размер
+     1em — масштабируется вместе с шрифтом бейджа, который его содержит
+     (1.1rem на дашборде, 0.92rem на "Мои базы"). */
+  .lvl-icon { display:inline-block; width:1em; height:1em; vertical-align:-0.15em;
+    background-color: currentColor; -webkit-mask-image: var(--icon-url); mask-image: var(--icon-url);
+    -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+    -webkit-mask-position: center; mask-position: center; }
   .deck-tile-count { font-size: 0.76rem; color: var(--text-faint); margin-top: 2px; }
   .deck-toggle { flex-shrink: 0; }
   .deck-tile .mbar { height: 5px; border-radius: 3px; background: var(--surface-2); overflow: hidden; margin-top: 10px; }
@@ -943,7 +956,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div id="appVersionFooter" style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.33.0</div>
+  <div id="appVersionFooter" style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.34.0</div>
 </div>
 
 <script>
@@ -982,6 +995,12 @@ const LEVELS = [
 // ни в выпадающий список фильтра, ни в список переключателей "Мои базы" —
 // оба строятся по LEVELS ДО того, как туда добавляется "🏷 Личное".
 const ROOTS_BASE1_LEVEL_CODE = LEVELS.length;
+// sym используется и в textContent-местах (выпадающий список фильтра,
+// чекбоксы, бейдж) и в innerHTML (плитки дашборда/"Мои базы") — вставить
+// сюда HTML-иконку вместо эмодзи безопасно нельзя, она бы вылезла как
+// голый текст тега в textContent-местах. Эмодзи 🌳 оставлен сознательно
+// (см. ROADMAP, "Разнобой иконок") — конвертация требует правки всех
+// шести мест использования .sym, не только двух плиточных.
 LEVELS.push({ sym: "🌳", label: "Корни · база 1" });
 
 const ttsSupported = "speechSynthesis" in window;
@@ -2241,7 +2260,7 @@ function renderDashboard() {
   const groupTiles = computeCustomGroupStats().filter(g => g.checked && g.total > 0).map(g => {
     const masteryPct = g.total ? Math.round((g.mastered / g.total) * 100) : 0;
     return `<div class="dash-tile">
-      <div class="lvl" style="font-size:0.82rem;">${g.label}</div>
+      <div class="lvl" style="font-size:0.82rem; display:flex; align-items:center; gap:5px;">${groupIconHtml(g.icon)}<span>${escapeHtml(g.label)}</span></div>
       <div class="due-label">К повтору</div>
       <div class="due-num">${g.due}</div>
       <div class="mbar"><div style="width:${masteryPct}%"></div></div>
@@ -2297,32 +2316,36 @@ let bookLevelMap = null; // bookId -> level string, null until first resolve
 // "ai:<lemma>:..." shape of a customCard's own source id — rather than a
 // new hand-maintained hierarchy, so this needs no migration and no
 // retroactive tagging of the corpus.
+function groupIconHtml(icon) {
+  return `<span class="lvl-icon" style="--icon-url:url('icons/icon-${icon}.png')"></span>`;
+}
+
+// icon — ключ файла в icons/icon-<icon>.png (см. .lvl-icon CSS выше),
+// НЕ эмодзи — единый контурный набор вместо разномастных эмодзи.
 function groupCustomCards() {
   const groups = {};
   Object.entries(customCardsInfo).forEach(([source, info]) => {
-    let key, label;
+    let key, icon, label;
     const readerMatch = source.match(/^reader:([^:]+):/);
     if (readerMatch) {
       const bookId = readerMatch[1];
       const level = bookLevelMap && bookLevelMap[bookId];
+      icon = "book";
       if (level) {
         key = "level:" + level;
-        label = "📖 Уровень " + level;
+        label = "Уровень " + level;
       } else {
         key = "reader:" + bookId;
-        label = "📖 " + bookId.replace(/[-_]/g, " ");
+        label = bookId.replace(/[-_]/g, " ");
       }
     } else if (source.startsWith("ai:")) {
-      key = "ai";
-      label = "🎓 ИИ-разбор";
+      key = "ai"; icon = "ai"; label = "ИИ-разбор";
     } else if (source.startsWith("import:")) {
-      key = "import";
-      label = "📥 Импорт";
+      key = "import"; icon = "import"; label = "Импорт";
     } else {
-      key = "other";
-      label = "✎ Другое";
+      key = "other"; icon = "other"; label = "Другое";
     }
-    if (!groups[key]) groups[key] = { key, label, entries: [] };
+    if (!groups[key]) groups[key] = { key, icon, label, entries: [] };
     groups[key].entries.push([source, info]);
   });
   return Object.values(groups);
@@ -2349,7 +2372,7 @@ function computeCustomGroupStats() {
         if (st.due <= now) due++;
       }
     }
-    return { key: g.key, label: g.label, checked, total, learning, mastered, due, sentenceCount: indices.length };
+    return { key: g.key, icon: g.icon, label: g.label, checked, total, learning, mastered, due, sentenceCount: indices.length };
   });
 }
 
@@ -2384,7 +2407,7 @@ function renderDeckBases() {
     return `<div class="deck-tile">
       <div class="deck-tile-top" data-group="${g.key}">
         <div>
-          <div class="deck-tile-name">${escapeHtml(g.label)}</div>
+          <div class="deck-tile-name"><span class="lvl">${groupIconHtml(g.icon)}</span>${escapeHtml(g.label)}</div>
           <div class="deck-tile-count">${indices.length} фраз</div>
         </div>
         <label class="deck-toggle"><input type="checkbox" class="deck-group-cb" data-group="${g.key}" ${allIn ? "checked" : ""}></label>
