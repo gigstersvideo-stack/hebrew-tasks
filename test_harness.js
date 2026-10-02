@@ -67,6 +67,21 @@ const sandbox = {
 };
 sandbox.window.speechSynthesis = undefined;
 sandbox.navigator = { onLine: true };
+// fetch: the page calls it at load time (loadBookLevelMap — the reader's
+// books-manifest.json), so it must exist before the script runs. A stub
+// instead of the real network: tests stay offline and deterministic.
+// fetchStub.calls records requests; fetchStub.manifest is the JSON the
+// next response carries; fetchStub.fail makes the request reject.
+const fetchStub = { calls: [], fail: false, manifest: { books: [
+  { id: 'cat-bet', level: 'A2' },
+  { id: 'demo-scifi', level: 'B1' },
+  { id: 'no-level-book' },
+] } };
+sandbox.fetch = (url, opts) => {
+  fetchStub.calls.push({ url: String(url), opts });
+  if (fetchStub.fail) return Promise.reject(new TypeError('Failed to fetch'));
+  return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(fetchStub.manifest) });
+};
 sandbox.window.addEventListener = () => {};
 vm.createContext(sandbox);
 
@@ -562,5 +577,53 @@ if (!fs.existsSync(sentencesPath)) {
   check('daily cap: a card that is not new never counts', c === false && run(`progress.meta.newToday.count`) === 4);
 }
 
-console.log(`\n${pass} passed, ${fail} failed`);
-process.exit(fail ? 1 : 0);
+// loadBookLevelMap (v1.31.0/v1.32.0): book id -> reader level, from the reader's
+// manifest. It is an IIFE that fires once at load, so the first tests inspect
+// what that load-time run left behind; the failure tests re-run its source
+// (taken from the page, not copied) against a stubbed fetch that fails.
+async function bookLevelMapTests() {
+  const run = (code) => vm.runInContext(code, sandbox);
+  const flush = () => new Promise(r => setTimeout(r, 0));
+  await flush();
+  const map = run(`bookLevelMap`);
+  check('loadBookLevelMap: asks the reader\'s books-manifest.json',
+    fetchStub.calls.length >= 1 && /hebrew-reader\/books-manifest\.json$/.test(fetchStub.calls[0].url));
+  check('loadBookLevelMap: maps bookId -> level, skips books without a level',
+    map && map['cat-bet'] === 'A2' && map['demo-scifi'] === 'B1' && !('no-level-book' in map) && Object.keys(map).length === 2);
+  check('loadBookLevelMap: the map is cached in localStorage for the next load',
+    JSON.parse(store.bookLevelMapCache).map['cat-bet'] === 'A2');
+  run(`Object.keys(customCardsInfo).forEach(k => delete customCardsInfo[k]); Object.assign(customCardsInfo, { 'reader:cat-bet:s1': { n: 1 }, 'reader:unknown-book:s1': { n: 1 } });`);
+  const groups = run(`JSON.stringify(groupCustomCards().map(g => g.key))`);
+  check('loadBookLevelMap: "Мои базы" groups a reader card by its book\'s level, an unknown book by its own id',
+    groups.includes('level:A2') && groups.includes('reader:unknown-book'));
+
+  const iifeSrc = /\(function loadBookLevelMap\(\) \{[\s\S]*?\n\}\)\(\);/.exec(script);
+  if (!iifeSrc) throw new Error('could not find loadBookLevelMap in index.html');
+  const rerun = async () => { run(iifeSrc[0]); await flush(); };
+  const before = run(`JSON.stringify(bookLevelMap)`);
+  const unhandled = [];
+  const onUnhandled = (e) => unhandled.push(e);
+  process.on('unhandledRejection', onUnhandled);
+  let threw = false;
+  const goodFetch = sandbox.fetch;
+  // network error, non-ok status, JSON without a books array
+  for (const bad of [
+    () => Promise.reject(new TypeError('Failed to fetch')),
+    () => Promise.resolve({ ok: false, status: 503, json: () => Promise.reject(new Error('not json')) }),
+    () => Promise.resolve({ ok: true, json: () => Promise.resolve({ oops: 1 }) }),
+  ]) {
+    sandbox.fetch = bad;
+    try { await rerun(); } catch (e) { threw = true; }
+  }
+  sandbox.fetch = goodFetch;
+  const after = run(`JSON.stringify(bookLevelMap)`);
+  await flush();
+  process.removeListener('unhandledRejection', onUnhandled);
+  check('loadBookLevelMap: a failing fetch does not throw or leave an unhandled rejection', !threw && unhandled.length === 0);
+  check('loadBookLevelMap: a failed / non-ok / malformed response keeps the previous map', after === before);
+}
+
+bookLevelMapTests().then(() => {
+  console.log(`\n${pass} passed, ${fail} failed`);
+  process.exit(fail ? 1 : 0);
+}, (e) => { console.error(e); process.exit(1); });
