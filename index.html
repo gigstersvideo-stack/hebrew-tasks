@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.34.1
+  Ивритский тренажёр — v1.34.2
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -956,7 +956,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div id="appVersionFooter" style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.34.1</div>
+  <div id="appVersionFooter" style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.34.2</div>
 </div>
 
 <script>
@@ -4234,15 +4234,15 @@ async function renderFeedbackReview() {
   list.innerHTML = items.map(it => `
     <div class="fb-review-item ${it.status === "new" ? "is-new" : ""}">
       <div class="fb-review-meta">
-        <span class="fb-review-badge ${it.type}">${it.type === "bug" ? "Баг" : "Предложение"}</span>
+        <span class="fb-review-badge ${it.type === "bug" ? "bug" : "suggestion"}">${it.type === "bug" ? "Баг" : "Предложение"}</span>
         <span>${escapeHtml(it.app || "?")}</span>
         <span>${it.createdAt ? new Date(it.createdAt).toLocaleString("ru-RU") : ""}</span>
       </div>
       <div class="fb-review-text">${escapeHtml(it.text || "")}</div>
       ${it.context ? `<div class="fb-review-meta" style="margin-top:-2px;">📍 ${escapeHtml(formatFeedbackContext(it.context))}</div>` : ""}
       <div class="fb-review-actions">
-        ${it.status === "new" ? `<button class="action ghost fb-mark-reviewed" data-id="${it.id}">Просмотрено</button>` : ""}
-        <button class="action ghost fb-delete" data-id="${it.id}">Удалить</button>
+        ${it.status === "new" ? `<button class="action ghost fb-mark-reviewed" data-id="${escapeHtml(String(it.id))}">Просмотрено</button>` : ""}
+        <button class="action ghost fb-delete" data-id="${escapeHtml(String(it.id))}">Удалить</button>
       </div>
     </div>`).join("");
   list.querySelectorAll(".fb-mark-reviewed").forEach(btn => btn.addEventListener("click", async () => {

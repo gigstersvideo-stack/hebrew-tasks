@@ -28,7 +28,12 @@ import google.auth.transport.requests
 from google.oauth2 import service_account
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-KEY_PATH = os.path.join(HERE, "ivrit-progress-firebase-adminsdk-fbsvc-156ed0e778.json")
+# Ключ сервис-аккаунта даёт полный admin-доступ к Firestore, поэтому живёт
+# ВНЕ репозитория (и вне папки, из которой деплоится сайт): по умолчанию
+# %APPDATA%\ivrit\, либо путь из переменной окружения IVRIT_FIREBASE_KEY.
+KEY_FILENAME = "ivrit-progress-firebase-adminsdk-fbsvc-156ed0e778.json"
+KEY_PATH = os.environ.get("IVRIT_FIREBASE_KEY") or os.path.join(
+    os.environ.get("APPDATA") or os.path.expanduser("~"), "ivrit", KEY_FILENAME)
 PROJECT_ID = "ivrit-progress"
 SCOPES = ["https://www.googleapis.com/auth/datastore"]
 BASE_URL = f"https://firestore.googleapis.com/v1/projects/{PROJECT_ID}/databases/(default)/documents"

@@ -1,0 +1,46 @@
+rules_version = '2';
+
+// Правила Firestore проекта ivrit-progress — общие для тренажёра
+// (trainivrit) и читалки (readivrit): оба сайта пишут в одну базу.
+// Это единственный источник правил: деплой — `python deploy_firestore_rules.py`
+// (сначала прогоняет тесты через Firebase Rules API, потом выкатывает).
+//
+// users/{uid}/** — личные данные (прогресс, словарь, настройки, в т.ч. ключ
+//   Gemini пользователя): читать и писать может только сам владелец.
+// feedback/{id} — отзывы с обоих сайтов. Создать может кто угодно, даже без
+//   входа (низкий порог — в этом смысл формы), но только документ строгой
+//   формы и разумного размера. Читать/править/удалять — только владелец
+//   проекта (OWNER_UID в коде обоих сайтов).
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{uid}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    function isOwner() {
+      return request.auth != null && request.auth.uid == "JYkCrXPmBwhFaW5fyb6eQcWkihf1";
+    }
+
+    function validFeedback(d) {
+      return d.keys().hasOnly(['type', 'text', 'app', 'url', 'uid', 'userAgent', 'createdAt', 'status', 'context'])
+        && d.keys().hasAll(['type', 'text', 'app', 'createdAt', 'status'])
+        && d.type in ['bug', 'suggestion']
+        && d.text is string && d.text.size() > 0 && d.text.size() <= 5000
+        && d.app in ['reader', 'trainer']
+        && (!('url' in d) || (d.url is string && d.url.size() <= 2000))
+        && (!('userAgent' in d) || (d.userAgent is string && d.userAgent.size() <= 1000))
+        && (!('uid' in d) || d.uid == null || (request.auth != null && d.uid == request.auth.uid))
+        && d.createdAt is int
+        && d.status == 'new'
+        && (!('context' in d) || d.context == null || (d.context is map && d.context.size() <= 30));
+    }
+
+    match /feedback/{feedbackId} {
+      allow create: if validFeedback(request.resource.data);
+      allow read, delete: if isOwner();
+      // Владелец меняет только статус (new → reviewed), остальное неизменно.
+      allow update: if isOwner()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']);
+    }
+  }
+}
