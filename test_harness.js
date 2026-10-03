@@ -272,7 +272,9 @@ check('real interior typo (substitution, same length) has a position on both sid
   sandbox.commitAndAdvance(5);
   const savedRaw = Object.values(store)[0];
   const saved = JSON.parse(savedRaw);
-  const today = new Date().toISOString().slice(0, 10);
+  // местная дата (v1.34.3: стрик и дневная норма по местным суткам, не по UTC)
+  const _d = new Date();
+  const today = _d.getFullYear() + '-' + String(_d.getMonth() + 1).padStart(2, '0') + '-' + String(_d.getDate()).padStart(2, '0');
   check('daily streak recorded after first commit', saved.streak && saved.streak.count === 1 && saved.streak.lastDate === today);
   check('mistakesHe/mistakesRu present in saved state', typeof saved.mistakesHe === 'object' && typeof saved.mistakesRu === 'object');
   sandbox.loadCard();
@@ -621,6 +623,29 @@ async function bookLevelMapTests() {
   process.removeListener('unhandledRejection', onUnhandled);
   check('loadBookLevelMap: a failing fetch does not throw or leave an unhandled rejection', !threw && unhandled.length === 0);
   check('loadBookLevelMap: a failed / non-ok / malformed response keeps the previous map', after === before);
+}
+
+// Режимы одного предложения не идут подряд (v1.34.3): повторение предложения,
+// которое меньше 12 часов назад уже было в другом режиме, откладывается,
+// пока есть из чего выбирать — иначе ответ «заспойлен» предыдущей карточкой.
+{
+  const run = (code) => vm.runInContext(code, sandbox);
+  const picks = run(`(() => {
+    const savedItems = progress.items, savedPool = poolForLevel, savedModes = enabledModes, savedLast = lastKey, savedSession = rootPracticeSession;
+    const now = Date.now();
+    progress.items = {
+      '0:he2ru': { due: now + 86400000, lastReview: now - 3600000, stability: 2, reps: 1, lapses: 0 },
+      '0:ru2he': { due: now - 1000, lastReview: now - 5 * 86400000, stability: 2, reps: 1, lapses: 0 },
+      '1:ru2he': { due: now - 1000, lastReview: now - 5 * 86400000, stability: 2, reps: 1, lapses: 0 },
+      '1:he2ru': { due: now + 86400000, lastReview: now - 5 * 86400000, stability: 2, reps: 1, lapses: 0 },
+    };
+    poolForLevel = () => [0, 1]; enabledModes = () => ['ru2he', 'he2ru']; lastKey = null; rootPracticeSession = null;
+    const out = [];
+    for (let k = 0; k < 20; k++) out.push(pickNext().index);
+    progress.items = savedItems; poolForLevel = savedPool; enabledModes = savedModes; lastKey = savedLast; rootPracticeSession = savedSession;
+    return out;
+  })()`);
+  check('siblings: a due card whose sentence was just reviewed in another mode waits', picks.every(i => i === 1));
 }
 
 bookLevelMapTests().then(() => {

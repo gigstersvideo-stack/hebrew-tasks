@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.34.2
+  Ивритский тренажёр — v1.34.3
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -357,6 +357,11 @@
   .dash-tile .mbar > div { height: 100%; background: var(--accent); border-radius: 3px; }
   .dash-actions { display: flex; align-items: center; gap: 16px; }
   .dash-start { align-self: flex-start; }
+  .onboard { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; margin-bottom: 18px; }
+  .onboard h2 { margin: 0 0 8px; font-size: 1.1rem; }
+  .onboard-steps { margin: 0 0 14px; padding-left: 1.2em; display: grid; gap: 6px; font-size: 0.9rem; max-width: 62ch; }
+  .onboard-levels { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+  .onboard-levels .he { font-weight: 700; margin-left: 4px; }
   .roots-banner {
     background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--accent);
     border-radius: 4px 12px 12px 4px; padding: 14px 16px; display: flex; align-items: center;
@@ -770,6 +775,20 @@
   </header>
 
   <div class="dashboard" id="dashboard-view">
+    <section class="onboard hidden" id="onboard" aria-labelledby="onboard-title">
+      <h2 id="onboard-title">С чего начать</h2>
+      <ol class="onboard-steps">
+        <li>Выберите свой уровень — тренажёр будет брать фразы только из него.</li>
+        <li>Переводите фразы с русского на иврит и обратно, слушайте и вставляйте пропущенное слово. Не знаете — жмите «Подсказка».</li>
+        <li>После ответа оцените себя: «Снова», «Трудно», «Хорошо» или «Легко». По этой оценке тренажёр сам решит, когда показать фразу снова.</li>
+      </ol>
+      <div class="onboard-levels" role="group" aria-label="Мой уровень">
+        <button class="action primary" data-levels="0,1">Только начинаю <span class="he">א</span></button>
+        <button class="action primary" data-levels="2,3">Знаю основы <span class="he">ב</span></button>
+        <button class="action primary" data-levels="4">Читаю и говорю <span class="he">ג</span></button>
+      </div>
+      <button class="link-btn" id="onboard-skip">Я уже занимаюсь — скрыть</button>
+    </section>
     <div class="dash-hero">
       <div class="dash-num" id="dash-due-total">0</div>
       <div class="dash-hero-label">фраз готовы к повторению сегодня</div>
@@ -956,7 +975,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div id="appVersionFooter" style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.34.2</div>
+  <div id="appVersionFooter" style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.34.3</div>
 </div>
 
 <script>
@@ -1014,7 +1033,12 @@ const ALL_MODES = ttsSupported ? ["ru2he", "he2ru", "listen", "cloze"] : ["ru2he
 
 const STORE_KEY = "ivrit_trainer_progress_v3";
 var progress = null; // `var`, not `let`: needs to be reachable as `window.progress` from the separate Firebase module script below
-function todayStr() { return new Date().toISOString().slice(0, 10); }
+// Местная дата, а не UTC: toISOString() переключал «сегодня» в 02:00–03:00
+// по Израилю/Москве — дневная норма и стрик обнулялись посреди ночи.
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
 function defaultProgress() {
   return {
     items: {},
@@ -2079,8 +2103,30 @@ function pickNext() {
       else if (!st) fresh.push(key);
     }
   }
-  let dueF = due.filter(k => k !== lastKey); if (!dueF.length) dueF = due;
-  let freshF = fresh.filter(k => k !== lastKey); if (!freshF.length) freshF = fresh;
+  // Режимы одного предложения (ru2he/he2ru/listen/cloze) — разные карточки,
+  // но ответ один: увидев he2ru, в ru2he того же предложения ответ уже
+  // знаешь, и FSRS учится на «заспойленном» повторе. Поэтому: новые карточки
+  // не берём из предложения, которое сегодня уже было в любом режиме, а
+  // повторения — из предложения, которое повторяли в другом режиме меньше
+  // 12 часов назад (если есть из чего выбирать).
+  const idxOf = k => k.slice(0, k.lastIndexOf(":"));
+  const lastIdx = lastKey ? idxOf(lastKey) : null;
+  const dayStart = new Date(); dayStart.setHours(0, 0, 0, 0);
+  const recentByIdx = {};
+  for (const k in progress.items) {
+    const lr = progress.items[k] && progress.items[k].lastReview;
+    if (!lr) continue;
+    const ix = idxOf(k);
+    if (!recentByIdx[ix] || recentByIdx[ix].t < lr) recentByIdx[ix] = { t: lr, key: k };
+  }
+  const SIBLING_GAP = 12 * 3600 * 1000;
+  let dueF = due.filter(k => idxOf(k) !== lastIdx && !(recentByIdx[idxOf(k)] && recentByIdx[idxOf(k)].key !== k && now - recentByIdx[idxOf(k)].t < SIBLING_GAP));
+  if (!dueF.length) dueF = due.filter(k => k !== lastKey);
+  if (!dueF.length) dueF = due;
+  let freshF = fresh.filter(k => idxOf(k) !== lastIdx && !(recentByIdx[idxOf(k)] && recentByIdx[idxOf(k)].t >= dayStart.getTime()));
+  if (!freshF.length) freshF = fresh.filter(k => k !== lastKey);
+  if (!freshF.length) freshF = fresh;
+  practiceMode = false;
 
   const capLeft = progress.meta.dailyNewCap - progress.meta.newToday.count;
   const canNew = capLeft > 0 && freshF.length > 0;
@@ -2104,7 +2150,11 @@ function pickNext() {
     const allKeys = [];
     for (const i of pool) for (const m of modes) allKeys.push(i + ":" + m);
     const learned = allKeys.filter(k => progress.items[k]);
-    if (learned.length) { pickedKey = pickLeastRecentlyShown(learned); }
+    // Ничего не назначено и новых нельзя — тренировка ВНЕ расписания:
+    // ответ не пишется в FSRS (см. commitAndAdvance), иначе ранние повторы
+    // сдвигали due и стабильность, портя расписание.
+    if (learned.length) { pickedKey = pickLeastRecentlyShown(learned); practiceMode = true;
+      document.getElementById("queue-note").textContent = "На сегодня всё повторено — это свободная тренировка, расписание повторений она не меняет."; }
     else if (freshF.length) pickedKey = sample(freshF);
     else { const f2 = allKeys.filter(k => k !== lastKey); pickedKey = sample(f2.length ? f2 : allKeys); }
   }
@@ -2245,7 +2295,32 @@ function renderLevelsTable() {
 // built-in sentence auto-matched to a word saved in the reader/AI-разбор,
 // see appendCustomCards). Those still get practiced, but a tile for a
 // level the user just told us is off would look like a lie.
+// Первый визит: пока нет ни одной отвеченной карточки и онбординг не скрыт,
+// над обзором — «С чего начать» с выбором уровня (новичок иначе попадал
+// сразу в 8239 фраз пяти уровней без объяснений).
+function renderOnboard() {
+  const box = document.getElementById("onboard");
+  const show = !Object.keys(progress.items || {}).length && !(progress.meta && progress.meta.onboarded);
+  box.classList.toggle("hidden", !show);
+}
+function finishOnboard(levels) {
+  progress.meta.onboarded = true;
+  if (levels) progress.pool.levels = levels;
+  saveProgress();
+  cloudSyncMeta();
+  updateStatsBar();
+  renderDashboard();
+}
+document.querySelectorAll("#onboard .onboard-levels button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    finishOnboard(btn.dataset.levels.split(",").map(Number));
+    document.getElementById("btn-dash-start").click();
+  });
+});
+document.getElementById("onboard-skip").addEventListener("click", () => finishOnboard(null));
+
 function renderDashboard() {
+  renderOnboard();
   const { perLevel, totals } = computeLevelStats();
   document.getElementById("dash-due-total").textContent = totals.due;
   const levelTiles = perLevel.filter(l => l.code < CUSTOM_LEVEL_CODE && progress.pool.levels.includes(l.code) && l.total > 0).map(l => {
@@ -3241,7 +3316,9 @@ function doCheck() {
     fb = { kind: "he", userOps, refOps };
     if (!isCorrect) refOps.filter(o => o.t === "ins").forEach(o => tallyMistake(progress.mistakesHe, heBaseNorm(o.w)));
   }
-  if (hintsUsed > 0) quality = Math.min(quality, 4);
+  // С подсказкой — не выше «Трудно» (3 → FSRS Hard): иначе открыв все слова,
+  // кроме одного, карточка получала «Хорошо», и интервал рос незаслуженно.
+  if (hintsUsed > 0) quality = Math.min(quality, 3);
   pendingQuality = quality;
 
   sessionTotal++;
@@ -3281,9 +3358,14 @@ function doHint() {
   els.answer.focus();
 }
 
+let practiceMode = false;
 function commitAndAdvance(quality) {
   const key = currentKey();
-  progress.items[key] = schedule(progress.items[key], quality);
+  if (practiceMode && progress.items[key]) {
+    progress.items[key] = { ...progress.items[key], lastPractice: Date.now() };
+  } else {
+    progress.items[key] = schedule(progress.items[key], quality);
+  }
   updateDailyStreak();
   saveProgress();
   cloudSyncCard(key, progress.items[key]);
