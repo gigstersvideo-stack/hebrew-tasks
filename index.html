@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.34.3
+  Ивритский тренажёр — v1.34.4
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -975,7 +975,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div id="appVersionFooter" style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.34.3</div>
+  <div id="appVersionFooter" style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.34.4</div>
 </div>
 
 <script>
@@ -1354,7 +1354,12 @@ modeOptions.forEach(([v, l]) => { const o = document.createElement("option"); o.
 // Личный пул: какие фразы вообще участвуют в вашей практике. По умолчанию —
 // все уровни. include/exclude — точечные исключения поверх уровня (например,
 // "убрать эту одну фразу", даже если весь её уровень включён).
+// Снятая фраза (x: 1 в DATA) — ошибочная или выдуманная, убрана из обучения.
+// Из массива её НЕ удаляют: прогресс у всех пользователей привязан к номеру
+// фразы, и удаление сдвинуло бы номера всех следующих (планка запуска, E16).
+function isRetired(index) { return !!(DATA[index] && DATA[index].x); }
 function inPool(index) {
+  if (isRetired(index)) return false;
   const p = progress.pool;
   if (p.exclude.includes(index)) return false;
   if (p.include.includes(index)) return true;
@@ -2091,7 +2096,7 @@ function pickNext() {
   ensureTodayMeta();
   const lvlPool = poolForLevel();
   const poolOnly = DATA.map((_, i) => i).filter(inPool);
-  const pool = lvlPool.length ? lvlPool : (poolOnly.length ? poolOnly : DATA.map((_, i) => i));
+  const pool = (lvlPool.length ? lvlPool : (poolOnly.length ? poolOnly : DATA.map((_, i) => i))).filter(i => !isRetired(i));
   const modes = enabledModes();
   const now = Date.now();
   const due = [], fresh = [];
@@ -2257,7 +2262,7 @@ function computeLevelStats() {
     // from "Мои базы", where the whole point is to see and re-enable it.
     let total = 0, learning = 0, mastered = 0, due = 0, sentenceCount = 0;
     for (let i = 0; i < DATA.length; i++) {
-      if (DATA[i].l !== code) continue;
+      if (DATA[i].l !== code || isRetired(i)) continue;
       sentenceCount++;
       if (!inPool(i)) continue;
       for (const m of ALL_MODES) {

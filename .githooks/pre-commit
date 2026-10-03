@@ -1,0 +1,10 @@
+#!/bin/sh
+# Перед коммитом: тесты тренажёра зелёные и index.html == hebrew_trainer.html
+# (планка запуска, E18). Включается один раз: git config core.hooksPath .githooks
+if git diff --cached --name-only | grep -qE '^(index\.html|test_harness\.js|sw\.js)$'; then
+  if [ -f hebrew_trainer.html ] && ! cmp -s index.html hebrew_trainer.html; then
+    echo "pre-commit: index.html и hebrew_trainer.html разошлись — синхронизируй копии."; exit 1; fi
+  node test_harness.js > /tmp/trainer-tests.log 2>&1 || {
+    echo "pre-commit: тесты тренажёра упали — коммит остановлен:"; grep -E "FAIL|Error|passed" /tmp/trainer-tests.log | tail -15; exit 1; }
+fi
+exit 0

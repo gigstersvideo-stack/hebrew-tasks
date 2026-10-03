@@ -648,6 +648,23 @@ async function bookLevelMapTests() {
   check('siblings: a due card whose sentence was just reviewed in another mode waits', picks.every(i => i === 1));
 }
 
+// Снятая фраза (v1.34.4): помеченная x:1 не попадает в пул и выбор карточек,
+// а номера соседних фраз (и прогресс по ним) не сдвигаются.
+{
+  const run = (code) => vm.runInContext(code, sandbox);
+  const r = run(`(() => {
+    const keep = DATA[0].x, savedPool = poolForLevel, savedModes = enabledModes, savedItems = progress.items, savedSession = rootPracticeSession;
+    DATA[0].x = 1;
+    const inP = inPool(0);
+    poolForLevel = () => [0, 1]; enabledModes = () => ['ru2he']; progress.items = {}; rootPracticeSession = null;
+    const picks = []; for (let k = 0; k < 15; k++) picks.push(pickNext().index);
+    DATA[0].x = keep; poolForLevel = savedPool; enabledModes = savedModes; progress.items = savedItems; rootPracticeSession = savedSession;
+    return { inP, picks };
+  })()`);
+  check('retired: a retired sentence is out of the pool', r.inP === false);
+  check('retired: a retired sentence is never picked', r.picks.every(i => i !== 0));
+}
+
 bookLevelMapTests().then(() => {
   console.log(`\n${pass} passed, ${fail} failed`);
   process.exit(fail ? 1 : 0);
