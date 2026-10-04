@@ -109,7 +109,17 @@ def _matches_allowlist(word):
     bare = _bare_consonants(word)
     if any(stem in bare for stem in KTIV_CHASER_ALLOWED_STEMS):
         return True
-    return any(bare.endswith(_bare_consonants(allowed)) for allowed in KTIV_CHASER_ALLOWLIST)
+    # Суффикс сравнивается С огласовкой (без дагеша — после приставки он появляется),
+    # а остаток спереди — только буквы приставок. Раньше сравнивались голые буквы,
+    # и любое слово на -כה/-לא (אֲרֻכָּה, מֻפְלָא) молча считалось разрешённым.
+    nod = unicodedata.normalize("NFC", word).replace("ּ", "")
+    for allowed in KTIV_CHASER_ALLOWLIST:
+        a = unicodedata.normalize("NFC", allowed).replace("ּ", "")
+        if nod.endswith(a):
+            head = _bare_consonants(nod[: len(nod) - len(a)])
+            if len(head) <= 3 and all(ch in "והבכלמש" for ch in head):
+                return True
+    return False
 
 
 def find_ktiv_chaser_violations(obj, path=""):

@@ -172,6 +172,13 @@ def main():
                 print("  [!] c не найден во фразе:", sid)
         elif c == "growing_texts":
             nn = sid[2:4]
+            new_t = nfc(r["he"]).split()
+            ga = gt.get(f"checkpoint_{nn}_audio.json")
+            sa = ga and next((x for x in ga["sentences"] if x["id"] == sid), None)
+            if sa and [nfc(w["t"]) for w in sa["words"]] == new_t and all("start" in w for w in sa["words"]):
+                # уже переписано и озвучено прошлым (прерванным) прогоном — не трогаем
+                rep["rewritten"] += 1
+                continue
             for fn in (f"checkpoint_{nn}.json", f"checkpoint_{nn}_audio.json"):
                 g = gt.get(fn)
                 s = g and next((x for x in g["sentences"] if x["id"] == sid), None)
@@ -199,15 +206,31 @@ def main():
     for fn in ("index.html", "hebrew_trainer.html"):
         open(os.path.join(HERE, fn), "w", encoding="utf-8", newline="").write(html2)
 
+    def save_gt(fn):
+        g = gt[fn]
+        p = os.path.join(HERE, "growing_texts", fn)
+        raw = open(p, encoding="utf-8", newline="").read()
+        m_ind = re.match(r"\{\r?\n( +)", raw)  # файлы бывают с отступом 1 и 2 — сохраняем свой
+        indent = len(m_ind.group(1)) if m_ind else None
+        s = json.dumps(g, ensure_ascii=False, indent=indent)
+        if "\r\n" in raw[:200]:
+            s = s.replace("\n", "\r\n")
+        if raw.endswith("\n"):
+            s += "\r\n" if raw.endswith("\r\n") else "\n"
+        open(p, "w", encoding="utf-8", newline="").write(s)
+
     if args.revoice and revoice:
         spec = importlib.util.spec_from_file_location("gen_audio", AUDIO_TOOL)
         m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
         subs = m.load_text_substitutions()
 
         async def run():
+            # Каждый текст сохраняется сразу после своей переозвучки: прерванный прогон
+            # (лимит времени) оставляет согласованные mp3+тайминги, повторный — доделывает.
             for fn, g in gt.items():
                 if not fn.endswith("_audio.json"):
                     continue
+                todo = [s for s in g["sentences"] if s["id"] in revoice]
                 for s in g["sentences"]:
                     if s["id"] not in revoice:
                         continue
@@ -221,16 +244,13 @@ def main():
                         bounds, _ = await m.synthesize_sentence_with_retry(text, "he-IL-AvriNeural", outp)
                     if not m.assign_word_timings(s["words"], bounds):
                         print("  [!] тайминги не сошлись:", s["id"])
+                if todo:
+                    save_gt(fn)
+                    save_gt(fn.replace("_audio.json", ".json"))
+                    print("  озвучено и сохранено:", fn, len(todo), flush=True)
         asyncio.run(run())
-    for fn, g in gt.items():
-        p = os.path.join(HERE, "growing_texts", fn)
-        raw = open(p, encoding="utf-8", newline="").read()
-        m_ind = re.match(r"\{\r?\n( +)", raw)  # файлы бывают с отступом 1 и 2 — сохраняем свой
-        indent = len(m_ind.group(1)) if m_ind else None
-        s = json.dumps(g, ensure_ascii=False, indent=indent)
-        if "\r\n" in raw[:200]:
-            s = s.replace("\n", "\r\n")
-        open(p, "w", encoding="utf-8", newline="").write(s)
+    for fn in gt:
+        save_gt(fn)
     print("Записано.")
 
 
