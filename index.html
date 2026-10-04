@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.36.1
+  Ивритский тренажёр — v1.37.0
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -975,7 +975,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div id="appVersionFooter" style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.36.1</div>
+  <div id="appVersionFooter" style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.37.0</div>
 </div>
 
 <script>
@@ -2599,7 +2599,7 @@ function loadRootsCourseData() {
 // markRootTheoryDone и pullAndMerge ниже). Асинхронно и только если есть
 // что реплеить — пользователь, который ни разу не открывал курс, не
 // платит fetch'ем 2.9 МБ на ровном месте при каждой загрузке тренажёра.
-if (progress.rootsCourse.completedTheory.length) {
+const rootsReplayReady = !progress.rootsCourse.completedTheory.length ? null :
   loadRootsCourseData().then(({ sentencesByRoot }) => {
     progress.rootsCourse.completedTheory.forEach(rootId => {
       if (sentencesByRoot[rootId]) appendRootSentences(rootId, sentencesByRoot[rootId]);
@@ -2607,7 +2607,6 @@ if (progress.rootsCourse.completedTheory.length) {
     restoreRootSession(); // индексы корней снова известны — вернуть сессию практики
     updateStatsBar();
   });
-}
 
 function rtExampleHtml(he, ru) {
   return `<div class="rt-example">
@@ -2787,6 +2786,7 @@ function renderRootTheory(entry, sentences) {
       if (!indices.length) return;
       startRootPracticeSession(entry.root, indices);
       showView(reviewArea);
+      pushViewHistory("review");
       loadCard();
     });
   }
@@ -2806,6 +2806,7 @@ function renderRootTheory(entry, sentences) {
       const indices = markRootTheoryDone(entry.root, sentences);
       startRootPracticeSession(entry.root, indices);
       showView(reviewArea);
+      pushViewHistory("review");
       loadCard();
       return;
     }
@@ -2865,6 +2866,7 @@ function openRootsCourseScreen(position) {
   showView(rootTheoryView);
   const page = document.getElementById("rt-page");
   if (position === undefined) position = progress.rootsCourse.completedTheory.length;
+  setViewHistory("roots", position);
   updateRootsCourseNav(position);
   if (position > 0 && position % ROOTS_PER_CHECKPOINT_HINT === 0 && position <= progress.rootsCourse.completedTheory.length) {
     const checkpoint = position / ROOTS_PER_CHECKPOINT_HINT;
@@ -4192,8 +4194,26 @@ function showView(view) {
 // ВНУТРИ курса (btn-roots-prev, растущий текст «Дальше →») историю не
 // засоряет — как листание страниц книги в читалке.
 const VIEW_BY_NAME = { dashboard: dashboardView, review: reviewArea, deckbases: deckbasesView, roots: rootTheoryView, feedback: feedbackReviewView };
-function pushViewHistory(name){
-  try { history.pushState({ v: name }, "", location.pathname + location.search); } catch(err){}
+// Экран живёт и в адресе (#/roots/12, #/review, #/deckbases, #/feedback): F5,
+// закладка и перезапуск установленного приложения возвращают туда же, где
+// был ученик. Раньше адрес при загрузке всегда сбрасывался на обзор, и
+// обновление на растущем тексте выкидывало на главную (отзыв владельца,
+// 2026-10-04). Номер шага курса в адресе — с 1, как «Корень N из …».
+function viewHash(name, pos) {
+  if (name === "roots") return "#/roots" + (typeof pos === "number" ? "/" + (pos + 1) : "");
+  return name && name !== "dashboard" ? "#/" + name : "";
+}
+function setViewHistory(name, pos, push) {
+  try {
+    const url = location.pathname + location.search + viewHash(name, pos);
+    history[push ? "pushState" : "replaceState"]({ v: name, pos }, "", url);
+  } catch(err){}
+}
+function pushViewHistory(name, pos){ setViewHistory(name, pos, true); }
+function parseViewHash(hash) {
+  const m = /^#\/(review|deckbases|feedback|roots)(?:\/(\d+))?$/.exec(hash || "");
+  if (!m) return { v: "dashboard" };
+  return { v: m[1], pos: m[1] === "roots" && m[2] ? Math.max(0, Number(m[2]) - 1) : undefined };
 }
 function goBackToDashboard(){
   if (history.state && history.state.v && history.state.v !== "dashboard"){ history.back(); return; }
@@ -4205,7 +4225,7 @@ window.addEventListener("popstate", (e) => {
   const view = VIEW_BY_NAME[name] || dashboardView;
   showView(view);
   if (view === deckbasesView) renderDeckBases();
-  else if (view === rootTheoryView) openRootsCourseScreen();
+  else if (view === rootTheoryView) openRootsCourseScreen(e.state && e.state.pos);
   else if (view === feedbackReviewView) renderFeedbackReview();
   else if (view === reviewArea) loadCard();
   else renderDashboard();
@@ -4415,8 +4435,46 @@ async function updateFeedbackUnreadBadge() {
   } catch (e) { /* not the owner, or offline — badge just stays at 0 */ }
 }
 
-try { history.replaceState({ v: "dashboard" }, "", location.pathname + location.search); } catch(err){}
+// Вход из читалки (#authHandoff=…) забираем ДО того, как адрес перепишется
+// маршрутом ниже: модульный скрипт со входом выполняется позже обычного, и
+// раньше он находил адрес уже стёртым — вход между доменами не срабатывал.
+try {
+  const m = /(?:^|&)authHandoff=([^&]+)/.exec(location.hash.slice(1));
+  window.__authHandoffToken = m ? decodeURIComponent(m[1]) : null;
+} catch(err){}
 renderDashboard();
+(function openInitialView() {
+  const route = parseViewHash(typeof location !== "undefined" ? location.hash : "");
+  if (route.v === "roots" && typeof route.pos === "number") {
+    // Вперёд фронта курса по адресу не пускаем (курс строго последовательный).
+    route.pos = Math.min(route.pos, progress.rootsCourse.completedTheory.length);
+  }
+  // Открыли сразу внутренний экран (закладка, иконка приложения), а не F5:
+  // кладём под него обзор, чтобы «назад» вело на обзор, а не прочь с сайта.
+  let nav = {};
+  try { nav = performance.getEntriesByType("navigation")[0] || {}; } catch(err){}
+  if (route.v !== "dashboard" && nav.type === "navigate") {
+    setViewHistory("dashboard");
+    pushViewHistory(route.v, route.pos);
+  } else {
+    setViewHistory(route.v, route.pos);
+  }
+  if (route.v === "roots") openRootsCourseScreen(route.pos);
+  else if (route.v === "deckbases") { showView(deckbasesView); renderDeckBases(); }
+  else if (route.v === "feedback") { showView(feedbackReviewView); renderFeedbackReview(); }
+  else if (route.v === "review") {
+    showView(reviewArea);
+    // Незаконченная сессия по корню восстанавливается асинхронно (после
+    // загрузки данных курса) — ждём её, иначе первая карточка придёт из
+    // общего пула вместо предложений корня.
+    if (progress.rootsCourse.activeSession && rootsReplayReady) rootsReplayReady.then(() => {
+      if (reviewArea.classList.contains("hidden")) return; // ученик уже ушёл с экрана
+      showView(reviewArea); // шапка прячется только в сессии по корню — она уже восстановлена
+      loadCard();
+    });
+    else loadCard();
+  }
+})();
 
 // PWA install support — safe no-op if manifest.json/sw.js aren't served
 // alongside this page (e.g. inside the Claude Artifact viewer).
@@ -4830,10 +4888,10 @@ if (crossLinkEl) {
 }
 (() => {
   if (typeof location === "undefined") return;
-  const m = /authHandoff=([^&]+)/.exec(location.hash.slice(1));
-  if (!m) return;
-  history.replaceState(null, "", location.pathname + location.search);
-  signInWithCredential(fbAuth, GoogleAuthProvider.credential(decodeURIComponent(m[1])))
+  const token = window.__authHandoffToken;
+  if (!token) return;
+  window.__authHandoffToken = null;
+  signInWithCredential(fbAuth, GoogleAuthProvider.credential(token))
     .then((result) => { console.log("[ivrit] auth handoff sign-in ok, uid:", result.user.uid); })
     .catch((e) => { console.warn("[ivrit] auth handoff sign-in failed:", e); });
 })();
@@ -4890,7 +4948,13 @@ onAuthStateChanged(fbAuth, async (user) => {
     // до следующей ручной навигации на дашборд (отзыв с сайта, 2026-09-12).
     renderDashboard();
     updateStatsBar();
-    loadCard();
+    // Раньше здесь всегда был loadCard(): вход (он происходит и сам, через
+    // пару секунд после каждой загрузки) подменял карточку, которую ученик
+    // уже читает, засчитывал лишнюю «новую» за день, а в сессии по корню
+    // молча выдёргивал из очереди одно предложение. Следующая карточка и так
+    // возьмётся из слитого прогресса.
+    if (!reviewArea.classList.contains("hidden") && currentIndex < 0) loadCard();
+    if (!feedbackReviewView.classList.contains("hidden") && user.uid === window.OWNER_UID) renderFeedbackReview();
     updateCloudStatusIndicator();
   } else {
     cloudUid = null;
