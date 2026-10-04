@@ -312,7 +312,7 @@ check('real interior typo (substitution, same length) has a position on both sid
   // at 5 levels x a few probes not to need anything fancier.
   function levelOf(i) {
     for (let lv = 0; lv <= 4; lv++) {
-      sandbox.progress.pool = { levels: [lv], include: [], exclude: [] };
+      sandbox.progress.pool = { levels: [lv], include: [], exclude: [], archive: true };
       if (inPool(i)) return lv;
     }
     return null;
@@ -327,7 +327,7 @@ check('real interior typo (substitution, same length) has a position on both sid
   }
   check('found a sentence at a different level from sentence 0 (sanity)', idxB !== -1);
 
-  sandbox.progress.pool = { levels: [lvlA, lvlB], include: [], exclude: [] };
+  sandbox.progress.pool = { levels: [lvlA, lvlB], include: [], exclude: [], archive: true };
   check('pool: level A in pool by default', inPool(0) === true);
   check('pool: level B in pool by default', inPool(idxB) === true);
 
@@ -341,14 +341,26 @@ check('real interior typo (substitution, same length) has a position on both sid
   sandbox.progress.pool.exclude = [idxB];
   check('pool: explicit exclude overrides an enabled level', inPool(idxB) === false);
 
-  sandbox.progress.pool = { levels: [0, 1, 2, 3, 4], include: [], exclude: [] };
+  sandbox.progress.pool = { levels: [0, 1, 2, 3, 4], include: [], exclude: [], archive: true };
   sandbox.document.getElementById('filter-level').value = 'all'; // fake <select> doesn't simulate default-option selection
   const full = poolForLevel();
   // poolForLevel() returns one entry per pooled SENTENCE (not per mode —
   // that multiplication only happens in computeLevelStats()'s totals), so
   // with every level enabled this is just the real corpus size, matching
   // the "8239 предложений" shown in the UI.
-  check('pool: full pool with all levels covers the whole real corpus', full.length === 8239);
+  check('pool: full pool with all levels covers the whole real corpus', full.length === 8540);
+  // Ядро / «Сборник ульпана» (2026-10-04): без archive в пуле только карточки ядра (k: 1).
+  sandbox.progress.pool = { levels: [0, 1, 2, 3, 4], include: [], exclude: [], archive: false };
+  const coreOnly = poolForLevel();
+  check('core: without archive the pool is only the core (1761 cards)', coreOnly.length === 1761);
+  let archIdx = -1;
+  for (let i = 0; i < 8540 && archIdx === -1; i++) if (!coreOnly.includes(i)) archIdx = i;
+  check('core: an archive card exists and is out of the pool', archIdx !== -1 && inPool(archIdx) === false);
+  sandbox.progress.pool.include = [archIdx];
+  check('core: explicit include still brings an archive card back', inPool(archIdx) === true);
+  sandbox.progress.pool = { levels: [0, 1, 2, 3, 4], include: [], exclude: [], archive: true };
+  check('core: archive on restores every card', inPool(archIdx) === true);
+
 }
 
 // 18. appendCustomCards: append-only growth, position stability, and pool
