@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.36.0
+  Ивритский тренажёр — v1.36.1
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -962,7 +962,7 @@
       <div class="ai-block" id="ai-block">
         <button class="ai-btn" id="btn-ai-analyze" type="button">Разбор слова</button>
         <div class="ai-keysetup hidden" id="ai-keysetup">
-          <div>Нужен свой бесплатный ключ Gemini — <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">получить ↗</a></div>
+          <div>Нужен свой бесплатный ключ Gemini — <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">получить ↗</a>. При входе через Google хранится в вашем аккаунте в зашифрованном виде и подхватывается на других устройствах и в читалке.</div>
           <input type="password" id="ai-key-input" placeholder="Вставьте ключ (AIza...)">
           <button class="link-btn" id="ai-key-save" type="button">Сохранить ключ</button>
         </div>
@@ -975,7 +975,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div id="appVersionFooter" style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.36.0</div>
+  <div id="appVersionFooter" style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.36.1</div>
 </div>
 
 <script>
@@ -3636,6 +3636,21 @@ rootsResetBtn.addEventListener("click", () => {
 // since the two apps are different origins and cannot share localStorage.
 const AI_KEY_STORAGE = "hebrew-trainer-ai-key";
 window.AI_KEY_STORAGE = AI_KEY_STORAGE; // readable from the module script below
+// Ключ Gemini хранится ТОЛЬКО в браузере ученика (не в облаке, 2026-10-04). Ссылка в шапке
+// между сайтами несёт его во фрагменте адреса (#…aiKey=…), который браузер не отправляет на
+// сервер: здесь он сразу сохраняется и стирается из адреса.
+(function receiveAiKeyHandoff() {
+  try {
+    const h = location.hash.slice(1);
+    try { if (!localStorage.getItem(AI_KEY_STORAGE)) { const o = localStorage.getItem("hebrew-reader-ai-key"); if (o) localStorage.setItem(AI_KEY_STORAGE, o); } } catch (e) {}
+    const m = /(?:^|&)aiKey=([^&]+)/.exec(h);
+    if (!m) return;
+    const key = decodeURIComponent(m[1]).trim();
+    if (key) localStorage.setItem(AI_KEY_STORAGE, key);
+    const rest = h.split("&").filter(p => !p.startsWith("aiKey=")).join("&");
+    history.replaceState(history.state, "", location.pathname + location.search + (rest ? "#" + rest : ""));
+  } catch (e) { console.error("AI key handoff failed", e); }
+})();
 // 503 = Google's shared servers are momentarily overloaded — unrelated to
 // this user's own quota, so it doesn't reset on a schedule and can recur
 // within seconds. Rather than re-trying the same congested model on every
@@ -4559,15 +4574,51 @@ window.cloudPushCustomCards = function (cards) {
 // both apps (each still mirrors it into its own origin's localStorage,
 // since the two sites can't share storage directly).
 function aiKeyDocRef(uid) { return doc(fbDb, "users", uid, "settings", "ai"); }
+// Ключ Gemini в облаке хранится ЗАШИФРОВАННЫМ (AES-256-GCM в браузере ученика, 2026-10-04):
+// в Firestore и консоли — шифротекст, не ключ. Схема общая с другим приложением (тот же документ
+// users/{uid}/settings/ai: {enc, v: 1}) — один ключ работает в читалке и тренажёре на всех устройствах.
+async function aiKeyCryptoKey(uid) {
+  const enc = new TextEncoder();
+  const base = await crypto.subtle.importKey("raw", enc.encode(uid + "|ivrit-ai-key-v1"), "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey({ name: "PBKDF2", salt: enc.encode("ivrit-progress/settings/ai"), iterations: 100000, hash: "SHA-256" },
+    base, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+}
+async function encryptAiKey(uid, plain) {
+  const k = await aiKeyCryptoKey(uid);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, k, new TextEncoder().encode(plain)));
+  const all = new Uint8Array(12 + ct.length); all.set(iv); all.set(ct, 12);
+  let s = ""; all.forEach(b => { s += String.fromCharCode(b); });
+  return btoa(s);
+}
+async function decryptAiKey(uid, b64) {
+  const all = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+  const k = await aiKeyCryptoKey(uid);
+  const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: all.slice(0, 12) }, k, all.slice(12));
+  return new TextDecoder().decode(pt);
+}
 window.cloudSyncAiKey = function (key) {
   if (!cloudUid || !key) return;
-  setDoc(aiKeyDocRef(cloudUid), { geminiKey: key }, { merge: true }).catch(() => {});
+  const uid = cloudUid;
+  encryptAiKey(uid, key).then(enc => setDoc(aiKeyDocRef(uid), { enc, v: 1 })).catch((e) => console.error("AI key sync failed", e));
 };
 window.cloudFetchAiKey = async function () {
   if (!cloudUid) return null;
+  const uid = cloudUid;
   return withAuthRaceRetry(async () => {
-    const snap = await getDoc(aiKeyDocRef(cloudUid));
-    return snap.exists() ? snap.data() : null;
+    const snap = await getDoc(aiKeyDocRef(uid));
+    if (!snap.exists()) return null;
+    const data = snap.data();
+    if (data.enc) {
+      try { return { geminiKey: await decryptAiKey(uid, data.enc) }; }
+      catch (e) { console.error("AI key decrypt failed", e); return null; }
+    }
+    if (data.geminiKey) {
+      // старая запись открытым текстом — перешифровываем на месте
+      encryptAiKey(uid, data.geminiKey).then(enc => setDoc(aiKeyDocRef(uid), { enc, v: 1 })).catch(() => {});
+      return { geminiKey: data.geminiKey };
+    }
+    return null;
   });
 };
 // Kicked off as early as possible on sign-in (see onAuthStateChanged below)
@@ -4764,10 +4815,15 @@ const crossLinkEl = document.getElementById("cross-link-reader");
 if (crossLinkEl) {
   crossLinkEl.addEventListener("click", () => {
     const idToken = readAuthHandoffToken();
-    if (!idToken) return;
+    let aiKey = null;
+    try { aiKey = localStorage.getItem(window.AI_KEY_STORAGE); } catch (e) {}
+    if (!idToken && !aiKey) return;
     try {
       const url = new URL(crossLinkEl.href);
-      url.hash = "authHandoff=" + encodeURIComponent(idToken);
+      const parts = [];
+      if (idToken) parts.push("authHandoff=" + encodeURIComponent(idToken));
+      if (aiKey) parts.push("aiKey=" + encodeURIComponent(aiKey));
+      url.hash = parts.join("&");
       crossLinkEl.href = url.toString();
     } catch (e) {}
   });
