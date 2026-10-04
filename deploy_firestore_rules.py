@@ -90,6 +90,9 @@ CASES = [
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--deploy", action="store_true")
+    # у сервис-аккаунта нет права firebaserules.rulesets.test (проверено 2026-10-04) — серверные
+    # тесты тогда пропускаются; синтаксис всё равно проверяет создание ruleset
+    ap.add_argument("--no-server-tests", action="store_true")
     args = ap.parse_args()
 
     creds = service_account.Credentials.from_service_account_file(
@@ -97,12 +100,14 @@ def main():
     s = google.auth.transport.requests.AuthorizedSession(creds)
     source = {"files": [{"name": "firestore.rules", "content": open(RULES_PATH, encoding="utf-8").read()}]}
 
-    r = s.post(f"{API}/projects/{PROJECT_ID}:test", timeout=60,
+    if args.no_server_tests:
+        print("Серверные тесты пропущены (--no-server-tests).")
+    r = None if args.no_server_tests else s.post(f"{API}/projects/{PROJECT_ID}:test", timeout=60,
                json={"source": source, "testSuite": {"testCases": [tc for _, tc in CASES]}})
-    if r.status_code != 200:
+    if r is not None and r.status_code != 200:
         print("Ошибка API тестов:", r.status_code, r.text[:2000])
         sys.exit(2)
-    body = r.json()
+    body = r.json() if r is not None else {}
     for issue in body.get("issues", []):
         print("ПРАВИЛА:", issue.get("severity"), issue.get("description"))
     failed = 0
