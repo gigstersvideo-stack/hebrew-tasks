@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.37.1
+  Ивритский тренажёр — v1.38.0
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -359,9 +359,21 @@
   .dash-start { align-self: flex-start; }
   .onboard { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; margin-bottom: 18px; }
   .onboard h2 { margin: 0 0 8px; font-size: 1.1rem; }
-  .onboard-steps { margin: 0 0 14px; padding-left: 1.2em; display: grid; gap: 6px; font-size: 0.9rem; max-width: 62ch; }
-  .onboard-levels { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
-  .onboard-levels .he { font-weight: 700; margin-left: 4px; }
+  .onboard-lede { margin: 0 0 14px; font-size: 0.95rem; color: var(--text-muted); max-width: 62ch; }
+  .onboard-levels { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; margin-bottom: 12px; }
+  .onboard-levels .action { display: flex; justify-content: space-between; align-items: center; gap: 10px; text-align: left; }
+  .onboard-levels .he { font-weight: 700; margin-left: 4px; opacity: .85; white-space: nowrap; }
+  .onboard-note { margin: 4px 0 0; font-size: 0.8rem; color: var(--text-muted); }
+  .onboard-note .link-btn { font-size: inherit; padding: 0; }
+  /* Новый ученик: до первого прогресса не показываем то, что пока пусто или
+     рано (счётчики по нулям, плитки «к повтору 0», просьба о донате). */
+  body.is-new #subtitle, body.is-new .stats, body.is-new .support-link,
+  body.is-new #btn-signin, body.is-new .dash-hero, body.is-new #dash-grid,
+  body.is-new .dash-note, body.is-new .dash-actions { display: none !important; }
+  .dash-note { font-size: 0.75rem; color: var(--text-faint); margin-top: -8px; }
+  /* Кнопка отзыва висит в углу — оставляем под ней место в конце страницы. */
+  @media (max-width: 520px) { .dashboard, #review-area { padding-bottom: 64px; } }
+  .kb-hint { margin-top: 8px; font-size: 0.8rem; color: var(--text-muted); background: var(--surface-2); border-radius: 8px; padding: 8px 10px; line-height: 1.45; }
   .roots-banner {
     background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--accent);
     border-radius: 4px 12px 12px 4px; padding: 14px 16px; display: flex; align-items: center;
@@ -775,25 +787,30 @@
   </header>
 
   <div class="dashboard" id="dashboard-view">
+    <!-- Первый экран нового ученика (2026-10-05, решение владельца об аудитории):
+         тренажёр — практика для тех, кто УЖЕ учит иврит (ульпан алеф и дальше
+         или сам по учебнику), а не курс с нуля. Уровень — вопросом «где вы
+         сейчас», а не самооценкой «знаю основы», которую каждый понимает
+         по-своему. Пока онбординг виден, body.is-new прячет счётчики, плитки
+         с нулями и «Поддержать» — они появляются вместе с первым прогрессом. -->
     <section class="onboard hidden" id="onboard" aria-labelledby="onboard-title">
-      <h2 id="onboard-title">С чего начать</h2>
-      <ol class="onboard-steps">
-        <li>Выберите свой уровень — тренажёр будет брать фразы только из него.</li>
-        <li>Переводите фразы с русского на иврит и обратно, слушайте и вставляйте пропущенное слово. Не знаете — жмите «Подсказка».</li>
-        <li>После ответа оцените себя: «Снова», «Трудно», «Хорошо» или «Легко». По этой оценке тренажёр сам решит, когда показать фразу снова.</li>
-      </ol>
-      <div class="onboard-levels" role="group" aria-label="Мой уровень">
-        <button class="action primary" data-levels="0,1">Только начинаю <span class="he">א</span></button>
-        <button class="action primary" data-levels="2,3">Знаю основы <span class="he">ב</span></button>
-        <button class="action primary" data-levels="4">Читаю и говорю <span class="he">ג</span></button>
+      <p class="onboard-lede">Практика для тех, кто уже учит иврит — в ульпане или сам. Фразы с огласовками и озвучкой; тренажёр сам решает, когда повторить каждую.</p>
+      <h2 id="onboard-title">Где вы сейчас?</h2>
+      <div class="onboard-levels" role="group" aria-label="Где вы сейчас">
+        <button class="action primary" data-levels="0">Учусь в ульпане алеф <span class="he" dir="ltr">א</span></button>
+        <button class="action primary" data-levels="1,2">Закончил алеф <span class="he" dir="ltr">א+ · ב</span></button>
+        <button class="action primary" data-levels="3,4">Бет и выше <span class="he" dir="ltr">ב+ · ג</span></button>
+        <button class="action primary" data-levels="0">Учу сам по учебнику <span class="he" dir="ltr">א</span></button>
       </div>
-      <button class="link-btn" id="onboard-skip">Я уже занимаюсь — скрыть</button>
+      <p class="onboard-note">Ещё не читаете буквы? Здесь пока рано — начните с ульпана или учебника и возвращайтесь.</p>
+      <p class="onboard-note">Уже занимались на другом устройстве? <button class="link-btn" id="onboard-signin">Войдите через Google</button> — прогресс подтянется. <button class="link-btn" id="onboard-skip">Скрыть это</button></p>
     </section>
     <div class="dash-hero">
       <div class="dash-num" id="dash-due-total">0</div>
       <div class="dash-hero-label">фраз готовы к повторению сегодня</div>
     </div>
     <div class="dash-grid" id="dash-grid"></div>
+    <div class="dash-note hidden" id="dash-note">«+» — ступенька между уровнями: фразы чуть сложнее, но ещё не следующий уровень.</div>
     <div class="dash-actions">
       <button class="action primary dash-start" id="btn-dash-start">Начать →</button>
       <button class="link-btn" id="btn-open-deckbases">🗂 Мои базы</button>
@@ -923,7 +940,8 @@
 
     <div class="answer-row">
       <label for="answer" id="answer-label" class="sr-only">Ваш перевод на иврит</label>
-      <input id="answer" type="text" dir="rtl" lang="he" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="הקלידו כאן..." />
+      <input id="answer" type="text" dir="rtl" lang="he" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Напишите на иврите…" />
+      <div class="kb-hint hidden" id="kb-hint">⌨️ Здесь ответ на иврите — нужна ивритская клавиатура. iPhone: Настройки → Основные → Клавиатура → Клавиатуры → Новые клавиатуры → Иврит. Android (Gboard): ⚙️ → Языки → Добавить клавиатуру → Иврит. Переключать — значком 🌐 на клавиатуре.</div>
       <div class="answer-diff diff-text hidden" id="answer-diff"></div>
     </div>
 
@@ -950,7 +968,7 @@
     </div>
     <div class="kbd-hint" id="kbd-hint"><kbd>Enter</kbd> проверить/дальше · <kbd>1</kbd>–<kbd>4</kbd> оценка после проверки</div>
     <div class="tts-notice hidden" id="tts-notice"></div>
-    <button class="reset-link" id="btn-exclude-card" style="align-self:flex-start;">Убрать эту фразу из пула</button>
+    <button class="reset-link" id="btn-exclude-card" style="align-self:flex-start;">Больше не показывать эту фразу</button>
   </div>
 
   <aside class="side-panel" id="side-panel">
@@ -975,7 +993,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div id="appVersionFooter" style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.37.1</div>
+  <div id="appVersionFooter" style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.38.0</div>
 </div>
 
 <script>
@@ -1383,9 +1401,18 @@ function poolForLevel() {
   }
   return out;
 }
+// Мягкий старт (2026-10-05): первые NOVICE_CARDS ответов — только HE→RU.
+// Это единственный режим, где отвечают по-русски: перевод на иврит,
+// аудирование и пропуск слова требуют ивритской клавиатуры, а первой
+// карточкой раньше могло выпасть «переведи целую фразу на иврит».
+const NOVICE_CARDS = 15;
+function isNovice() {
+  return Object.keys(progress.items || {}).length < NOVICE_CARDS;
+}
 function enabledModes() {
   const sel = modeSelect.value;
-  return ALL_MODES.includes(sel) ? [sel] : ALL_MODES;
+  if (ALL_MODES.includes(sel)) return [sel];
+  return isNovice() ? ["he2ru"] : ALL_MODES;
 }
 
 // ---- normalization ----
@@ -2081,7 +2108,12 @@ function buildKnownWords() {
 function pickI1(candidates) {
   if (candidates.length <= 1) return sample(candidates);
   const known = buildKnownWords();
-  if (!known.size) return sample(candidates);
+  if (!known.size) {
+    // Ещё ни одного знакомого слова — «i+1» не работает (у всех фраз все
+    // слова незнакомы), поэтому начинаем с коротких, а не со случайных.
+    const byLen = candidates.map(k => [k, tokenize(DATA[Number(k.slice(0, k.lastIndexOf(":")))].h).length]).sort((a, b) => a[1] - b[1]);
+    return sample(byLen.slice(0, 30).map(x => x[0]));
+  }
   let bestScore = Infinity, bestList = [];
   for (const k of candidates) {
     const idx = Number(k.slice(0, k.lastIndexOf(":")));
@@ -2317,6 +2349,9 @@ function renderOnboard() {
   const box = document.getElementById("onboard");
   const show = !Object.keys(progress.items || {}).length && !(progress.meta && progress.meta.onboarded);
   box.classList.toggle("hidden", !show);
+  if (document.body) document.body.classList.toggle("is-new", show);
+  // Новичку курс «Корни» — второй путь, с честной подсказкой, для кого он.
+  if (show) document.getElementById("roots-banner-sub").textContent = "200 главных корней иврита по шагам: теория и практика. Лучше всего — после ульпана алеф.";
 }
 function finishOnboard(levels) {
   progress.meta.onboarded = true;
@@ -2333,6 +2368,7 @@ document.querySelectorAll("#onboard .onboard-levels button").forEach(btn => {
   });
 });
 document.getElementById("onboard-skip").addEventListener("click", () => finishOnboard(null));
+document.getElementById("onboard-signin").addEventListener("click", () => document.getElementById("btn-signin").click());
 
 function renderDashboard() {
   renderOnboard();
@@ -2357,7 +2393,9 @@ function renderDashboard() {
     </div>`;
   }).join("");
   document.getElementById("dash-grid").innerHTML = levelTiles + groupTiles;
+  document.getElementById("dash-note").classList.toggle("hidden", !/\+</.test(levelTiles));
   updateRootsBanner();
+  renderOnboard(); // подсказка «Корней» для новичка — поверх текста баннера
 }
 
 function updateRootsBanner() {
@@ -3117,6 +3155,25 @@ function renderPrompt(mode, d) {
 // the prompt sentence, the play button) and reappears in the placeholder
 // the moment the field is empty again, so a persistent visible line
 // saying the same thing a third time was pure duplication.
+// Подсказка про ивритскую клавиатуру — на первой карточке, где надо печатать
+// на иврите (после мягкого старта), и до тех пор, пока с такой карточки не
+// перешли к следующей. Клавиатура — дело устройства, поэтому флаг в
+// localStorage, а не в синхронизируемом прогрессе.
+const KB_HINT_KEY = "ivrit-kb-hint-seen";
+let kbHintShownFor = null;
+function updateKbHint(mode) {
+  const el = document.getElementById("kb-hint");
+  if (!el) return;
+  let seen = false;
+  try { seen = localStorage.getItem(KB_HINT_KEY) === "1"; } catch (e) {}
+  if (!seen && kbHintShownFor && kbHintShownFor !== lastKey) {
+    seen = true;
+    try { localStorage.setItem(KB_HINT_KEY, "1"); } catch (e) {}
+  }
+  const show = mode !== "he2ru" && !seen && !rootPracticeSession;
+  el.classList.toggle("hidden", !show);
+  if (show) kbHintShownFor = lastKey;
+}
 function configureAnswerInput(mode) {
   if (mode === "he2ru") {
     els.answer.setAttribute("dir", "ltr"); els.answer.setAttribute("lang", "ru");
@@ -3125,14 +3182,15 @@ function configureAnswerInput(mode) {
     els.answerLabel.textContent = "Ваш перевод на русский";
   } else {
     els.answer.setAttribute("dir", "rtl"); els.answer.setAttribute("lang", "he");
-    els.answer.placeholder = mode === "listen" ? "הקלידו את מה ששמעתם..."
-      : mode === "cloze" ? "רק המילה החסרה..."
-      : "הקלידו כאן...";
+    els.answer.placeholder = mode === "listen" ? "Напишите на иврите, что услышали…"
+      : mode === "cloze" ? "Только пропущенное слово…"
+      : "Напишите на иврите…";
     Object.assign(els.answer.style, { direction: "rtl", textAlign: "right", fontFamily: "'Noto Sans Hebrew', 'Arial Hebrew', 'David', sans-serif", fontSize: "1.3rem" });
     els.answerLabel.textContent = mode === "listen" ? "Что вы услышали? (на иврите)"
       : mode === "cloze" ? "Пропущенное слово"
       : "Ваш перевод на иврит";
   }
+  updateKbHint(mode);
 }
 
 // Дневной лимит новых карточек относится к свободной практике. 20 предложений
