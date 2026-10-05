@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.38.0
+  Ивритский тренажёр — v1.39.0
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -536,6 +536,27 @@
   .rt-origin b { color: var(--text); font-weight: 600; }
 
   .rt-section-head { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; }
+  /* «Почему корни» — вступление к курсу (2026-10-05, идея владельца) */
+  .rw-group { display: flex; flex-direction: column; gap: 8px; }
+  .rw-group-title { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-faint); }
+  .rw-words { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .rw-word { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .rw-word.fun { border-color: var(--amber); background: var(--amber-soft); }
+  .rw-word-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+  .rw-he { direction: rtl; font-family: 'David Libre', 'Noto Sans Hebrew', serif; font-weight: 700; font-size: 1.3rem; color: var(--text); }
+  .rw-ru { font-size: 0.8rem; color: var(--text-muted); line-height: 1.35; }
+  .rw-kind { font-size: 0.66rem; color: var(--accent-strong); font-weight: 600; letter-spacing: 0.02em; }
+  .rw-more { font-size: 0.82rem; color: var(--text-muted); }
+  .rw-pattern { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+  .rw-pattern-head { display: block; }
+  .rw-pattern-name { direction: rtl; font-family: 'David Libre', 'Noto Sans Hebrew', serif; font-weight: 700; font-size: 1.15rem; color: var(--accent-strong); }
+  .rw-pattern-role { font-size: 0.82rem; color: var(--text-muted); }
+  .rw-pattern-row { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 0.85rem; }
+  .rw-pattern-row .he { direction: rtl; font-family: 'David Libre', 'Noto Sans Hebrew', serif; font-weight: 700; font-size: 1.1rem; }
+  .rw-pattern-row .ru { color: var(--text-muted); }
+  .rw-quiz-list { display: flex; flex-direction: column; gap: 10px; }
+  .rw-quiz-list .rt-quiz-card p { margin: 0; }
+  .rw-quiz-list .rt-quiz-feedback:empty { display: none; }
   .rt-section-head h3 { margin: 0; font-size: 1rem; font-weight: 700; letter-spacing: -0.01em; }
   .rt-section-head .hint { font-size: 0.78rem; color: var(--text-faint); }
 
@@ -839,6 +860,7 @@
       <div class="rt-nav">
         <button class="link-btn" id="btn-roots-prev">← Назад</button>
         <span class="rt-progress-label" id="rt-progress-label"></span>
+        <button class="link-btn" id="btn-roots-why">Зачем корни?</button>
       </div>
       <button class="link-btn" id="btn-roots-back">🏠 Обзор</button>
     </div>
@@ -993,7 +1015,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div id="appVersionFooter" style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.38.0</div>
+  <div id="appVersionFooter" style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.39.0</div>
 </div>
 
 <script>
@@ -2856,6 +2878,126 @@ function renderRootTheory(entry, sentences) {
   });
 }
 
+// ---- «Почему корни» — вступление к курсу (2026-10-05, идея владельца) ----
+// Перед первым корнем (и потом по ссылке «Зачем корни?»): что из ОДНОГО
+// корня вырастает два десятка живых слов, что шаблоны повторяются на других
+// корнях — и маленькая проверка «угадайте значение», где это срабатывает.
+// Только реально употребимые слова (не таблица всех теоретических форм);
+// огласовка — по конвенции корпуса (ктив мале с огласовками).
+const ROOTS_INTRO = {
+  groups: [
+    { title: "Глаголы — один корень во всех биньянах", words: [
+      ["כָּתַב", "написал", "пааль"],
+      ["נִכְתַּב", "был написан", "нифъаль"],
+      ["כִּיתֵּב", "поставил в копию e-mail (разг.)", "пиэль", true],
+      ["הִכְתִּיב", "продиктовал; навязал", "хифъиль"],
+      ["הִתְכַּתֵּב", "переписывался", "хитпаэль"],
+    ]},
+    { title: "Причастия и прилагательные", words: [
+      ["כּוֹתֵב", "пишет; пишущий", "настоящее время"],
+      ["כָּתוּב", "написанный; написано", "пассивное причастие"],
+    ]},
+    { title: "Существительные", words: [
+      ["מִכְתָּב", "письмо", ""],
+      ["כְּתוֹבֶת", "адрес; надпись", ""],
+      ["כְּתִיבָה", "письмо как занятие, писательство", ""],
+      ["כְּתָב", "почерк; шрифт", ""],
+      ["כַּתָּב", "корреспондент", ""],
+      ["כַּתָּבָה", "статья, репортаж", ""],
+      ["הַכְתָּבָה", "диктант", ""],
+      ["תַּכְתִּיב", "диктат, предписание", ""],
+      ["כְּתִיב", "правописание (כְּתִיב מָלֵא — «полное письмо»)", ""],
+      ["הִתְכַּתְּבוּת", "переписка", ""],
+      ["כְּתוּבָּה", "брачный договор", "", true],
+      ["מַכְתֵּבָה", "письменный стол, бюро", "", true],
+      ["כְּתוּבִים", "Писания — третья часть ТАНАХа (буква «Х» в ТаНаХ)", "", true],
+    ]},
+  ],
+  patterns: [
+    ["כַּתָּב", "кто этим занимается — профессия", [["טַבָּח", "повар"], ["צַלָּם", "фотограф"], ["נַגָּר", "столяр"]]],
+    ["כְּתִיבָה", "само действие", [["קְרִיאָה", "чтение"], ["שְׁמִירָה", "охрана"], ["נְסִיעָה", "поездка"]]],
+    ["כָּתוּב", "признак после действия: над кем или чем его совершили", [["סָגוּר", "закрытый"], ["שָׁבוּר", "сломанный"], ["אָהוּב", "любимый"]]],
+    ["מִכְתָּב", "результат, место или событие действия", [["מִשְׁפָּט", "судебный процесс; предложение (в грамматике)"], ["מִפְעָל", "завод"], ["מִפְגָּשׁ", "встреча"]]],
+  ],
+  quiz: [
+    ["ל-מ-ד — учиться. Кто такой תַּלְמִיד?", ["ученик", "урок", "школа"], 0],
+    ["ש-ת-ה — пить. Что такое שְׁתִיָּיה? (шаблон как у כְּתִיבָה)", ["бутылка", "питьё", "пьяный"], 1],
+    ["נ-ה-ג — водить, вести. Кто такой נַהָג? (шаблон как у כַּתָּב)", ["дорога", "руль", "водитель"], 2],
+    ["פ-ת-ח — открывать. Что значит פָּתוּחַ? (шаблон как у כָּתוּב)", ["открытый", "открыл", "открытие"], 0],
+  ],
+};
+const ROOTS_INTRO_SEEN_KEY = "ivrit-roots-intro-seen";
+function rootsIntroSeen() {
+  try { return localStorage.getItem(ROOTS_INTRO_SEEN_KEY) === "1"; } catch (e) { return false; }
+}
+// returnPos — куда вести кнопкой внизу: к первому корню (вход в курс) или
+// обратно к шагу, с которого открыли «Зачем корни?».
+function renderRootsIntro(returnPos) {
+  if (rtGtStop) { rtGtStop(); rtGtStop = null; }
+  showView(rootTheoryView);
+  setViewHistory("roots", "why");
+  const page = document.getElementById("rt-page");
+  const firstVisit = !progress.rootsCourse.completedTheory.length;
+  const total = ROOTS_INTRO.groups.reduce((n, g) => n + g.words.length, 0);
+  const wordHtml = ([he, ru, kind, fun]) => `
+    <div class="rw-word${fun ? " fun" : ""}">
+      <div class="rw-word-top"><span class="rw-he">${escapeHtml(he)}</span>
+        <button class="rt-listen-btn" type="button" aria-label="Прослушать" data-he="${escapeHtml(he)}">🔊</button></div>
+      <span class="rw-ru">${escapeHtml(ru)}</span>
+      ${kind ? `<span class="rw-kind">${escapeHtml(kind)}</span>` : ""}
+    </div>`;
+  const groupsHtml = ROOTS_INTRO.groups.map(g => `
+    <div class="rw-group"><span class="rw-group-title">${escapeHtml(g.title)}</span>
+      <div class="rw-words">${g.words.map(wordHtml).join("")}</div></div>`).join("");
+  const patternsHtml = ROOTS_INTRO.patterns.map(([model, role, list]) => `
+    <div class="rw-pattern">
+      <div class="rw-pattern-head"><span class="rw-pattern-role">как</span> <bdi class="rw-pattern-name">${escapeHtml(model)}</bdi> <span class="rw-pattern-role">— ${escapeHtml(role)}</span></div>
+      <div class="rw-pattern-row">${list.map(([he, ru]) => `<span><span class="he">${escapeHtml(he)}</span> <span class="ru">${escapeHtml(ru)}</span></span>`).join("")}</div>
+    </div>`).join("");
+  const quizHtml = ROOTS_INTRO.quiz.map(([q, opts, correct], qi) => `
+    <div class="rt-quiz-card" data-q="${qi}">
+      <p class="rt-quiz-question">${escapeHtml(q)}</p>
+      <div class="rt-quiz-options">${opts.map((o, i) => `<button class="rt-quiz-option" type="button" data-correct="${i === correct}">${escapeHtml(o)}</button>`).join("")}</div>
+      <p class="rt-quiz-feedback"></p>
+    </div>`).join("");
+  const backLabel = typeof returnPos === "number" && !firstVisit ? "Вернуться к курсу →" : "К первому корню →";
+  page.innerHTML = `
+    <div class="rt-hero">
+      <div class="rt-letters">כ<span class="sep">–</span>ת<span class="sep">–</span>ב</div>
+      <p class="rt-thesis">Большинство слов иврита собрано из <em>корня</em> — обычно трёх согласных — и <em>шаблона</em>. Корень несёт смысл, шаблон — роль слова: действие, профессия, место, признак. Вот что вырастает из одного корня כ-ת-ב — «писать».</p>
+    </div>
+    ${groupsHtml}
+    <p class="rw-more">Это ${total} живых, употребимых слов — в словаре их ещё больше. Жёлтым отмечены те, где смысл ушёл в сторону: корень подсказывает, но не гарантирует.</p>
+
+    <div class="rt-section-head"><h3>Шаблоны повторяются</h3>
+      <span class="hint">Тот же шаблон с другим корнем даёт слово с той же ролью — так угадывают незнакомые слова.</span></div>
+    <div class="rw-group">${patternsHtml}</div>
+
+    <div class="rt-section-head"><h3>Попробуйте угадать</h3>
+      <span class="hint">Этих слов здесь не было — но корень и шаблон подскажут.</span></div>
+    <div class="rw-quiz-list">${quizHtml}</div>
+
+    <p class="rt-transition">Слов от одного корня можно образовать много, и многие из них вы будете узнавать сами. Мы отобрали 200 самых частотных корней иврита и их самые употребительные формы: у каждого корня — короткая теория, слова и 20 фраз на практику.</p>
+    <div class="rt-cta-row"><button class="action primary" id="rw-go">${backLabel}</button></div>`;
+  page.querySelectorAll(".rt-listen-btn").forEach(btn => btn.addEventListener("click", () => speak(btn.dataset.he, 0.9)));
+  page.querySelectorAll(".rt-quiz-card[data-q]").forEach(card => {
+    const opts = card.querySelectorAll(".rt-quiz-option");
+    const fb = card.querySelector(".rt-quiz-feedback");
+    opts.forEach(btn => btn.addEventListener("click", () => {
+      const ok = btn.dataset.correct === "true";
+      opts.forEach(b => { b.disabled = true; if (b.dataset.correct === "true") b.classList.add("correct"); });
+      if (!ok) btn.classList.add("wrong");
+      fb.textContent = ok ? "Верно — корень и шаблон сработали." : "Не страшно: правильный ответ подсвечен.";
+    }));
+  });
+  document.getElementById("rw-go").addEventListener("click", () => {
+    try { localStorage.setItem(ROOTS_INTRO_SEEN_KEY, "1"); } catch (e) {}
+    openRootsCourseScreen(typeof returnPos === "number" ? returnPos : 0);
+    window.scrollTo(0, 0);
+  });
+  window.scrollTo(0, 0);
+}
+
 // Текущая позиция, показанная на экране курса (0-based) — нужна кнопке
 // "← Назад", которая живёт в постоянной шапке (не перерисовывается вместе
 // с rt-page), чтобы знать, откуда шагнуть на 1 назад.
@@ -2901,6 +3043,11 @@ function updateRootsCourseNav(position) {
 // пересмотра (что уже пройдено — просто в режиме "только чтение", см.
 // alreadyDone в renderRootTheory/идемпотентный push в renderGrowingTextScreen).
 function openRootsCourseScreen(position) {
+  if (position === "why") { renderRootsIntro(rootsCoursePosition); return; }
+  if ((position === undefined || position === 0) && !progress.rootsCourse.completedTheory.length && !rootsIntroSeen()) {
+    renderRootsIntro(0);
+    return;
+  }
   showView(rootTheoryView);
   const page = document.getElementById("rt-page");
   if (position === undefined) position = progress.rootsCourse.completedTheory.length;
@@ -4258,7 +4405,7 @@ const VIEW_BY_NAME = { dashboard: dashboardView, review: reviewArea, deckbases: 
 // обновление на растущем тексте выкидывало на главную (отзыв владельца,
 // 2026-10-04). Номер шага курса в адресе — с 1, как «Корень N из …».
 function viewHash(name, pos) {
-  if (name === "roots") return "#/roots" + (typeof pos === "number" ? "/" + (pos + 1) : "");
+  if (name === "roots") return "#/roots" + (pos === "why" ? "/why" : typeof pos === "number" ? "/" + (pos + 1) : "");
   return name && name !== "dashboard" ? "#/" + name : "";
 }
 function setViewHistory(name, pos, push) {
@@ -4269,8 +4416,9 @@ function setViewHistory(name, pos, push) {
 }
 function pushViewHistory(name, pos){ setViewHistory(name, pos, true); }
 function parseViewHash(hash) {
-  const m = /^#\/(review|deckbases|feedback|roots)(?:\/(\d+))?$/.exec(hash || "");
+  const m = /^#\/(review|deckbases|feedback|roots)(?:\/(\d+|why))?$/.exec(hash || "");
   if (!m) return { v: "dashboard" };
+  if (m[1] === "roots" && m[2] === "why") return { v: "roots", pos: "why" };
   return { v: m[1], pos: m[1] === "roots" && m[2] ? Math.max(0, Number(m[2]) - 1) : undefined };
 }
 function goBackToDashboard(){
@@ -4326,6 +4474,7 @@ document.getElementById("btn-open-roots").addEventListener("click", () => {
   openRootsCourseScreen();
 });
 document.getElementById("btn-roots-back").addEventListener("click", goBackToDashboard);
+document.getElementById("btn-roots-why").addEventListener("click", () => renderRootsIntro(rootsCoursePosition));
 document.getElementById("btn-roots-prev").addEventListener("click", () => {
   if (rootsCoursePosition > 0) openRootsCourseScreen(rootsCoursePosition - 1);
 });
