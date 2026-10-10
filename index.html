@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.39.1
+  Ивритский тренажёр — v1.39.2
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -547,6 +547,9 @@
   .rw-ru { font-size: 0.8rem; color: var(--text-muted); line-height: 1.35; }
   .rw-kind { font-size: 0.66rem; color: var(--accent-strong); font-weight: 600; letter-spacing: 0.02em; }
   .rw-more { font-size: 0.82rem; color: var(--text-muted); }
+  .rw-legend { font-size: 0.82rem; color: var(--text-muted); display: flex; align-items: center; gap: 8px; margin: 0; }
+  .rw-swatch { flex-shrink: 0; width: 14px; height: 14px; border-radius: 4px; background: var(--amber-soft); border: 1px solid var(--amber); }
+  .rw-drift { font-size: 0.66rem; color: var(--amber); font-weight: 600; }
   .rw-pattern { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
   .rw-pattern-head { display: block; }
   .rw-pattern-name { direction: rtl; font-family: 'David Libre', 'Noto Sans Hebrew', serif; font-weight: 700; font-size: 1.15rem; color: var(--accent-strong); }
@@ -1015,7 +1018,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div id="appVersionFooter" style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.39.1</div>
+  <div id="appVersionFooter" style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.39.2</div>
 </div>
 
 <script>
@@ -1806,7 +1809,7 @@ function renderCustomCardsPanel() {
   if (!wrap) return;
   const entries = Object.entries(customCardsInfo);
   if (!entries.length) {
-    wrap.innerHTML = '<div class="pool-note">Пока пусто — карточки появляются, когда вы сохраняете слово или пример из читалки/ИИ-разбора.</div>';
+    wrap.innerHTML = '<div class="pool-note">Пока пусто — карточки появляются, когда вы сохраняете слово или пример из читалки или кнопкой «Разбор слова».</div>';
     return;
   }
   wrap.innerHTML = entries.map(([source, info]) => `
@@ -2483,13 +2486,13 @@ function groupCustomCards() {
       icon = "book";
       if (level) {
         key = "level:" + level;
-        label = "Уровень " + level;
+        label = "Из книг уровня " + level;
       } else {
         key = "reader:" + bookId;
         label = bookId.replace(/[-_]/g, " ");
       }
     } else if (source.startsWith("ai:")) {
-      key = "ai"; icon = "ai"; label = "ИИ-разбор";
+      key = "ai"; icon = "ai"; label = "Свои фразы";
     } else if (source.startsWith("import:")) {
       key = "import"; icon = "import"; label = "Импорт";
     } else {
@@ -2945,6 +2948,7 @@ function renderRootsIntro(returnPos) {
         <button class="rt-listen-btn" type="button" aria-label="Прослушать" data-he="${escapeHtml(he)}">🔊</button></div>
       <span class="rw-ru">${escapeHtml(ru)}</span>
       ${kind ? `<span class="rw-kind">${escapeHtml(kind)}</span>` : ""}
+      ${fun ? `<span class="rw-drift">смысл ушёл в сторону</span>` : ""}
     </div>`;
   const groupsHtml = ROOTS_INTRO.groups.map(g => `
     <div class="rw-group"><span class="rw-group-title">${escapeHtml(g.title)}</span>
@@ -2966,8 +2970,9 @@ function renderRootsIntro(returnPos) {
       <div class="rt-letters">כ<span class="sep">–</span>ת<span class="sep">–</span>ב</div>
       <p class="rt-thesis">Большинство слов иврита собрано из <em>корня</em> — обычно трёх согласных — и <em>шаблона</em>. Корень несёт смысл, шаблон — роль слова: действие, профессия, место, признак. Вот что вырастает из одного корня כ-ת-ב — «писать».</p>
     </div>
+    <p class="rw-legend"><span class="rw-swatch"></span>Жёлтым отмечены слова, где смысл ушёл в сторону от «писать»: корень подсказывает, но не гарантирует.</p>
     ${groupsHtml}
-    <p class="rw-more">Это ${total} живых, употребимых слов — в словаре их ещё больше. Жёлтым отмечены те, где смысл ушёл в сторону: корень подсказывает, но не гарантирует.</p>
+    <p class="rw-more">Это ${total} живых, употребимых слов — в словаре их ещё больше.</p>
 
     <div class="rt-section-head"><h3>Шаблоны повторяются</h3>
       <span class="hint">Тот же шаблон с другим корнем даёт слово с той же ролью — так угадывают незнакомые слова.</span></div>
@@ -3354,7 +3359,8 @@ function loadCard() {
   currentIndex = picked.index; currentMode = picked.mode;
   const key = currentKey();
   const wasNew = !progress.items[key];
-  countNewCardToday(wasNew);
+  // Новая карточка засчитывается в дневную норму при ОТВЕТЕ (commitAndAdvance), а не при показе:
+  // раньше каждый F5 на экране тренировки показывал другую новую карточку и засчитывал её снова.
   lastKey = key; checked = false; hintsUsed = 0;
   const d = DATA[currentIndex];
   const lv = LEVELS[d.l];
@@ -3599,10 +3605,12 @@ function doHint() {
 let practiceMode = false;
 function commitAndAdvance(quality) {
   const key = currentKey();
+  const wasNewItem = !progress.items[key];
   if (practiceMode && progress.items[key]) {
     progress.items[key] = { ...progress.items[key], lastPractice: Date.now() };
   } else {
     progress.items[key] = schedule(progress.items[key], quality);
+    if (wasNewItem) countNewCardToday(true);
   }
   updateDailyStreak();
   saveProgress();
