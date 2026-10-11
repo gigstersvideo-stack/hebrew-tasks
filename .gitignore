@@ -21,3 +21,8 @@ firebase-service-account.json
 __pycache__/
 
 _dict/
+# озвучка тренажёра: кэш Dicta, отчёты скана и логи — служебное
+.cache/
+tts_risk.json
+tts_risk_texts.json
+*.log

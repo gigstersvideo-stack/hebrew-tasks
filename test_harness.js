@@ -601,7 +601,7 @@ async function bookLevelMapTests() {
   await flush();
   const map = run(`bookLevelMap`);
   check('loadBookLevelMap: asks the reader\'s books-manifest.json',
-    fetchStub.calls.length >= 1 && /hebrew-reader\/books-manifest\.json$/.test(fetchStub.calls[0].url));
+    fetchStub.calls.some(c => /hebrew-reader\/books-manifest\.json$/.test(c.url)));
   check('loadBookLevelMap: maps bookId -> level, skips books without a level',
     map && map['cat-bet'] === 'A2' && map['demo-scifi'] === 'B1' && !('no-level-book' in map) && Object.keys(map).length === 2);
   check('loadBookLevelMap: the map is cached in localStorage for the next load',

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.39.2
+  Ивритский тренажёр — v1.40.0
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -1018,7 +1018,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div id="appVersionFooter" style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.39.2</div>
+  <div id="appVersionFooter" style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.40.0</div>
 </div>
 
 <script>
@@ -1972,7 +1972,27 @@ if (ttsSupported && window.speechSynthesis && window.speechSynthesis.addEventLis
   checkHebrewVoice();
   window.speechSynthesis.addEventListener("voiceschanged", checkHebrewVoice, { once: true });
 }
+// Готовые записи для фраз, которые голос устройства читает неверно (омографы вроде הַמּוֹרָה/הַמּוֹרֶה,
+// לְךָ/לָךְ, כִּיתֵּב — голос почти не смотрит на огласовки). Список и записи — tts_risk_scan.py +
+// tts_gen.py (Azure, голос Avri, как в книгах читалки). Есть запись — играем её, нет — голос устройства.
+let ttsRecordings = null;
+let ttsAudioEl = null;
+fetch("tts/manifest.json").then(r => (r.ok ? r.json() : null)).then(m => { ttsRecordings = m; }).catch(() => {});
+function playRecording(text, rate) {
+  const file = ttsRecordings && ttsRecordings[String(text || "").normalize("NFC")];
+  if (!file) return false;
+  try {
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    if (ttsAudioEl) ttsAudioEl.pause();
+    ttsAudioEl = new Audio(file);
+    ttsAudioEl.playbackRate = rate || 1;
+    ttsAudioEl.play().catch(() => {});
+    if (els.ttsNotice) els.ttsNotice.classList.add("hidden");
+    return true;
+  } catch (e) { return false; }
+}
 function speak(text, rate) {
+  if (playRecording(text, rate)) return;
   if (!ttsSupported) return;
   // Отзывы с сайта (2026-09-08, 2026-09-10): "догз" вместо иврита всё ещё
   // проскакивал даже после первого фикса. Причина — гонка: hebrewVoice
