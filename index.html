@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.40.0
+  Ивритский тренажёр — v1.41.0
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -383,6 +383,52 @@
   .roots-banner-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 3px; }
   .roots-banner-sub { font-size: 0.8rem; color: var(--text-muted); }
   .roots-banner button.action { flex-shrink: 0; }
+  /* Курс «Праздники Израиля» (HOLIDAYS_COURSE.md) */
+  .holidays-banner { margin-top: 10px; border-left-color: #C08A2E; }
+  .holidays-banner:hover { border-left-color: #9A6B1C; }
+  .hol-intro { font-size: 0.88rem; color: var(--text-muted); line-height: 1.5; margin: 4px 0 14px; }
+  .hol-list { display: flex; flex-direction: column; gap: 8px; }
+  .hol-row { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; font-family: inherit; cursor: pointer;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; color: inherit; }
+  .hol-row:hover { border-color: var(--accent); }
+  .hol-row.is-soon { opacity: .72; }
+  .hol-emoji { font-size: 1.5rem; width: 2rem; text-align: center; flex-shrink: 0; }
+  .hol-row-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .hol-row-title { font-weight: 700; font-size: 0.95rem; }
+  .hol-he { font-weight: 400; color: var(--text-muted); font-size: 0.9rem; }
+  .hol-row-when { font-size: 0.78rem; color: var(--text-muted); }
+  .hol-badge { font-size: 0.72rem; font-weight: 700; border-radius: 999px; padding: 2px 9px; flex-shrink: 0; white-space: nowrap; }
+  .hol-badge.ready { background: var(--accent-soft, #e7efe9); color: var(--accent); }
+  .hol-badge.done { background: var(--good-soft); color: var(--good-deep); }
+  .hol-badge.soon { background: var(--surface-2); color: var(--text-muted); }
+  .hol-back { margin-bottom: 6px; }
+  .hol-head { margin: 4px 0 6px; }
+  .hol-he-big { font-size: 1.6rem; font-family: 'Frank Ruhl Libre', 'David Libre', serif; text-align: right; }
+  .hol-when { font-size: 0.82rem; color: #9A6B1C; font-weight: 600; margin-top: 2px; }
+  .hol-blurb { font-size: 0.9rem; line-height: 1.5; margin: 6px 0 0; }
+  .hol-h { font-size: 0.95rem; margin: 18px 0 6px; }
+  .hol-note, .hol-muted { font-size: 0.8rem; color: var(--text-muted); line-height: 1.45; }
+  .hol-note { margin: 0 0 8px; }
+  .hol-link { display: flex; align-items: center; gap: 10px; padding: 9px 12px; margin-bottom: 6px; border: 1px solid var(--border);
+    border-radius: 10px; background: var(--surface); color: inherit; text-decoration: none; }
+  .hol-link:hover { border-color: var(--accent); }
+  .hol-link span[dir=rtl] { font-size: 1.05rem; font-family: 'Frank Ruhl Libre', 'David Libre', serif; flex: 1; text-align: right; order: 2; }
+  .hol-lvl { font-size: 0.72rem; font-weight: 700; color: var(--text-muted); border: 1px solid var(--border); border-radius: 999px; padding: 1px 7px; order: 1; }
+  .hol-go { font-size: 0.78rem; color: var(--accent); order: 0; white-space: nowrap; }
+  .hol-song { border: 1px solid var(--border); border-radius: 10px; background: var(--surface); padding: 8px 12px; margin-bottom: 6px; }
+  .hol-song summary { cursor: pointer; font-weight: 600; }
+  .hol-song summary span[dir=rtl] { font-family: 'Frank Ruhl Libre', 'David Libre', serif; font-size: 1.05rem; }
+  .hol-song p { font-size: 0.86rem; line-height: 1.5; margin: 8px 0; }
+  .hol-yt { font-size: 0.85rem; font-weight: 600; color: var(--accent); }
+  .hol-vocab { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.85rem; }
+  .hol-vocab td { border-top: 1px solid var(--border); padding: 5px 4px; vertical-align: top; }
+  .hol-vocab-he { font-family: 'Frank Ruhl Libre', 'David Libre', serif; font-size: 1.05rem; white-space: nowrap; width: 1%; padding-left: 12px !important; }
+  .hol-done-note { background: var(--good-soft); color: var(--good-deep); border: 1px solid var(--good); border-radius: 10px; padding: 10px 12px; font-size: 0.85rem; margin: 10px 0; }
+  .holiday-popup { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%) translateY(20px); width: min(440px, calc(100vw - 32px));
+    background: var(--surface); border: 1px solid var(--border); border-left: 4px solid #C08A2E; border-radius: 6px 12px 12px 6px;
+    box-shadow: var(--shadow); padding: 12px 14px; font-size: 0.86rem; line-height: 1.45; z-index: 60; opacity: 0; transition: opacity .3s ease, transform .3s ease; }
+  .holiday-popup.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .holiday-popup .hp-actions { display: flex; gap: 10px; align-items: center; margin-top: 8px; }
   @media (max-width: 520px) {
     .roots-banner { flex-direction: column; align-items: stretch; }
     .roots-banner button.action { align-self: flex-start; }
@@ -846,6 +892,13 @@
       </div>
       <button class="action primary" id="btn-open-roots"></button>
     </div>
+    <div class="roots-banner holidays-banner" id="holidays-banner">
+      <div>
+        <div class="roots-banner-title">🕎 Праздники Израиля — откуда они и как их празднуют</div>
+        <div class="roots-banner-sub" id="holidays-banner-sub">История, песни с разбором и карточки — по главе на праздник</div>
+      </div>
+      <button class="action primary" id="btn-open-holidays">Открыть →</button>
+    </div>
   </div>
 
   <div class="hidden" id="deckbases-view">
@@ -870,6 +923,14 @@
     <div class="rt-scrubber" id="rt-scrubber"></div>
     <div style="text-align:right;"><button class="reset-link" id="btn-roots-reset">Сбросить прогресс курса</button></div>
     <div class="rt-page" id="rt-page"></div>
+  </div>
+
+  <div class="hidden" id="holidays-view">
+    <div class="deckbases-hdr">
+      <h2 id="hol-title">🕎 Праздники Израиля</h2>
+      <button class="link-btn" id="btn-holidays-back">🏠 Обзор</button>
+    </div>
+    <div id="hol-page"></div>
   </div>
 
   <div class="hidden" id="review-area">
@@ -1018,7 +1079,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div id="appVersionFooter" style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.40.0</div>
+  <div id="appVersionFooter" style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.41.0</div>
 </div>
 
 <script>
@@ -1068,6 +1129,10 @@ const ROOTS_BASE1_LEVEL_CODE = LEVELS.length;
 // (см. ROADMAP, "Разнобой иконок") — конвертация требует правки всех
 // шести мест использования .sym, не только двух плиточных.
 LEVELS.push({ sym: "🌳", label: "Корни · база 1" });
+// Курс «Праздники Израиля» (HOLIDAYS_COURSE.md) — своя база, тоже до CUSTOM_LEVEL_CODE.
+// Карточки главы попадают сюда, когда глава пройдена (как предложения корня в базу 1).
+const HOLIDAYS_LEVEL_CODE = LEVELS.length;
+LEVELS.push({ sym: "🕎", label: "Праздники Израиля" });
 
 const ttsSupported = "speechSynthesis" in window;
 const MODES = {
@@ -1107,6 +1172,7 @@ if (!progress.pool) progress.pool = { levels: [0, 1, 2, 3, 4], include: [], excl
 if (progress.pool.archive === undefined) progress.pool.archive = Object.keys(progress.items).length > 0;
 if (progress.meta.autoPlayAudio === undefined) progress.meta.autoPlayAudio = true;
 if (!progress.rootsCourse) progress.rootsCourse = { completedTheory: [] };
+if (!progress.holidaysCourse) progress.holidaysCourse = { completed: [] };
 // v1.28.0: раскладка DATA, под которую записаны СТАРЫЕ числовые ключи карточек
 // корней/личных (до перехода на стабильные id) — нужна ровно один раз для
 // миграции, потом флаг keysV2 её отключает.
@@ -2441,6 +2507,7 @@ function renderDashboard() {
   document.getElementById("dash-note").classList.toggle("hidden", !/\+</.test(levelTiles));
   updateRootsBanner();
   renderOnboard(); // подсказка «Корней» для новичка — поверх текста баннера
+  updateHolidaysBanner(); // асинхронно: ближайший праздник + поп-ап «скоро праздник»
 }
 
 function updateRootsBanner() {
@@ -2687,9 +2754,225 @@ const rootsReplayReady = !progress.rootsCourse.completedTheory.length ? null :
     progress.rootsCourse.completedTheory.forEach(rootId => {
       if (sentencesByRoot[rootId]) appendRootSentences(rootId, sentencesByRoot[rootId]);
     });
-    restoreRootSession(); // индексы корней снова известны — вернуть сессию практики
     updateStatsBar();
   });
+
+// ===== Курс «Праздники Израиля» (HOLIDAYS_COURSE.md) =====
+// Главы идут по календарю. Материалы главы (история, песни) живут в читалке — здесь список глав,
+// страница главы, словарики защищённых песен и карточки. Карточки главы, как предложения корня,
+// попадают в пул, когда глава пройдена: база «🕎 Праздники Израиля», стабильные id h|<глава>|<k>.
+// Тренировка — та же rootPracticeSession с ключом "h:<глава>" (сохранение/восстановление общие).
+let holidaysDataPromise = null;
+const holidayTitleById = {};
+function loadHolidaysCourse() {
+  if (!holidaysDataPromise) {
+    holidaysDataPromise = fetch("holidays_course.json").then(r => r.json()).then(d => {
+      const byId = {};
+      (d.chapters || []).forEach(c => { byId[c.id] = c; holidayTitleById[c.id] = c.title; });
+      return { chapters: d.chapters || [], byId };
+    });
+    holidaysDataPromise.catch(() => { holidaysDataPromise = null; });
+  }
+  return holidaysDataPromise;
+}
+const holidayCardsInjectedThisLoad = new Set();
+function appendHolidayCards(chId, cards) {
+  const key = "h:" + chId;
+  if (!progress.rootsCourse.sentenceIndexByRoot) progress.rootsCourse.sentenceIndexByRoot = {};
+  if (holidayCardsInjectedThisLoad.has(chId)) return progress.rootsCourse.sentenceIndexByRoot[key] || [];
+  if (!cards || !cards.length) return [];
+  holidayCardsInjectedThisLoad.add(chId);
+  const indices = cards.map((c, k) => {
+    const index = DATA.length;
+    const sid = "h|" + chId + "|" + k;
+    DATA.push({ r: c.ru || "", h: c.he || "", l: HOLIDAYS_LEVEL_CODE, c: c.cloze_token || "", _sid: sid });
+    sidToIndex[sid] = index;
+    return index;
+  });
+  progress.rootsCourse.sentenceIndexByRoot[key] = indices;
+  flushPendingItems();
+  return indices;
+}
+function markHolidayChapterDone(chId, cards) {
+  if (!progress.holidaysCourse.completed.includes(chId)) progress.holidaysCourse.completed.push(chId);
+  const indices = appendHolidayCards(chId, cards);
+  if (!progress.pool.levels.includes(HOLIDAYS_LEVEL_CODE)) progress.pool.levels.push(HOLIDAYS_LEVEL_CODE);
+  saveProgress();
+  cloudSyncMeta();
+  updateStatsBar();
+  return indices;
+}
+const holidaysReplayReady = !progress.holidaysCourse.completed.length ? null :
+  loadHolidaysCourse().then(({ byId }) => {
+    progress.holidaysCourse.completed.forEach(id => { if (byId[id]) appendHolidayCards(id, byId[id].cards); });
+    updateStatsBar();
+  });
+// Незаконченная сессия (корень или глава праздника) восстанавливается, когда известны индексы ОБОИХ курсов —
+// иначе restoreRootSession, не найдя индексов «чужого» курса, стёр бы сохранённую сессию.
+const courseReplayReady = (rootsReplayReady || holidaysReplayReady)
+  ? Promise.all([rootsReplayReady, holidaysReplayReady].map(p => p && p.catch(() => {}))).then(() => { restoreRootSession(); updateStatsBar(); })
+  : null;
+
+function holEsc(v) { return String(v == null ? "" : v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+function holDate(str) { const [y, m, d] = str.split("-").map(Number); return new Date(y, m - 1, d); }
+function holToday() { const t = new Date(); return new Date(t.getFullYear(), t.getMonth(), t.getDate()); }
+const HOL_DAY_MS = 86400000;
+const HOL_MONTHS = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
+// Ближайшее начало праздника (вечер накануне): { date, inDays, now }; now — праздник идёт сейчас.
+function holidayNext(ch) {
+  const today = holToday();
+  if (ch.weekly) { // шабат: ближайшая пятница; в пятницу и субботу — «сейчас»
+    const dow = today.getDay();
+    if (dow === 5 || dow === 6) return { date: today, inDays: 0, now: true };
+    const inDays = (5 - dow + 7) % 7;
+    return { date: new Date(today.getTime() + inDays * HOL_DAY_MS), inDays, now: false };
+  }
+  for (const str of ch.starts || []) {
+    const d = holDate(str);
+    const inDays = Math.round((d - today) / HOL_DAY_MS);
+    if (inDays >= 0) return { date: d, inDays, now: false };
+    if (inDays > -(ch.days || 1)) return { date: d, inDays, now: true };
+  }
+  return null;
+}
+function holidayWhen(ch) {
+  const n = holidayNext(ch);
+  if (!n) return "";
+  if (ch.weekly) return n.now ? "сейчас шабат" : n.inDays === 1 ? "завтра вечером" : `в пятницу вечером · через ${n.inDays} дн.`;
+  if (n.now) return "идёт сейчас";
+  const dt = `${n.date.getDate()} ${HOL_MONTHS[n.date.getMonth()]}`;
+  return n.inDays === 0 ? "сегодня вечером" : n.inDays === 1 ? `завтра вечером (${dt})` : `вечером ${dt} · через ${n.inDays} дн.`;
+}
+function readerBaseUrl() {
+  const a = document.getElementById("cross-link-reader");
+  return (a && a.href) || "https://readivrit.pages.dev/reader-prototype.html";
+}
+const holidaysView = document.getElementById("holidays-view");
+let holidaysJustFinished = null;   // глава, тренировку которой только что закончили — показать плашку
+let holidayOpenedFromList = false; // «← Все праздники» = шаг назад в истории, если пришли из списка
+function openHolidaysScreen(chId) {
+  showView(holidaysView);
+  const page = document.getElementById("hol-page");
+  page.innerHTML = '<p class="hol-muted">Загрузка…</p>';
+  loadHolidaysCourse().then(data => {
+    if (holidaysView.classList.contains("hidden")) return;
+    const ch = chId && data.byId[chId];
+    if (ch) renderHolidayChapter(ch); else renderHolidaysList(data.chapters);
+    window.scrollTo(0, 0);
+  }).catch(() => { page.innerHTML = '<p class="hol-muted">Не удалось загрузить курс — проверьте соединение и обновите страницу.</p>'; });
+}
+function holidaysOrdered(chapters) {
+  const withNext = chapters.map(ch => ({ ch, n: holidayNext(ch) }));
+  const far = x => (x.n ? x.n.inDays : 99999);
+  return withNext.filter(x => x.ch.weekly).concat(withNext.filter(x => !x.ch.weekly).sort((a, b) => far(a) - far(b)));
+}
+function renderHolidaysList(chapters) {
+  document.getElementById("hol-title").textContent = "🕎 Праздники Израиля";
+  const done = progress.holidaysCourse.completed;
+  const rows = holidaysOrdered(chapters).map(({ ch }) => {
+    const badge = !ch.ready ? '<span class="hol-badge soon">скоро</span>'
+      : done.includes(ch.id) ? '<span class="hol-badge done">✓ пройдено</span>' : '<span class="hol-badge ready">готово</span>';
+    const when = ch.weekly ? "пролог · " + holidayWhen(ch) : holidayWhen(ch);
+    return `<button class="hol-row${ch.ready ? "" : " is-soon"}" data-ch="${holEsc(ch.id)}">
+      <span class="hol-emoji">${holEsc(ch.emoji)}</span>
+      <span class="hol-row-main"><span class="hol-row-title">${holEsc(ch.title)} <span class="hol-he" dir="rtl">${holEsc(ch.he)}</span></span>
+      <span class="hol-row-when">${holEsc(when)}</span></span>${badge}</button>`;
+  }).join("");
+  document.getElementById("hol-page").innerHTML = `
+    <p class="hol-intro">Праздники, которые вы встретите в Израиле: откуда они, как их празднуют сегодня и какими словами о них говорят. В каждой главе — история в читалке, песни с разбором и видео, карточки для тренажёра. Ближайший праздник — сверху.</p>
+    <div class="hol-list">${rows}</div>`;
+  document.querySelectorAll("#hol-page .hol-row").forEach(b => b.addEventListener("click", () => {
+    holidayOpenedFromList = true;
+    pushViewHistory("holidays", b.dataset.ch);
+    openHolidaysScreen(b.dataset.ch);
+  }));
+}
+function renderHolidayChapter(ch) {
+  document.getElementById("hol-title").textContent = ch.emoji + " " + ch.title;
+  const base = readerBaseUrl();
+  const when = holidayWhen(ch);
+  const done = progress.holidaysCourse.completed.includes(ch.id);
+  let html = `<button class="link-btn hol-back" id="btn-hol-list">← Все праздники</button>
+    <div class="hol-head"><div class="hol-he-big" dir="rtl">${holEsc(ch.he)}</div>
+    ${when ? `<div class="hol-when">${holEsc(when)}</div>` : ""}<p class="hol-blurb">${holEsc(ch.blurb)}</p></div>`;
+  if (holidaysJustFinished === ch.id) {
+    html += `<div class="hol-done-note">✓ Глава пройдена — её карточки теперь в базе «🕎 Праздники Израиля» и будут приходить в обычном повторении.</div>`;
+    holidaysJustFinished = null;
+  }
+  if (!ch.ready) {
+    html += `<p class="hol-muted">Эта глава готовится и появится к празднику. Пока можно пройти готовые главы.</p>`;
+  } else {
+    const link = (href, title, level, go) => `<a class="hol-link" href="${holEsc(href)}" target="_blank" rel="noopener">` +
+      `<span class="hol-go">${go}</span><span class="hol-lvl">${holEsc(level)}</span><span dir="rtl">${holEsc(title)}</span></a>`;
+    html += `<h3 class="hol-h">📖 История</h3>` + link(base + "#/book/" + encodeURIComponent(ch.book.id), ch.book.title, ch.book.level, "читать ↗");
+    html += `<h3 class="hol-h">🎵 Песни и тексты</h3><p class="hol-note">Полный текст, перевод каждой строки и видео — слова подсвечиваются под исполнение.</p>` +
+      ch.songs.map(sg => link(base + "#/song/" + encodeURIComponent(sg.id), sg.title, sg.level, "открыть ↗")).join("");
+    if (ch.linked && ch.linked.length) {
+      html += `<h3 class="hol-h">🎧 Ещё песни — послушать</h3><p class="hol-note">Эти песни под авторским правом: их текста здесь нет — видео, о чём песня и трудные слова.</p>` +
+        ch.linked.map(sg => `<details class="hol-song"><summary><span dir="rtl">${holEsc(sg.title)}</span> <span class="hol-muted">· ${holEsc(sg.author)}</span></summary>
+          <p>${holEsc(sg.about)}</p>
+          <a class="hol-yt" href="https://www.youtube.com/watch?v=${encodeURIComponent(sg.youtubeId)}" target="_blank" rel="noopener">▶ Смотреть на YouTube ↗</a> <span class="hol-muted">${holEsc(sg.video || "")}</span>
+          <table class="hol-vocab">${(sg.vocab || []).map(v => `<tr><td dir="rtl" class="hol-vocab-he">${holEsc(v.he)}</td><td>${holEsc(v.ru)}${v.note ? `<div class="hol-muted">${holEsc(v.note)}</div>` : ""}</td></tr>`).join("")}</table>
+        </details>`).join("");
+    }
+    html += `<h3 class="hol-h">🃏 Карточки</h3>
+      <p class="hol-note">${ch.cards.length} фраз о празднике на современном иврите: слова праздника, как его празднуют сегодня, откуда растут ноги. ${done ? "Карточки уже в базе «🕎 Праздники Израиля»." : "После тренировки они добавятся в базу «🕎 Праздники Израиля»."}</p>
+      <button class="action primary" id="btn-hol-train">${done ? "Пройти карточки ещё раз →" : `Тренировать ${ch.cards.length} карточек →`}</button>`;
+  }
+  document.getElementById("hol-page").innerHTML = html;
+  document.getElementById("btn-hol-list").addEventListener("click", () => {
+    if (holidayOpenedFromList) { holidayOpenedFromList = false; history.back(); return; }
+    setViewHistory("holidays");
+    openHolidaysScreen();
+  });
+  const train = document.getElementById("btn-hol-train");
+  if (train) train.addEventListener("click", () => {
+    const indices = markHolidayChapterDone(ch.id, ch.cards);
+    if (!indices.length) return;
+    startRootPracticeSession("h:" + ch.id, indices);
+    showView(reviewArea);
+    pushViewHistory("review");
+    loadCard();
+  });
+}
+// Плашка «скоро праздник»: за 3 недели до праздника, если его глава готова и ещё не пройдена;
+// не чаще раза в 3 дня на главу (localStorage), один раз за загрузку страницы, не новичку.
+let holidayPopupShown = false;
+const HOLIDAY_POPUP_DAYS = 21, HOLIDAY_POPUP_EVERY_MS = 3 * 86400000;
+function maybeShowHolidayPopup(chapters) {
+  if (holidayPopupShown || document.body.classList.contains("is-new") || dashboardView.classList.contains("hidden")) return;
+  const ch = chapters.map(c => ({ c, n: holidayNext(c) }))
+    .filter(x => x.c.ready && !x.c.weekly && x.n && x.n.inDays <= HOLIDAY_POPUP_DAYS && !progress.holidaysCourse.completed.includes(x.c.id))
+    .sort((a, b) => a.n.inDays - b.n.inDays)[0];
+  if (!ch) return;
+  const key = "ivrit-holiday-popup-" + ch.c.id;
+  let last = 0;
+  try { last = Number(localStorage.getItem(key)) || 0; } catch (err) {}
+  if (Date.now() - last < HOLIDAY_POPUP_EVERY_MS) return;
+  holidayPopupShown = true;
+  try { localStorage.setItem(key, String(Date.now())); } catch (err) {}
+  const soon = ch.n.now ? `Сейчас ${ch.c.title}.` : ch.n.inDays <= 1 ? `${ch.n.inDays ? "Завтра" : "Сегодня"} вечером — ${ch.c.title}.` : `Через ${ch.n.inDays} дн. — ${ch.c.title}.`;
+  const el = document.createElement("div");
+  el.className = "holiday-popup";
+  el.innerHTML = `<div>${holEsc(ch.c.emoji)} <b>${holEsc(soon)}</b> Глава курса «Праздники Израиля»: откуда праздник, песни с разбором и ${ch.c.cards.length} карточек.</div>
+    <div class="hp-actions"><button class="action primary" type="button">Открыть главу</button><button class="link-btn" type="button">Позже</button></div>`;
+  document.body.appendChild(el);
+  requestAnimationFrame(() => el.classList.add("show"));
+  const close = () => { el.classList.remove("show"); setTimeout(() => el.remove(), 350); };
+  const [open, later] = el.querySelectorAll("button");
+  later.addEventListener("click", close);
+  open.addEventListener("click", () => { close(); pushViewHistory("holidays", ch.c.id); openHolidaysScreen(ch.c.id); });
+}
+function updateHolidaysBanner() {
+  loadHolidaysCourse().then(({ chapters }) => {
+    const ready = chapters.filter(c => c.ready);
+    const next = holidaysOrdered(chapters).find(x => !x.ch.weekly && x.n);
+    const sub = document.getElementById("holidays-banner-sub");
+    if (sub) sub.textContent = (next ? `Ближайший: ${next.ch.title} — ${next.n.now ? "сейчас" : next.n.inDays === 0 ? "сегодня вечером" : "через " + next.n.inDays + " дн."} · ` : "")
+      + `готово глав: ${ready.length} из ${chapters.length}`;
+    maybeShowHolidayPopup(chapters);
+  }).catch(() => {});
+}
 
 function rtExampleHtml(he, ru) {
   return `<div class="rt-example">
@@ -3392,7 +3675,10 @@ function loadCard() {
     // следующий корень курса; если обнулить тут, к моменту оценки этой
     // самой карточки сигнал был бы уже потерян.
     const current = rootPracticeSession.total - rootPracticeSession.queue.length;
-    els.eyebrow.textContent = `Корень «${rootPracticeSession.rootId}» · ${current}/${rootPracticeSession.total}`;
+    const rid = String(rootPracticeSession.rootId);
+    els.eyebrow.textContent = rid.startsWith("h:")
+      ? `Праздник «${holidayTitleById[rid.slice(2)] || rid.slice(2)}» · ${current}/${rootPracticeSession.total}`
+      : `Корень «${rid}» · ${current}/${rootPracticeSession.total}`;
   }
   els.modeBadge.textContent = MODES[currentMode].label;
   els.badge.textContent = `${lv.sym} · ${lv.label}`;
@@ -3643,8 +3929,16 @@ function commitAndAdvance(quality) {
     // обычный пул, как раньше молчаливо получалось (отзыв с сайта,
     // 2026-09-13: "после прохождения предложений должно вести на новый
     // корень").
+    const finishedId = String(rootPracticeSession.rootId);
     rootPracticeSession = null;
     persistRootSession(null); // сессия закончена — убрать сохранённую
+    if (finishedId.startsWith("h:")) { // глава «Праздников» — назад на её страницу с плашкой «пройдено»
+      holidaysJustFinished = finishedId.slice(2);
+      holidayOpenedFromList = false;
+      setViewHistory("holidays", holidaysJustFinished);
+      openHolidaysScreen(holidaysJustFinished);
+      return;
+    }
     openRootsCourseScreen();
     return;
   }
@@ -4408,7 +4702,7 @@ const deckbasesView = document.getElementById("deckbases-view");
 const feedbackReviewView = document.getElementById("feedback-review-view");
 const rootTheoryView = document.getElementById("root-theory-view");
 function showView(view) {
-  [dashboardView, reviewArea, deckbasesView, feedbackReviewView, rootTheoryView].forEach(v => v.classList.add("hidden"));
+  [dashboardView, reviewArea, deckbasesView, feedbackReviewView, rootTheoryView, document.getElementById("holidays-view")].forEach(v => v.classList.add("hidden"));
   view.classList.remove("hidden");
   // Курс «Корни» уже несёт свою собственную шапку (заголовок, "← Назад",
   // прогресс) — глобальная шапка тренажёра поверх неё (счётчик "Изучено
@@ -4417,7 +4711,7 @@ function showView(view) {
   // идёт выделенная сессия по конкретному корню (rootPracticeSession) —
   // это часть того же курсового потока, не обычная тренировка (отзыв
   // пользователя, 2026-09-14).
-  document.getElementById("app-header").classList.toggle("hidden", view === rootTheoryView || (view === reviewArea && !!rootPracticeSession));
+  document.getElementById("app-header").classList.toggle("hidden", view === rootTheoryView || view === document.getElementById("holidays-view") || (view === reviewArea && !!rootPracticeSession));
 }
 
 // Кнопка «назад»: экраны обзор/повторение/мои базы/курс «Корни»/отзывы
@@ -4426,7 +4720,7 @@ function showView(view) {
 // та же идея, что уже сделана в читалке). Переключение между корнями
 // ВНУТРИ курса (btn-roots-prev, растущий текст «Дальше →») историю не
 // засоряет — как листание страниц книги в читалке.
-const VIEW_BY_NAME = { dashboard: dashboardView, review: reviewArea, deckbases: deckbasesView, roots: rootTheoryView, feedback: feedbackReviewView };
+const VIEW_BY_NAME = { dashboard: dashboardView, review: reviewArea, deckbases: deckbasesView, roots: rootTheoryView, feedback: feedbackReviewView, holidays: document.getElementById("holidays-view") };
 // Экран живёт и в адресе (#/roots/12, #/review, #/deckbases, #/feedback): F5,
 // закладка и перезапуск установленного приложения возвращают туда же, где
 // был ученик. Раньше адрес при загрузке всегда сбрасывался на обзор, и
@@ -4434,6 +4728,7 @@ const VIEW_BY_NAME = { dashboard: dashboardView, review: reviewArea, deckbases: 
 // 2026-10-04). Номер шага курса в адресе — с 1, как «Корень N из …».
 function viewHash(name, pos) {
   if (name === "roots") return "#/roots" + (pos === "why" ? "/why" : typeof pos === "number" ? "/" + (pos + 1) : "");
+  if (name === "holidays") return "#/holidays" + (pos ? "/" + encodeURIComponent(pos) : "");
   return name && name !== "dashboard" ? "#/" + name : "";
 }
 function setViewHistory(name, pos, push) {
@@ -4444,6 +4739,8 @@ function setViewHistory(name, pos, push) {
 }
 function pushViewHistory(name, pos){ setViewHistory(name, pos, true); }
 function parseViewHash(hash) {
+  const h = /^#\/holidays(?:\/([a-z0-9-]+))?$/.exec(hash || "");
+  if (h) return { v: "holidays", pos: h[1] };
   const m = /^#\/(review|deckbases|feedback|roots)(?:\/(\d+|why))?$/.exec(hash || "");
   if (!m) return { v: "dashboard" };
   if (m[1] === "roots" && m[2] === "why") return { v: "roots", pos: "why" };
@@ -4460,6 +4757,7 @@ window.addEventListener("popstate", (e) => {
   showView(view);
   if (view === deckbasesView) renderDeckBases();
   else if (view === rootTheoryView) openRootsCourseScreen(e.state && e.state.pos);
+  else if (view === document.getElementById("holidays-view")) { holidayOpenedFromList = false; openHolidaysScreen(e.state && e.state.pos); }
   else if (view === feedbackReviewView) renderFeedbackReview();
   else if (view === reviewArea) loadCard();
   else renderDashboard();
@@ -4492,7 +4790,7 @@ document.getElementById("btn-open-roots").addEventListener("click", () => {
   // СЛЕДУЮЩИЙ корень, и пользователя молча перекидывало мимо
   // оставшихся предложений на теорию следующего корня (отзыв
   // пользователя, 2026-09-14).
-  if (rootPracticeSession && rootPracticeSession.queue.length) {
+  if (rootPracticeSession && rootPracticeSession.queue.length && !String(rootPracticeSession.rootId).startsWith("h:")) {
     showView(reviewArea);
     pushViewHistory("review");
     loadCard();
@@ -4502,6 +4800,18 @@ document.getElementById("btn-open-roots").addEventListener("click", () => {
   openRootsCourseScreen();
 });
 document.getElementById("btn-roots-back").addEventListener("click", goBackToDashboard);
+document.getElementById("btn-holidays-back").addEventListener("click", goBackToDashboard);
+document.getElementById("btn-open-holidays").addEventListener("click", () => {
+  // незаконченная тренировка главы — продолжить её, как у «Корней»
+  if (rootPracticeSession && rootPracticeSession.queue.length && String(rootPracticeSession.rootId).startsWith("h:")) {
+    showView(reviewArea);
+    pushViewHistory("review");
+    loadCard();
+    return;
+  }
+  pushViewHistory("holidays");
+  openHolidaysScreen();
+});
 document.getElementById("btn-roots-why").addEventListener("click", () => renderRootsIntro(rootsCoursePosition));
 document.getElementById("btn-roots-prev").addEventListener("click", () => {
   if (rootsCoursePosition > 0) openRootsCourseScreen(rootsCoursePosition - 1);
@@ -4697,6 +5007,7 @@ renderDashboard();
     setViewHistory(route.v, route.pos);
   }
   if (route.v === "roots") openRootsCourseScreen(route.pos);
+  else if (route.v === "holidays") openHolidaysScreen(route.pos);
   else if (route.v === "deckbases") { showView(deckbasesView); renderDeckBases(); }
   else if (route.v === "feedback") { showView(feedbackReviewView); renderFeedbackReview(); }
   else if (route.v === "review") {
@@ -4704,7 +5015,7 @@ renderDashboard();
     // Незаконченная сессия по корню восстанавливается асинхронно (после
     // загрузки данных курса) — ждём её, иначе первая карточка придёт из
     // общего пула вместо предложений корня.
-    if (progress.rootsCourse.activeSession && rootsReplayReady) rootsReplayReady.then(() => {
+    if (progress.rootsCourse.activeSession && courseReplayReady) courseReplayReady.then(() => {
       if (reviewArea.classList.contains("hidden")) return; // ученик уже ушёл с экрана
       showView(reviewArea); // шапка прячется только в сессии по корню — она уже восстановлена
       loadCard();
@@ -4814,6 +5125,7 @@ function metaPayload() {
     // корни могли разблокироваться в другом порядке и получить другие
     // индексы (см. комментарий у appendRootSentences).
     rootsCourse: { completedTheory: progress.rootsCourse.completedTheory, completedGrowingTexts: progress.rootsCourse.completedGrowingTexts },
+    holidaysCourse: { completed: progress.holidaysCourse.completed },
   };
 }
 
@@ -5052,6 +5364,20 @@ async function pullAndMerge(uid) {
           progress.rootsCourse.completedTheory.push(rootId);
           if (sentencesByRoot[rootId]) appendRootSentences(rootId, sentencesByRoot[rootId]);
         });
+      }
+    }
+    // Курс «Праздники Израиля»: так же сливаем пройденные главы и раскладываем их карточки.
+    if (remoteMeta.holidaysCourse && Array.isArray(remoteMeta.holidaysCourse.completed)) {
+      const newChapters = remoteMeta.holidaysCourse.completed.filter(id => !progress.holidaysCourse.completed.includes(id));
+      if (newChapters.length) {
+        try {
+          const { byId } = await loadHolidaysCourse();
+          newChapters.forEach(id => {
+            progress.holidaysCourse.completed.push(id);
+            if (byId[id]) appendHolidayCards(id, byId[id].cards);
+          });
+          if (!progress.pool.levels.includes(HOLIDAYS_LEVEL_CODE)) progress.pool.levels.push(HOLIDAYS_LEVEL_CODE);
+        } catch (err) {}
       }
     }
     if (remoteMeta.rootsCourse && remoteMeta.rootsCourse.completedGrowingTexts) {

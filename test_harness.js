@@ -677,6 +677,37 @@ async function bookLevelMapTests() {
   check('retired: a retired sentence is never picked', r.picks.every(i => i !== 0));
 }
 
+// Курс «Праздники Израиля» (v1.41.0): адреса глав, база курса до «Личного», карточки главы в пуле
+// со стабильными id h|<глава>|<k>, ближайшая дата праздника.
+{
+  const run = (code) => vm.runInContext(code, sandbox);
+  const r = run(`(() => {
+    const route = parseViewHash("#/holidays/hanukkah"), list = parseViewHash("#/holidays"), bad = parseViewHash("#/holidays/<x>");
+    const savedLen = DATA.length, savedLevels = progress.pool.levels.slice(), savedDone = progress.holidaysCourse.completed.slice();
+    const idx = markHolidayChapterDone("test-ch", [{ he: "א", ru: "a", cloze_token: "א" }, { he: "ב", ru: "b", cloze_token: "ב" }]);
+    const again = appendHolidayCards("test-ch", [{ he: "x" }]);
+    const out = {
+      route, list, bad, hash: viewHash("holidays", "hanukkah"),
+      levelBeforeCustom: HOLIDAYS_LEVEL_CODE < CUSTOM_LEVEL_CODE,
+      idx, again, sid: DATA[idx[0]]._sid, lvl: DATA[idx[1]].l === HOLIDAYS_LEVEL_CODE, inPool: inPool(idx[0]),
+      inMeta: progress.holidaysCourse.completed.includes("test-ch"),
+      next: holidayNext({ starts: ["2000-01-01", "2999-01-01"] }).inDays > 0, gone: holidayNext({ starts: ["2000-01-01"] }),
+    };
+    DATA.length = savedLen; progress.pool.levels = savedLevels; progress.holidaysCourse.completed = savedDone;
+    return out;
+  })()`);
+  check('holidays: #/holidays/<глава> parses to the chapter', r.route.v === 'holidays' && r.route.pos === 'hanukkah');
+  check('holidays: #/holidays parses to the course list', r.list.v === 'holidays' && r.list.pos === undefined);
+  check('holidays: a malformed chapter id falls back to the dashboard', r.bad.v === 'dashboard');
+  check('holidays: viewHash round-trips a chapter', r.hash === '#/holidays/hanukkah');
+  check('holidays: the course base comes before «Личное»', r.levelBeforeCustom);
+  check('holidays: passing a chapter appends its cards with stable ids and puts them in the pool',
+    r.idx.length === 2 && r.sid === 'h|test-ch|0' && r.lvl && r.inPool);
+  check('holidays: re-appending the same chapter in one load does not duplicate cards', JSON.stringify(r.again) === JSON.stringify(r.idx));
+  check('holidays: the passed chapter is recorded in progress', r.inMeta);
+  check('holidays: the next start date skips past years; none left → null', r.next && r.gone === null);
+}
+
 bookLevelMapTests().then(() => {
   console.log(`\n${pass} passed, ${fail} failed`);
   process.exit(fail ? 1 : 0);
