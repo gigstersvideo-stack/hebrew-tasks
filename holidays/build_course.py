@@ -23,7 +23,12 @@ CHAPTERS = [
             {"id": "kiddush-shabbat", "title": "קִידּוּשׁ לְלֵיל שַׁבָּת", "level": "ד"}],
   "cards": "shabbat_cards.json"},
  {"id": "rosh-hashana", "emoji": "🍎", "title": "Рош ха-Шана", "he": "רֹאשׁ הַשָּׁנָה",
-  "blurb": "Еврейский Новый год: яблоко с мёдом, шофар и «шана това».", "starts": ["2027-10-01", "2028-09-20"]},
+  "blurb": "Еврейский Новый год: яблоко с мёдом, шофар и «шана това».", "starts": ["2027-10-01", "2028-09-20"], "days": 2,
+  "book": {"id": "roshhashana-alef", "title": "תַּפּוּחַ בִּדְבַשׁ", "level": "א"},
+  "songs": [{"id": "avinu-malkeinu", "title": "אָבִינוּ מַלְכֵּנוּ", "level": "ג"},
+            {"id": "yehi-ratzon", "title": "יְהִי רָצוֹן", "level": "ב"},
+            {"id": "zichron-terua", "title": "זִכְרוֹן תְּרוּעָה", "level": "ד"}],
+  "cards": "roshhashana_cards.json"},
  {"id": "yom-kippur", "emoji": "🕊️", "title": "Йом Кипур", "he": "יוֹם כִּיפּוּר",
   "blurb": "День искупления: пост, тишина, пустые дороги и дети на велосипедах.", "starts": ["2027-10-10", "2028-09-29"]},
  {"id": "sukkot", "emoji": "🛖", "title": "Суккот и Симхат Тора", "he": "סוּכּוֹת",
@@ -87,7 +92,13 @@ CHAPTERS = [
             {"id": "chag-habikurim", "title": "חַג הַבִּיכּוּרִים", "level": "ד"}],
   "cards": "shavuot_cards.json"},
  {"id": "av", "emoji": "🍇", "title": "Тиша бе-Ав и Ту бе-Ав", "he": "תִּשְׁעָה בְּאָב · ט״ו בְּאָב",
-  "blurb": "День траура по Храму — а через неделю день любви.", "starts": ["2027-08-11", "2028-07-31"], "days": 8},
+  "memorial": True,
+  "blurb": "День траура по разрушенному Храму — а через шесть дней день любви и свадеб.", "starts": ["2027-08-11", "2028-07-31"], "days": 8,
+  "book": {"id": "av-alef", "title": "הַכּוֹס", "level": "א"},
+  "songs": [{"id": "im-eshkachech", "title": "אִם אֶשְׁכָּחֵךְ", "level": "ג"},
+            {"id": "dodi-li", "title": "דּוֹדִי לִי", "level": "ג"},
+            {"id": "eicha-tu-beav", "title": "אֵיכָה וְט״ו בְּאָב", "level": "ד"}],
+  "cards": "av_cards.json"},
 ]
 
 linked = json.load(open(os.path.join(HERE, "linked_songs.json"), encoding="utf-8"))
