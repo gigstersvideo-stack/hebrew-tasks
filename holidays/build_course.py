@@ -40,7 +40,13 @@ CHAPTERS = [
             {"id": "rosh-hashana-lailan", "title": "רֹאשׁ הַשָּׁנָה לָאִילָן", "level": "ד"}],
   "cards": "tubishvat_cards.json"},
  {"id": "purim", "emoji": "🎭", "title": "Пурим", "he": "פּוּרִים",
-  "blurb": "Свиток Эстер, маскарад, подарки соседям и трещотки на имени Амана.", "starts": ["2027-03-22", "2028-03-11"]},
+  "blurb": "Свиток Эстер, маскарад, подарки соседям и трещотки на имени Амана — и почему «Пурим» значит «жребии».", "starts": ["2027-03-22", "2028-03-11"],
+  "book": {"id": "purim-alef", "title": "הַמֶּלֶךְ שֶׁל פּוּרִים", "level": "א"},
+  "songs": [{"id": "layehudim", "title": "לַיְּהוּדִים הָיְיתָה אוֹרָה", "level": "ב"},
+            {"id": "mishenichnas-adar", "title": "מִשֶּׁנִּכְנַס אֲדָר", "level": "ב"},
+            {"id": "shoshanat-yaakov", "title": "שׁוֹשַׁנַּת יַעֲקוֹב", "level": "ג"},
+            {"id": "megillat-esther", "title": "מִן הַמְּגִילָּה", "level": "ד"}],
+  "cards": "purim_cards.json"},
  {"id": "pesach", "emoji": "🫓", "title": "Песах", "he": "פֶּסַח",
   "blurb": "Исход из Египта: седер, маца и Агада — самая «певучая» глава.", "starts": ["2027-04-21", "2028-04-10"], "days": 7},
  {"id": "yom-hashoah", "emoji": "🕯️", "title": "Йом ха-Шоа", "he": "יוֹם הַשּׁוֹאָה",
@@ -67,4 +73,7 @@ for ch in CHAPTERS:
     out.append(c)
 p = os.path.join(ROOT, "holidays_course.json")
 json.dump({"chapters": out}, open(p, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
+# Календарь для читалки (вкладка «Праздники и песни», сезонная плашка) — только даты и названия.
+cal = [{k: c[k] for k in ("id", "emoji", "title", "he", "weekly", "starts", "days", "ready") if k in c} for c in out]
+json.dump({"chapters": cal}, open(r"E:\hebrew-reader\holidays.json", "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
 print(f"{len(out)} глав, готовы: {[c['id'] for c in out if c['ready']]}, карточек: {sum(len(c.get('cards', [])) for c in out)}, {os.path.getsize(p)//1024} КБ")
