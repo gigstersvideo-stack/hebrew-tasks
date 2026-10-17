@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Ивритский тренажёр — v1.42.7
+  Ивритский тренажёр — v1.42.8
   См. CHANGELOG.md за полной историей изменений.
 -->
 <title>Ивритский тренажёр — карточки для изучения иврита</title>
@@ -501,6 +501,9 @@
   .hol-urgent { background: var(--amber-soft); border-radius: 12px; padding: 10px 14px; margin: 10px 0; font-size: 0.86rem; }
   .hol-urgent > summary { cursor: pointer; font-weight: 600; color: var(--amber); }
   .hol-urgent .hol-memo { margin: 8px 0 2px; padding: 0; background: none; }
+  .hol-plan { border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; margin: 10px 0; font-size: 0.86rem; }
+  .hol-plan > summary { cursor: pointer; font-weight: 600; }
+  .hol-plan ol { margin: 8px 0 2px; padding-inline-start: 20px; display: grid; gap: 4px; }
   .hol-step-sub i { font-style: normal; color: var(--text-faint); }
   .hol-say { width: 100%; font: inherit; font-size: 1.25rem; font-family: 'Frank Ruhl Libre', 'David Libre', serif; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2); color: var(--text); }
   .hol-say:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
@@ -1165,7 +1168,7 @@
   <div class="queue-note" id="queue-note"></div>
   </div><!-- /#review-area -->
 
-  <div id="appVersionFooter" style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.42.7</div>
+  <div id="appVersionFooter" style="text-align:center; margin-top:4px; font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text-faint);">Ивритский тренажёр v1.42.8</div>
 </div>
 
 <script>
@@ -2852,11 +2855,13 @@ const rootsReplayReady = !progress.rootsCourse.completedTheory.length ? null :
 // Тренировка — та же rootPracticeSession с ключом "h:<глава>" (сохранение/восстановление общие).
 let holidaysDataPromise = null;
 const holidayTitleById = {};
+let holAllChapters = []; // все главы — для вопросов-повторений из пройденных глав в итоге
 function loadHolidaysCourse() {
   if (!holidaysDataPromise) {
     holidaysDataPromise = fetch("holidays_course.json").then(r => r.json()).then(d => {
       const byId = {};
       (d.chapters || []).forEach(c => { byId[c.id] = c; holidayTitleById[c.id] = c.title; });
+      holAllChapters = d.chapters || [];
       return { chapters: d.chapters || [], byId };
     });
     holidaysDataPromise.catch(() => { holidaysDataPromise = null; });
@@ -2868,7 +2873,15 @@ function loadHolidaysCourse() {
 // Индексы — массив по порядку карточек главы, у ещё не разложенных — null; sid h|<глава>|<k> стабилен.
 const holidayCardsInjectedThisLoad = {}; // глава → Set(k) разложенных в эту загрузку
 function holCardGroup(c) { return c && (c.layer === "roots" || c.layer === "today") ? c.layer : "words"; }
-function appendHolidayCards(chId, cards, group) {
+// Ядро главы (v1.42.8, прожарка: «30 карточек — много»): шаги и общее повторение берут только core-карточки
+// (6 слов + 5 «жизнь вокруг» + 4 корня); остальные — группа "extra", по желанию. Карточки без флага — ядро.
+function holCore(c) { return !c || c.core !== false; }
+function holInGroup(c, group) {
+  if (group === "all") return true;
+  if (group === "extra") return !holCore(c);
+  return holCardGroup(c) === group && holCore(c);
+}
+function appendHolidayCards(chId, cards, group, keep) {
   const key = "h:" + chId;
   if (!progress.rootsCourse.sentenceIndexByRoot) progress.rootsCourse.sentenceIndexByRoot = {};
   if (!cards || !cards.length) return [];
@@ -2878,8 +2891,9 @@ function appendHolidayCards(chId, cards, group) {
   const idx = map[key];
   let added = false;
   cards.forEach((c, k) => {
-    if (done.has(k) || (group && group !== "all" && holCardGroup(c) !== group)) return;
-    const index = DATA.length, sid = "h|" + chId + "|" + k;
+    const sid = "h|" + chId + "|" + k;
+    if (done.has(k) || (group && !holInGroup(c, group) && !(keep && keep.has(sid)))) return;
+    const index = DATA.length;
     DATA.push({ r: c.ru || "", h: c.he || "", l: HOLIDAYS_LEVEL_CODE, c: c.cloze_token || "", _sid: sid });
     sidToIndex[sid] = index;
     idx[k] = index;
@@ -2902,12 +2916,26 @@ function markHolidayChapterDone(chId, cards, group) {
 function holGroupsFor(ch) {
   const done = holDone(ch), g = [];
   ["words", "today", "roots"].forEach(st => { if (done.includes(st)) g.push(st); });
+  if ((progress.holidaysCourse.extra || []).includes(ch.id)) g.push("extra");
   const s = progress.rootsCourse && progress.rootsCourse.activeSession;
   if (s && s.rootId === "h:" + ch.id && s.step && !g.includes(s.step)) g.push(s.step);
   return g;
 }
+// Карточки, которые уже учили (до появления ядра все 10 карточек шага шли в базу), раскладываем как раньше,
+// даже если они не в ядре, — иначе их история повторения повисла бы в pendingItems.
+function holStudiedSids() {
+  const out = new Set();
+  for (const k in pendingItems) if (k.startsWith("h|")) out.add(k.slice(0, k.lastIndexOf(":")));
+  return out;
+}
 function holInjectDone(byId) {
-  progress.holidaysCourse.completed.forEach(id => { const ch = byId[id]; if (ch) holGroupsFor(ch).forEach(g => appendHolidayCards(id, ch.cards, g)); });
+  const studied = holStudiedSids();
+  progress.holidaysCourse.completed.forEach(id => {
+    const ch = byId[id];
+    if (!ch) return;
+    holGroupsFor(ch).forEach(g => appendHolidayCards(id, ch.cards, g));
+    appendHolidayCards(id, ch.cards, "none", studied);
+  });
 }
 const holidaysReplayReady = !progress.holidaysCourse.completed.length ? null :
   loadHolidaysCourse().then(({ byId }) => {
@@ -3031,7 +3059,7 @@ function holMarkStep(chId, step) {
 }
 function holPl(n, f) { const m = n % 10, h = n % 100; return n + " " + (m === 1 && h !== 11 ? f[0] : m >= 2 && m <= 4 && (h < 12 || h > 14) ? f[1] : f[2]); }
 function holMainSong(ch) { return (ch.songs || []).find(s => s.id === (ch.path || {}).main) || { id: (ch.path || {}).main, title: "", level: "" }; }
-function holGroupCards(ch, group) { return (ch.cards || []).filter(c => group === "all" || holCardGroup(c) === group); }
+function holGroupCards(ch, group) { return (ch.cards || []).filter(c => holInGroup(c, group)); }
 // Честная оценка времени (прожарка 2026-10-17: «8 мин» на 20 карточек с вводом — неправда):
 // карточка ~40 с, предложение книги ~20 с, строка песни ~30 с + видео.
 function holStepMin(ch, s) {
@@ -3133,8 +3161,13 @@ function renderHolidaysList(chapters) {
 }
 
 function holStartCards(ch, step) {
+  if (step === "extra" || step === "all") { // «ещё карточки» по желанию — с этого момента они тоже в базе курса
+    const hc = progress.holidaysCourse;
+    if (!hc.extra) hc.extra = [];
+    if (!hc.extra.includes(ch.id)) hc.extra.push(ch.id);
+  }
   const idx = markHolidayChapterDone(ch.id, ch.cards, step); // в базу — только карточки этого шага
-  const list = idx.filter((i, k) => typeof i === "number" && (step === "all" || holCardGroup(ch.cards[k]) === step));
+  const list = idx.filter((i, k) => typeof i === "number" && holInGroup(ch.cards[k], step));
   if (!list.length) return;
   startRootPracticeSession("h:" + ch.id, list);
   rootPracticeSession.step = step;
@@ -3157,6 +3190,22 @@ function holStepSub(ch, s, locked, prevTitle) {
   else if (s === "roots") t = `${holPl(holGroupCards(ch, "roots").length, ["карточка", "карточки", "карточек"])}: корни и источники`;
   else t = ch.memorial ? "вопросы для самопроверки и памятка ко дню памяти" : "8 вопросов и памятка к празднику";
   return t + (locked && prevTitle ? ` · <i>откроется после «${holEsc(prevTitle)}»</i>` : "");
+}
+// План к празднику (прожарка: «нужен план — по шагу в день»): за ≤30 дней раскладываем оставшиеся шаги по дням
+// так, чтобы закончить накануне; если дней меньше, чем шагов, — по 2–3 шага в день.
+const HOL_WD = ["вс", "пн", "вт", "ср", "чт", "пт", "сб"];
+function holPlanHtml(ch, steps, done, d) {
+  if (d === null || d < 1 || d > 30 || holPassed(ch.id)) return "";
+  const left = steps.filter(s => !done.includes(s));
+  if (left.length < 2) return "";
+  const per = Math.ceil(left.length / d), today = holToday(), rows = [];
+  for (let i = 0; i * per < left.length; i++) {
+    const day = new Date(today.getTime() + i * HOL_DAY_MS);
+    const label = i === 0 ? "Сегодня" : i === 1 ? "Завтра" : `${HOL_WD[day.getDay()]}, ${day.getDate()} ${HOL_MON[day.getMonth()]}`;
+    rows.push(`<li><b>${holEsc(label)}</b> — ${left.slice(i * per, i * per + per).map(s => holEsc(holStepTitle(ch, s))).join(", ")}</li>`);
+  }
+  const head = per === 1 ? `По шагу в день — и глава готова за ${holPl(left.length, ["день", "дня", "дней"])}` : `До ${ch.memorial ? "дня памяти" : "праздника"} ${holPl(d, ["день", "дня", "дней"])} — по ${per} шага в день`;
+  return `<details class="hol-plan"${d <= 14 ? " open" : ""}><summary>📅 План ${holForDay(ch)}: ${holEsc(head)}</summary><ol>${rows.join("")}</ol></details>`;
 }
 function holMemoHtml(ch) {
   const rows = (ch.path.memo || []).slice();
@@ -3193,6 +3242,7 @@ function renderHolidayChapter(ch, sub) {
   else if (d !== null && d <= 7) html += `<details class="hol-urgent"><summary>${ch.memorial ? "День памяти" : "Праздник"} уже ${d === 0 ? "сегодня" : "скоро"} — открыть памятку сразу</summary>${holMemoHtml(ch)}</details>`;
   html += `<div class="hol-progress"><div class="hol-bar"><i style="width:${Math.round(100 * done.length / steps.length)}%"></i></div>
     <span>${done.length} / ${steps.length} · осталось ~${holMinutesLeft(ch)} мин</span></div>`;
+  html += holPlanHtml(ch, steps, done, d);
   if (!passed) html += `<div class="hol-outcomes"><b>После главы вы сможете</b><ul>${(ch.path.outcomes || []).map(o => `<li>${holRich(o)}</li>`).join("")}</ul></div>`;
   const next = holNextStep(ch);
   html += `<div class="hol-steps">` + steps.map((s, i) => {
@@ -3225,7 +3275,12 @@ function renderHolidayChapter(ch, sub) {
       <a class="hol-yt" href="https://www.youtube.com/watch?v=${encodeURIComponent(sg.youtubeId)}" target="_blank" rel="noopener">▶ Смотреть на YouTube ↗</a> <span class="hol-muted">${holEsc(sg.video || "")}</span>
       <table class="hol-vocab">${(sg.vocab || []).map(v => `<tr><td dir="rtl" class="hol-vocab-he">${holEsc(v.he)}</td><td>${holEsc(v.ru)}${v.note ? `<div class="hol-muted">${holEsc(v.note)}</div>` : ""}</td></tr>`).join("")}</table>
     </details>`).join("");
-  if (["words", "today", "roots"].every(st => done.includes(st) || !steps.includes(st))) extra += `<button class="link-btn" id="btn-hol-all">Повторить все ${holPl(ch.cards.length, ["карточку", "карточки", "карточек"])} главы</button>`;
+  if (["words", "today", "roots"].every(st => done.includes(st) || !steps.includes(st))) {
+    const more = holGroupCards(ch, "extra").length;
+    if (more) extra += `<p class="hol-note">В шагах — ${holPl(ch.cards.length - more, ["главная карточка", "главные карточки", "главных карточек"])} главы. Хотите больше практики — ещё ${holPl(more, ["карточка", "карточки", "карточек"])} с теми же словами; после первого раза они тоже будут приходить на повторение.</p>
+      <button class="link-btn" id="btn-hol-extra">Ещё ${holPl(more, ["карточка", "карточки", "карточек"])} главы →</button>`;
+    extra += `<button class="link-btn" id="btn-hol-all">Повторить все ${holPl(ch.cards.length, ["карточку", "карточки", "карточек"])} главы</button>`;
+  }
   if (extra) html += `<details class="hol-extra"${passed ? " open" : ""}><summary>Дополнительно</summary>${extra}</details>`;
   document.getElementById("hol-page").innerHTML = html;
   document.getElementById("btn-hol-list").addEventListener("click", holBackToList);
@@ -3251,6 +3306,8 @@ function renderHolidayChapter(ch, sub) {
   }));
   const all = document.getElementById("btn-hol-all");
   if (all) all.addEventListener("click", () => holStartCards(ch, "all"));
+  const more = document.getElementById("btn-hol-extra");
+  if (more) more.addEventListener("click", () => holStartCards(ch, "extra"));
 }
 function holBackToList() {
   if (holidayOpenedFromList) { holidayOpenedFromList = false; history.back(); return; }
@@ -3314,12 +3371,25 @@ function holOptionsFrom(right, pool, n) {
   for (const x of holShuffle(pool)) { if (out.length >= n) break; if (!seen.has(x)) { seen.add(x); out.push(x); } }
   return out;
 }
+// Повторение (прожарка: «прошлые главы забываются»): в итог — до 2 вопросов из ядра уже пройденных глав,
+// по одному из разных глав; вместо части автоматических вопросов, длина итога та же.
+function holReviewQs(ch, n) {
+  const prev = holShuffle(holAllChapters.filter(c => c.ready && c.id !== ch.id && holPassed(c.id))).slice(0, n);
+  return prev.map(c => {
+    const pool = (c.cards || []).filter(x => x.layer !== "roots" && holCore(x));
+    if (pool.length < 4) return null;
+    const x = pool[Math.floor(Math.random() * pool.length)];
+    const opts = holOptionsFrom(x.ru, pool.filter(y => y !== x).map(y => y.ru), 4);
+    return { kind: "review", q: `Из главы «${c.title}»: что значит эта фраза?`, he: x.he, options: opts, answer: 0, heOptions: false };
+  }).filter(Boolean);
+}
 function holBuildQuiz(ch) {
   const p = ch.path || {}, hand = p.quiz || [], say = holShuffle(p.say || []).slice(0, 2);
-  const cards = (ch.cards || []).filter(c => c.layer !== "roots");
+  const cards = (ch.cards || []).filter(c => c.layer !== "roots" && holCore(c));
   if (hebrewVoice === null && typeof checkHebrewVoice === "function") checkHebrewVoice();
   const qs = say.map(s => ({ kind: "say", q: s.q, accept: s.accept }));
   hand.forEach(h => qs.push({ kind: h.kind, q: h.q, options: h.options.slice(), answer: h.answer, heOptions: h.kind === "reply" }));
+  holReviewQs(ch, Math.min(2, Math.max(0, HOL_QUIZ_LEN - qs.length - 1))).forEach(q => qs.push(q));
   const need = Math.max(0, HOL_QUIZ_LEN - qs.length);
   holShuffle(cards.map((c, i) => i)).slice(0, need).forEach((ci, j) => {
     const c = cards[ci];
@@ -3362,7 +3432,7 @@ function renderHolFinal(ch) {
         return `<button class="hol-opt${q.heOptions ? " is-he" : ""}${cls}" data-k="${k}"${q.heOptions ? ' dir="rtl"' : ""}${answered ? " disabled" : ""}>${holEsc(o)}</button>`;
       }).join("")}</div>`;
   }
-  const kind = { say: "Скажите на иврите", reply: "Что ответить", listen: "На слух", card: "Что значит", meaning: "Вопрос" }[q.kind] || "Вопрос";
+  const kind = { say: "Скажите на иврите", reply: "Что ответить", listen: "На слух", card: "Что значит", meaning: "Вопрос", review: "Повторение" }[q.kind] || "Вопрос";
   page.innerHTML = `<button class="link-btn hol-back" id="btn-hol-ch">← ${holEsc(ch.title)}</button>
     <div class="hol-stepper">${ch.memorial ? "Самопроверка" : "Итог"} · вопрос ${Q.i + 1} из ${Q.qs.length}</div><div class="hol-bar"><i style="width:${Math.round(100 * Q.i / Q.qs.length)}%"></i></div>
     <div class="hol-q"><div class="hol-q-kind">${kind}</div><div class="hol-q-t">${holRich(q.q)}</div>${body}</div>
@@ -5623,7 +5693,7 @@ function metaPayload() {
     // корни могли разблокироваться в другом порядке и получить другие
     // индексы (см. комментарий у appendRootSentences).
     rootsCourse: { completedTheory: progress.rootsCourse.completedTheory, completedGrowingTexts: progress.rootsCourse.completedGrowingTexts },
-    holidaysCourse: { completed: progress.holidaysCourse.completed, steps: progress.holidaysCourse.steps || {}, passed: progress.holidaysCourse.passed || [] },
+    holidaysCourse: { completed: progress.holidaysCourse.completed, steps: progress.holidaysCourse.steps || {}, passed: progress.holidaysCourse.passed || [], extra: progress.holidaysCourse.extra || [] },
   };
 }
 
@@ -5875,6 +5945,8 @@ async function pullAndMerge(uid) {
         list.forEach(st => { if (!mine.includes(st)) mine.push(st); });
       });
       (remoteMeta.holidaysCourse.passed || []).forEach(id => { if (!hc.passed.includes(id)) hc.passed.push(id); });
+      if (!hc.extra) hc.extra = [];
+      (remoteMeta.holidaysCourse.extra || []).forEach(id => { if (!hc.extra.includes(id)) hc.extra.push(id); });
     }
     // Курс «Праздники Израиля»: так же сливаем главы с карточками и раскладываем пройденные группы.
     if (remoteMeta.holidaysCourse && Array.isArray(remoteMeta.holidaysCourse.completed)) {

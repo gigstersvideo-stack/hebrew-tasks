@@ -114,6 +114,7 @@ CHAPTERS = [
 linked = json.load(open(os.path.join(HERE, "linked_songs.json"), encoding="utf-8"))
 sys.path.insert(0, HERE)
 from path_content import PATH  # noqa: E402  путь главы: знакомство, итог, памятка (v1.42.0)
+CORE_QUOTA = {"words": 6, "today": 5, "roots": 4}
 out = []
 for ch in CHAPTERS:
     c = {k: v for k, v in ch.items() if k != "cards"}
@@ -145,6 +146,19 @@ for ch in CHAPTERS:
         miss = [w for w, _ in pc["words"] if bare(w) not in cards_txt]
         if miss:
             print(f"  ! {ch['id']}: главные слова не встречаются в карточках: {', '.join(miss)}")
+        if "book" in ch:  # …и в книге главы (прожарка: слова урока должны встретиться в истории)
+            book_txt = " ".join(bare(w["t"]) for s in bd["sentences"] for w in s["words"]) + " | " +                 " ".join(bare(w.get("lemma", "")) for s in bd["sentences"] for w in s["words"])
+            miss = [w for w, _ in pc["words"] if bare(w) not in book_txt]
+            if miss:
+                print(f"  ! {ch['id']}: главные слова не встречаются в книге: {', '.join(miss)}")
+        # Ядро главы (прожарка: 30 карточек — много): по слою 6 / 5 / 4, первыми — карточки с главными словами.
+        # Шаги пути и общее повторение берут только ядро, остальное — «ещё карточки» по желанию.
+        keys = [bare(w) for w, _ in pc["words"]]
+        for layer, quota in CORE_QUOTA.items():
+            ks = [k for k, x in enumerate(c["cards"]) if x["layer"] == layer]
+            ks.sort(key=lambda k: (not any(w in bare(c["cards"][k]["he"]) for w in keys), k))
+            for k in ks:
+                c["cards"][k]["core"] = k in ks[:quota]
     out.append(c)
 p = os.path.join(ROOT, "holidays_course.json")
 json.dump({"chapters": out}, open(p, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
