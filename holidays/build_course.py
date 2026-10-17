@@ -4,13 +4,17 @@ CHAPTERS ниже (порядок, даты, что лежит в читалке
 
     python holidays/build_course.py
 """
-import json, os, sys
+import json, os, sys, unicodedata
 sys.stdout.reconfigure(encoding="utf-8")
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
+READER = r"E:\hebrew-reader"
 
 # ready=True — глава готова (есть материалы в читалке и карточки). starts — вечер, когда праздник начинается.
 CHAPTERS = [
+ {"id": "year", "emoji": "🗓️", "title": "Как устроен еврейский год", "he": "הַשָּׁנָה הָעִבְרִית", "intro": True,
+  "blurb": "Вводный урок: почему праздники «плавают» по датам, почему день начинается вечером и как поздравлять.",
+  "cards": "year_cards.json"},
  {"id": "shabbat", "emoji": "🍞", "title": "Шабат", "he": "שַׁבָּת", "weekly": True,
   "blurb": "Каждую неделю: свечи, кидуш, две халы — и почему отдыхают именно в седьмой день.",
   "book": {"id": "shabbat-alef", "title": "שְׁתֵּי חַלּוֹת", "level": "א"},
@@ -56,7 +60,7 @@ CHAPTERS = [
             {"id": "ma-nishtana", "title": "מַה נִּשְׁתַּנָּה", "level": "ג"},
             {"id": "vehigadeta", "title": "וְהִגַּדְתָּ לְבִנְךָ", "level": "ד"}],
   "cards": "pesach_cards.json"},
- {"id": "yom-hashoah", "emoji": "🕯️", "title": "Йом ха-Шоа", "he": "יוֹם הַשּׁוֹאָה",
+ {"id": "yom-hashoah", "emoji": "🕯️", "title": "Йом ха-Шоа", "he": "יוֹם הַשּׁוֹאָה", "memorial": True,
   "blurb": "День памяти Катастрофы и героизма: сирена в 10 утра, поминальные свечи, имена.", "starts": ["2027-05-03", "2028-04-23"],
   "book": {"id": "yomhashoah-alef", "title": "הַצְּפִירָה", "level": "א"},
   "songs": [{"id": "eli-eli", "title": "אֵלִי, אֵלִי", "level": "ב"},
@@ -74,6 +78,8 @@ CHAPTERS = [
 ]
 
 linked = json.load(open(os.path.join(HERE, "linked_songs.json"), encoding="utf-8"))
+sys.path.insert(0, HERE)
+from path_content import PATH  # noqa: E402  путь главы: знакомство, итог, памятка (v1.42.0)
 out = []
 for ch in CHAPTERS:
     c = {k: v for k, v in ch.items() if k != "cards"}
@@ -82,10 +88,33 @@ for ch in CHAPTERS:
         cards = json.load(open(os.path.join(HERE, ch["cards"]), encoding="utf-8"))
         c["cards"] = [{"he": x["he"], "ru": x["ru"], "cloze_token": x["cloze_token"], "layer": x["layer"]} for x in cards]
         c["linked"] = [{k: v for k, v in s.items() if k != "chapter"} for s in linked if s["chapter"] == ch["id"]]
+        # объём для честной оценки времени шагов: предложения книги, строки песен (читалка)
+        if "book" in ch:
+            bd = json.load(open(os.path.join(READER, "books", ch["book"]["id"], "book-data.json"), encoding="utf-8"))
+            c["book"] = dict(ch["book"], sentences=len(bd["sentences"]))
+        c["songs"] = [dict(sg, lines=len(json.load(open(os.path.join(READER, "songs", sg["id"], "song-data.json"), encoding="utf-8"))["lines"]))
+                      for sg in ch.get("songs", [])]
+        pc = PATH[ch["id"]]  # у готовой главы путь обязателен
+        if "main" in pc:
+            assert pc["main"] in [x["id"] for x in ch["songs"]], (ch["id"], pc["main"])
+        for kind, q, opts, ans in pc["quiz"]:
+            assert kind in ("reply", "meaning") and 0 <= ans < len(opts), (ch["id"], q)
+        c["path"] = {"outcomes": pc["outcomes"], "intro": [{"title": t, "text": x} for t, x in pc["intro"]],
+                     "words": [{"he": h, "ru": r} for h, r in pc["words"]], "main": pc.get("main"),
+                     "quiz": [{"kind": k, "q": q, "options": o, "answer": a} for k, q, o, a in pc["quiz"]],
+                     "memo": [{"label": l, "text": t} for l, t in pc["memo"]],
+                     "say": [{"q": q, "accept": acc} for q, acc in pc.get("say", [])]}
+        assert len(c["path"]["say"]) >= 2, (ch["id"], "нужно ≥2 заданий «скажите на иврите»")
+        # главные слова должны встречаться в карточках главы (прожарка: «6 слов почти не повторяются»)
+        bare = lambda t: "".join(x for x in unicodedata.normalize("NFD", t) if not unicodedata.combining(x))
+        cards_txt = " ".join(bare(x["he"]) for x in c["cards"])
+        miss = [w for w, _ in pc["words"] if bare(w) not in cards_txt]
+        if miss:
+            print(f"  ! {ch['id']}: главные слова не встречаются в карточках: {', '.join(miss)}")
     out.append(c)
 p = os.path.join(ROOT, "holidays_course.json")
 json.dump({"chapters": out}, open(p, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
 # Календарь для читалки (вкладка «Праздники и песни», сезонная плашка) — только даты и названия.
-cal = [{k: c[k] for k in ("id", "emoji", "title", "he", "weekly", "starts", "days", "ready") if k in c} for c in out]
+cal = [{k: c[k] for k in ("id", "emoji", "title", "he", "weekly", "starts", "days", "ready") if k in c} for c in out if not c.get("intro")]
 json.dump({"chapters": cal}, open(r"E:\hebrew-reader\holidays.json", "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
 print(f"{len(out)} глав, готовы: {[c['id'] for c in out if c['ready']]}, карточек: {sum(len(c.get('cards', [])) for c in out)}, {os.path.getsize(p)//1024} КБ")

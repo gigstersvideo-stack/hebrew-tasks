@@ -708,6 +708,90 @@ async function bookLevelMapTests() {
   check('holidays: the next start date skips past years; none left → null', r.next && r.gone === null);
 }
 
+// Курс как путь (v1.42.0): шаги главы по порядку, переход вперёд только до самого дальнего пройденного,
+// старый прогресс («тренировал карточки») засчитывает всё до итога, адреса подэкранов, вопросы итога.
+{
+  const run = (code) => vm.runInContext(code, sandbox);
+  const r = run(`(() => {
+    const hc = progress.holidaysCourse, saved = JSON.stringify(hc);
+    const cards = [{ he: "א א", ru: "a", layer: "words" }, { he: "ב ב", ru: "b", layer: "today" }, { he: "ג ג", ru: "c", layer: "roots" }, { he: "ד ד", ru: "d", layer: "words" }];
+    const path = { intro: [{ title: "t", text: "x" }], words: [], main: "s1", quiz: [{ kind: "reply", q: "q", options: ["א", "ב", "ג"], answer: 0 }], memo: [], outcomes: [] };
+    const full = { id: "tp-full", ready: true, book: { id: "b" }, songs: [{ id: "s1" }], cards, path };
+    const intro = { id: "tp-intro", ready: true, intro: true, cards, path: { ...path, main: null } };
+    const legacy = { id: "tp-legacy", ready: true, book: { id: "b" }, songs: [{ id: "s1" }], cards, path };
+    hc.completed.push("tp-legacy");
+    const out = {
+      stepsFull: holSteps(full).join(","), stepsIntro: holSteps(intro).join(","),
+      openFresh: holSteps(full).map((s, i) => holStepOpen(full, i)).join(","), nextFresh: holNextStep(full),
+    };
+    hc.steps["tp-full"] = ["intro", "story", "words"];
+    out.nextMid = holNextStep(full);
+    hc.steps["tp-full"] = ["intro", "story", "words", "main"]; // вернулся к шагу 1 — вперёд можно прыгнуть до 5
+    out.openMid = holSteps(full).map((s, i) => holStepOpen(full, i)).join(",");
+    out.legacyDone = holDone(legacy).join(","); out.legacyNext = holNextStep(legacy); out.legacyPassed = holPassed("tp-legacy");
+    out.routeSub = parseViewHash("#/holidays/pesach/final"); out.routeIntro = parseViewHash("#/holidays/year/intro");
+    out.routeBad = parseViewHash("#/holidays/pesach/other"); out.hashSub = viewHash("holidays", "pesach/intro");
+    const q = holBuildQuiz(full);
+    out.quizLen = q.length; out.quizOk = q.every(x => x.answer >= 0 && x.answer < x.options.length);
+    out.quizReplyHe = q.filter(x => x.kind === "reply").every(x => x.heOptions && x.options[x.answer] === "א");
+    out.pl = [holPl(1, ["шаг", "шага", "шагов"]), holPl(4, ["шаг", "шага", "шагов"]), holPl(11, ["шаг", "шага", "шагов"]), holPl(22, ["шаг", "шага", "шагов"])].join(",");
+    out.rich = holRich("слово שָׁלוֹם, и <b>");
+    Object.assign(hc, JSON.parse(saved));
+    return out;
+  })()`);
+  check('holidays path: a full chapter has seven steps in order', r.stepsFull === 'intro,story,words,main,today,roots,final');
+  check('holidays path: the intro lesson skips story and main text', r.stepsIntro === 'intro,words,today,roots,final');
+  check('holidays path: on a fresh chapter only the first step is open', r.openFresh === 'true,false,false,false,false,false,false' && r.nextFresh === 'intro');
+  check('holidays path: the next step follows the last one passed', r.nextMid === 'main');
+  check('holidays path: steps stay open up to one past the furthest passed', r.openMid === 'true,true,true,true,true,false,false');
+  check('holidays path: a chapter trained before v1.42 counts all steps but the final, and is not passed yet',
+    r.legacyDone === 'intro,story,words,main,today,roots' && r.legacyNext === 'final' && !r.legacyPassed);
+  check('holidays path: #/holidays/<глава>/final and /intro parse to sub-screens', r.routeSub.pos === 'pesach/final' && r.routeIntro.pos === 'year/intro');
+  check('holidays path: an unknown sub-screen falls back to the dashboard', r.routeBad.v === 'dashboard');
+  check('holidays path: viewHash keeps the slash of a sub-screen', r.hashSub === '#/holidays/pesach/intro');
+  check('holidays path: the final quiz has valid answers; «что ответить» options stay Hebrew', r.quizLen >= 4 && r.quizOk && r.quizReplyHe);
+  check('holidays path: Russian plural for step counts', r.pl === '1 шаг,4 шага,11 шагов,22 шага');
+  check('holidays path: Hebrew runs are wrapped rtl and HTML is escaped', r.rich === 'слово <span class="hol-hi" dir="rtl">שָׁלוֹם</span>, и &lt;b&gt;');
+}
+
+// После прожарки (v1.42.0): ввод ответа на иврите, карточки в базу по шагам, замок на прямых адресах,
+// честное время, дни памяти.
+{
+  const run = (code) => vm.runInContext(code, sandbox);
+  const r = run(`(() => {
+    const savedLen = DATA.length, savedDone = progress.holidaysCourse.completed.slice();
+    const cards = [{ he: "א", ru: "a", layer: "words" }, { he: "ב", ru: "b", layer: "roots" }, { he: "ג", ru: "c", layer: "today" }];
+    const w = appendHolidayCards("tg-ch", cards, "words");
+    const wCopy = w.slice();
+    const all = appendHolidayCards("tg-ch", cards, "roots");
+    const ch20 = { id: "x", cards: Array.from({ length: 20 }, () => ({ layer: "words" })), path: {} };
+    const out = {
+      wordsOnly: typeof wCopy[0] === "number" && wCopy[1] === null && wCopy[2] === null,
+      rootsAdded: typeof all[1] === "number" && all[2] === null && all[0] === wCopy[0],
+      say1: holQuizRight({ kind: "say", accept: ["חַג שָׂמֵחַ"] }, "חג שמח!"),
+      say2: holQuizRight({ kind: "say", accept: ["סוּפְגָּנִיּוֹת"] }, "סופגנייות"),
+      sayNo: holQuizRight({ kind: "say", accept: ["מַצָּה"] }, "חמץ"),
+      lockMissing: holStepOpen({ id: "y", cards: [], path: {} }, -1),
+      pass5: holPassMark(5), pass8: holPassMark(8),
+      min20: holStepMin(ch20, "words"),
+      memTitle: holStepTitle({ memorial: true }, "roots"), normTitle: holStepTitle({}, "roots"),
+      memFor: holForDay({ memorial: true }), normFor: holForDay({}),
+      groupsLegacy: (() => { progress.holidaysCourse.completed.push("tg-legacy"); return holGroupsFor({ id: "tg-legacy", book: { id: "b" }, cards, path: { intro: [{}], quiz: [{}] } }).join(","); })(),
+    };
+    DATA.length = savedLen; progress.holidaysCourse.completed = savedDone;
+    delete progress.holidaysCourse.steps["tg-legacy"]; delete progress.rootsCourse.sentenceIndexByRoot["h:tg-ch"];
+    return out;
+  })()`);
+  check('holidays path: starting a step puts only the cards of that step into the base', r.wordsOnly);
+  check('holidays path: the next step adds its cards without moving the earlier ones', r.rootsAdded);
+  check('holidays path: typed answers match without nikud, punctuation or ו/י spelling differences', r.say1 && r.say2 && !r.sayNo);
+  check('holidays path: a step that does not exist is never open (locks deep links)', r.lockMissing === false);
+  check('holidays path: the pass mark is 6 of 8 and 75% for shorter quizzes', r.pass8 === 6 && r.pass5 === 4);
+  check('holidays path: 20 cards are estimated at ~13 minutes, not 8', r.min20 === 13);
+  check('holidays path: memorial days get neutral wording', r.memTitle === 'Откуда эти слова' && r.normTitle === 'Откуда растут ноги' && r.memFor === 'ко дню памяти' && r.normFor === 'к празднику');
+  check('holidays path: a chapter trained before v1.42 keeps all card groups in the base', r.groupsLegacy === 'words,today,roots');
+}
+
 bookLevelMapTests().then(() => {
   console.log(`\n${pass} passed, ${fail} failed`);
   process.exit(fail ? 1 : 0);
